@@ -231,14 +231,15 @@
     <div class="sidebar-overlay"></div>
     <aside id="docs-sidebar" class="docs-sidebar">
       <div class="sidebar-search">
-        <input type="text" id="docsSearch" class="sidebar-search-input" placeholder="Поиск..." autocomplete="off">
-        <button class="sidebar-search-clear" id="searchClear" aria-label="Clear search">&times;</button>
+        <div class="sidebar-search-wrap">
+          <input type="text" id="docsSearch" class="sidebar-search-input" placeholder="Поиск..." autocomplete="off">
+          <button class="sidebar-search-clear" id="searchClear" aria-label="Clear search">&times;</button>
+        </div>
       </div>
       <nav class="sidebar-tree" id="sidebarTree"></nav>
     </aside>
     <div class="docs-main">
       <div class="container">
-        <h2 data-i18n="nav_docs">Документация</h2>
         <div id="docs-content" class="docs-content"></div>
       </div>
     </div>

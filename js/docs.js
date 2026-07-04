@@ -177,31 +177,47 @@
   function buildTreeHtml(nodes, level) {
     if (!level) level = 0;
     if (!nodes || nodes.length === 0) return "";
-    var html = '<ul class="sidebar-level">';
+    var cls = level === 0 ? "sidebar-level" : "sidebar-level sidebar-sub";
+    var html = '<ul class="' + cls + '">';
     for (var i = 0; i < nodes.length; i++) {
       var node = nodes[i];
       var hasChildren = node.children && node.children.length > 0;
+      var isLast = i === nodes.length - 1;
       var indent = 14 + level * 18;
-      html += '<li class="sidebar-item">';
+
+      html +=
+        '<li class="sidebar-item' +
+        (hasChildren ? " has-children" : "") +
+        (isLast ? " is-last" : "") +
+        '">';
+      html +=
+        '<div class="sidebar-row" style="padding-left:' +
+        indent +
+        'px">';
+
+      if (hasChildren) {
+        html +=
+          '<button class="tree-toggle" aria-expanded="true" aria-label="Toggle">▾</button>';
+      } else {
+        html += '<span class="tree-spacer"></span>';
+      }
+
       if (node.slug) {
         html +=
           '<a href="#/docs/' +
           node.slug +
           '" class="sidebar-link" data-slug="' +
           node.slug +
-          '" style="padding-left:' +
-          indent +
-          'px">' +
+          '">' +
           esc(node.title) +
           "</a>";
       } else {
         html +=
-          '<span class="sidebar-category" style="padding-left:' +
-          indent +
-          'px">' +
-          esc(node.title) +
-          "</span>";
+          '<span class="sidebar-category">' + esc(node.title) + "</span>";
       }
+
+      html += "</div>";
+
       if (hasChildren) {
         html += buildTreeHtml(node.children, level + 1);
       }
@@ -504,6 +520,17 @@
     var sidebarTree = document.getElementById("sidebarTree");
     if (sidebarTree) {
       sidebarTree.addEventListener("click", function (e) {
+        var toggle = e.target.closest(".tree-toggle");
+        if (toggle) {
+          e.preventDefault();
+          e.stopPropagation();
+          var item = toggle.closest(".sidebar-item");
+          item.classList.toggle("collapsed");
+          var isCollapsed = item.classList.contains("collapsed");
+          toggle.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
+          return;
+        }
+
         var a = e.target.closest(".sidebar-link");
         if (!a) return;
         e.preventDefault();

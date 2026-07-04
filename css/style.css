@@ -1036,7 +1036,6 @@ body.docs-mode .docs-sidebar {
 
 .sidebar-search {
   display: none;
-  position: relative;
   padding: 0 12px 16px;
 }
 
@@ -1044,9 +1043,15 @@ body.docs-mode .sidebar-search {
   display: block;
 }
 
+.sidebar-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .sidebar-search-input {
   width: 100%;
-  padding: 8px 32px 8px 12px;
+  padding: 7px 32px 7px 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--bg-primary);
@@ -1067,12 +1072,14 @@ body.docs-mode .sidebar-search {
 
 .sidebar-search-clear {
   display: none;
+  align-items: center;
+  justify-content: center;
   position: absolute;
-  right: 18px;
+  right: 6px;
   top: 50%;
   transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   padding: 0;
   border: none;
   background: none;
@@ -1091,8 +1098,6 @@ body.docs-mode .sidebar-search {
 
 .sidebar-search-clear.visible {
   display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .sidebar-tree {
@@ -1105,13 +1110,72 @@ body.docs-mode .sidebar-search {
   margin: 0;
 }
 
+.sidebar-tree .sidebar-sub {
+  border-left: 1px solid var(--border);
+  margin-left: 11px;
+}
+
 .sidebar-item {
+  position: relative;
   margin: 0;
 }
 
+.sidebar-item.collapsed > .sidebar-sub {
+  display: none;
+}
+
+.sidebar-item.collapsed .tree-toggle {
+  transform: rotate(-90deg);
+}
+
+/* ----- tree row ----- */
+
+.sidebar-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 8px;
+}
+
+/* ----- toggle ----- */
+
+.tree-toggle {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.65rem;
+  line-height: 1;
+  padding: 0;
+  border-radius: 3px;
+  transition: transform 0.2s ease, color var(--transition);
+}
+
+.tree-toggle:hover {
+  color: var(--text-primary);
+  background: var(--accent-dim);
+}
+
+.tree-spacer {
+  flex-shrink: 0;
+  width: 16px;
+  height: 0;
+}
+
+/* ----- link & category ----- */
+
 .sidebar-link {
   display: block;
-  padding: 7px 14px 7px 14px;
+  flex: 1;
+  min-width: 0;
+  padding: 7px 8px;
+  margin-bottom: 1px;
   border-radius: var(--radius);
   color: var(--text-secondary);
   font-size: 0.88rem;
@@ -1136,12 +1200,18 @@ body.docs-mode .sidebar-search {
 
 .sidebar-category {
   display: block;
-  padding: 6px 14px 6px 0;
+  flex: 1;
+  min-width: 0;
+  padding: 7px 8px 6px;
+  margin-bottom: 1px;
   color: var(--text-muted);
   font-size: 0.8rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sidebar-toggle {
