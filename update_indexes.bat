@@ -1,0 +1,1 @@
+python ./build-docs-index.py

@@ -8,6 +8,8 @@ const I18N = {
     nav_videos: "Видео",
     nav_story: "Сюжет",
     nav_systems: "Системы",
+    nav_docs: "Документация",
+    nav_docs_back: "← На сайт",
     nav_github: "GitHub",
 
     hero_title: "cthangover",
@@ -138,6 +140,8 @@ const I18N = {
     nav_videos: "Videos",
     nav_story: "Story",
     nav_systems: "Systems",
+    nav_docs: "Documentation",
+    nav_docs_back: "← Back to site",
     nav_github: "GitHub",
 
     hero_title: "cthangover",
@@ -268,6 +272,8 @@ const I18N = {
     nav_videos: "视频",
     nav_story: "剧情",
     nav_systems: "系统",
+    nav_docs: "文档",
+    nav_docs_back: "← 返回网站",
     nav_github: "GitHub",
 
     hero_title: "cthangover",
@@ -398,6 +404,8 @@ const I18N = {
     nav_videos: "動画",
     nav_story: "ストーリー",
     nav_systems: "システム",
+    nav_docs: "ドキュメント",
+    nav_docs_back: "← サイトに戻る",
     nav_github: "GitHub",
 
     hero_title: "cthangover",
@@ -528,6 +536,8 @@ const I18N = {
     nav_videos: "비디오",
     nav_story: "스토리",
     nav_systems: "시스템",
+    nav_docs: "문서",
+    nav_docs_back: "← 사이트로",
     nav_github: "GitHub",
 
     hero_title: "cthangover",
@@ -658,6 +668,8 @@ const I18N = {
     nav_videos: "Video",
     nav_story: "Cốt truyện",
     nav_systems: "Hệ thống",
+    nav_docs: "Tài liệu",
+    nav_docs_back: "← Về trang",
     nav_github: "GitHub",
 
     hero_title: "cthangover",
@@ -788,6 +800,8 @@ const I18N = {
     nav_videos: "Videos",
     nav_story: "Historia",
     nav_systems: "Sistemas",
+    nav_docs: "Documentación",
+    nav_docs_back: "← Volver al sitio",
     nav_github: "GitHub",
 
     hero_title: "cthangover",
