@@ -1,6 +1,6 @@
 # Items
 
-JSON-defined items — consumables, resources, equipment, and recipe items — with localization, pricing, and crafting recipes.
+JSON-defined items — consumables, resources, and recipe items — with localization, pricing, and crafting recipes.
 
 ## JSON structure
 
@@ -11,8 +11,8 @@ JSON-defined items — consumables, resources, equipment, and recipe items — w
   "Description": "locale_key_for_description",
   "Cost":        5,
   "Sprite":      "type/item_id",
-  "ItemType":    "Food | Resource | Weapon | ...",
-  "ItemAction":  "null | action_id"
+  "ItemType":    "Food | Resource | ...",
+  "ItemAction":  "action_id"
 }
 ```
 
@@ -25,8 +25,22 @@ JSON-defined items — consumables, resources, equipment, and recipe items — w
 | `Description` | Locale key for tooltip/info text |
 | `Cost` | Base price in the game economy |
 | `Sprite` | Path to the item icon under the mod's sprites directory |
-| `ItemType` | Type tag(s), comma-separated: `Food`, `Resource`, `Weapon`, `Armor`, `Quest`, `Recipe` |
-| `ItemAction` | C# action class invoked when the item is used (`"null"` for passive items) |
+| `ItemType` | Type tag(s), comma-separated: `Food`, `Resource`, `Quest`, `Recipe`, `Used`, `TargetUsed` |
+| `ItemAction` | Action ID resolved via `IItemAction` factory — C# class that defines the item's use effect |
+
+### ItemType values
+
+`ItemType` is a `[Flags]` enum — multiple values can be combined with a comma:
+
+| Value | Hex | Description |
+|---|---|---|
+| `Quest` | `0x01` | Quest item — tracked in quest log |
+| `Used` | `0x02` | Self-targeting use item |
+| `TargetUsed` | `0x04` | Ally/enemy-targeting use item |
+| `Food` | `0x08` | Edible (consumes hunger stat) |
+| `Resource` | `0x10` | Crafting material |
+| `Recipe` | `0x20` | Recipe item (unlocks in cookbook) |
+| `CantDrop` | `0x80000000` | Cannot be discarded from inventory |
 
 ## Real examples
 
@@ -39,8 +53,7 @@ JSON-defined items — consumables, resources, equipment, and recipe items — w
   "Description": "items/food/ration/desc",
   "Cost": 5,
   "Sprite": "food/ration",
-  "ItemType": "Food",
-  "ItemAction": "null"
+  "ItemType": "Food"
 }
 ```
 
@@ -53,30 +66,11 @@ JSON-defined items — consumables, resources, equipment, and recipe items — w
   "Description": "items/food/wolf_meat/desc",
   "Cost": 1,
   "Sprite": "food/wolf_meat",
-  "ItemType": "Resource,Food",
-  "ItemAction": "null"
+  "ItemType": "Resource,Food"
 }
 ```
 
 Note: `ItemType` can be multiple values — `"Resource,Food"` means it's both a crafting ingredient and edible.
-
-### Equipment — full example (not in current mods, but fully supported)
-
-```json
-{
-  "Id": "weapon/iron_sword",
-  "Name": "items/weapon/iron_sword/name",
-  "Description": "items/weapon/iron_sword/desc",
-  "Cost": 50,
-  "Sprite": "weapon/iron_sword",
-  "ItemType": "Weapon",
-  "ItemAction": "equip_weapon",
-  "Stats": {
-    "Attack": 12,
-    "Speed": -2
-  }
-}
-```
 
 ### Recipe item
 
@@ -88,8 +82,7 @@ Recipe items are items that represent a craftable recipe in the player's invento
   "Name": "recipe/wolf_meat_to_ration/name",
   "Description": "recipe/wolf_meat_to_ration/desc",
   "Sprite": "recipe/wolf_meat_to_ration",
-  "ItemType": "Recipe",
-  "ItemAction": "null"
+  "ItemType": "Recipe"
 }
 ```
 
@@ -111,7 +104,7 @@ Recipe items are items that represent a craftable recipe in the player's invento
 
 ## Recipes
 
-Recipes are defined separately in `recipes/` and describe input→output transformations. See the Cooking mod for a real example:
+Recipes are defined separately in `recipes/` and describe input→output transformations:
 
 ```json
 {
@@ -131,7 +124,14 @@ Recipes are defined separately in `recipes/` and describe input→output transfo
 }
 ```
 
-`Time` is in in-game minutes. `Input` specifies required items and quantities; `Output` specifies what's produced.
+| Field | Description |
+|---|---|
+| `Id` | Unique recipe ID |
+| `Name` | Locale key for recipe display name |
+| `Type` | Workbench type — currently only `"Cooking"` |
+| `Time` | Crafting time in in-game minutes |
+| `Input` | Required ingredients: `Id` (item ID) + `Count` |
+| `Output` | Produced items: `Id` (item ID) + `Count` |
 
 ## Locale keys
 
@@ -152,4 +152,4 @@ recipe/wolf_meat_to_ration/desc = A recipe for cooking wolf meat safely
 2. Add it to `items/items.json`: `"${type/id}"`
 3. Add locale keys for name and description
 4. Optionally add a sprite icon
-5. If the item has an active use, implement an `IItemAction` C# class and reference it in `ItemAction`
+5. If the item has an active use, implement an `IItemAction` C# class and reference it via the factory

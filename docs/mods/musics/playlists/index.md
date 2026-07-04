@@ -9,7 +9,7 @@ Detailed schema for music playlist configuration JSON files.
   "Scene": "playlist_identifier",
   "Musics": [
     {
-      "MusicType": "Ambient | Combat | Boss | Menu",
+      "MusicType": "Force | Combat | Ambient",
       "MusicNames": ["track1", "track2", "..."],
       "Shuffle": true,
       "Volume": 0.8,
@@ -25,7 +25,7 @@ Detailed schema for music playlist configuration JSON files.
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `Scene` | string | *(required)* | Unique playlist ID. Referenced in scene JSONs (`defaultAmbient`) and scenario commands (`music playlists/{id}`) |
-| `MusicType` | string | *(required)* | Category tag. The engine uses this to switch between playlists when game state changes (e.g. `Ambient` → `Combat` on battle start) |
+| `MusicType` | string | *(required)* | Category: `Ambient` (exploration), `Combat` (battle), `Force` (transient, normalised to `Ambient`). Engine auto-switches `Ambient` ↔ `Combat` on battle state changes |
 | `MusicNames` | string[] | *(required)* | Track filenames without extension. Must match `.ogg` files in `music/` |
 | `Shuffle` | bool | `true` | Whether to randomize playback order |
 | `Volume` | float | `0.8` | Playback volume, 0.0 to 1.0 |

@@ -68,7 +68,7 @@ music/
   "Scene": "playlist_id",
   "Musics": [
     {
-      "MusicType": "Ambient | Combat | Boss | Menu",
+      "MusicType": "Force | Combat | Ambient",
       "MusicNames": ["track_1", "track_2", "..."],
       "Shuffle": true,
       "Volume": 0.8,
@@ -82,7 +82,7 @@ music/
 | Field | Required | Description |
 |---|---|---|
 | `Scene` | Yes | Playlist ID (referenced in scene definitions) |
-| `MusicType` | Yes | Category: `Ambient`, `Combat`, `Boss`, `Menu` |
+| `MusicType` | Yes | Category: `Ambient`, `Combat`, `Force`. `Force` is transient — normalised to `Ambient` |
 | `MusicNames` | Yes | List of track filenames (no extension, no path) |
 | `Shuffle` | No | Randomize playback order (default: `true`) |
 | `Volume` | No | Playback volume 0.0–1.0 (default: `0.8`) |

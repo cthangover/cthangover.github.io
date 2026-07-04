@@ -1,6 +1,6 @@
 # Effects
 
-Visual effect sprites used in battles, scene transitions, and interactive feedback. Managed via the `effect` command in the Scenario DSL.
+Visual effect textures used in battles, scene transitions, and interactive feedback. Managed via the `effect` command in the Scenario DSL.
 
 ## Directory structure
 
@@ -40,31 +40,23 @@ effect death on current
 | Position | `at center`, `at left`, `at right`, `at 0.5 0.3` (UV coords) |
 | Target | `on player`, `on enemy`, `on current`, `on all` |
 
+## Effect types
+
+Effects are primarily **texture-based** — the engine loads a `.png` (or `.spritesheet` for animated effects) from the mod's `effects/` group and renders it at the requested position/target. There are no predefined C# effect class names — the effect behavior is determined by the visual asset and its shader.
+
+The `IEffect` C# interface in `Core/UI/Animation/` provides the base for any custom effect logic.
+
 ## Adding a new effect
 
 1. Create `effects/{name}.png` in your mod
 2. If the effect is animated, use a spritesheet and register frame count via the C# `IEffect` interface (see `src/` docs)
 3. Use in scenarios: `effect my_effect at center`
 
-## Effect types available in the engine
-
-The C# `IEffect` interface supports these built-in types:
-
-| Type | Description |
-|---|---|
-| `SplashEffect` | Single-frame burst at a position, fades out |
-| `ParticleEffect` | Multi-particle emitter with configurable spread, velocity, lifetime |
-| `ScreenShake` | Screen shake with intensity + duration |
-| `FlashEffect` | Full-screen color flash (e.g. white flash on hit) |
-| `DeathDissolve` | Shader-based dissolve on character death |
-
 ## Example — spawning an effect from C#
 
-Mentioned here for completeness; see `src/` for full C# integration:
-
 ```csharp
-var effect = EffectFactory.Create("splash", new Vector2(0.5f, 0.5f));
-effect.Play();
+var texture = EffectFactory.Get("splash");
+// Use the texture in an EffectController or EffectAnimator
 ```
 
-The `effect` scenario command wraps this factory call — no C# needed for basic usage.
+The `effect` scenario command wraps the factory call — no C# needed for basic usage.

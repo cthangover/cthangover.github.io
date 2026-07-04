@@ -16,6 +16,9 @@ JSON-defined characters — both player-controlled and enemies — with attribut
   "Health":      2000,
   "Defence":     0,
   "Attack":      500,
+  "Strength":    10,
+  "Magic":       5,
+  "Fullness":    100,
   "Exp":         5,
   "RecruitmentChance": 0,
 
@@ -47,8 +50,11 @@ JSON-defined characters — both player-controlled and enemies — with attribut
 | `Health` | int | Maximum HP |
 | `Defence` | int | Base defence stat |
 | `Attack` | int | Base attack stat |
+| `Strength` | int | Physical damage modifier |
+| `Magic` | int | Magical damage/heal modifier |
+| `Fullness` | int | Satiety stat (depletes over time, affects hunger system) |
 | `Exp` | int | XP reward on defeat |
-| `RecruitmentChance` | int | % chance to recruit after defeat (0-100) |
+| `RecruitmentChance` | int | % chance to recruit after defeat (0–100) |
 | `Depravity` | int | Morality stat modifier |
 | `Discipline` | int | Discipline stat modifier |
 | `Actions` | string | Comma-separated action IDs (e.g. `"physics/attack,physics/defence"`) |

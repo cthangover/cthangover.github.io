@@ -1,11 +1,11 @@
 # Conditions — Quest Expression Language
 
-The `condition:` metadata field uses a simple expression language to control which scenarios execute based on quest state, inventory, and scene flags.
+The `condition:` metadata field uses a simple expression language to control which scenarios execute based on quest state and scene flags.
 
 ## Syntax
 
 ```
-condition: QuestId.method("arg") [&& || ! QuestId.method("arg") ...]
+condition: QuestId.method("arg") [&& || ! expr ...]
 ```
 
 ## Available methods
@@ -14,9 +14,23 @@ condition: QuestId.method("arg") [&& || ! QuestId.method("arg") ...]
 |---|---|
 | `hasTag("tag")` | True if the quest has the specified tag |
 | `notHasTag("tag")` | True if the quest does NOT have the tag |
-| `status >= N` | True if quest status is N or higher |
-| `status == N` | True if quest status equals N |
-| `status < N` | True if quest status is less than N |
+| `IsActive` | True when quest Status equals `Progress` |
+| `Status >= N` | True if quest Status is N or higher |
+| `Status == N` | True if quest Status equals N |
+| `Status < N` | True if quest Status is less than N |
+| `DataStatus >= N` | True if quest numeric counter is N or higher |
+| `DataStatus == N` | True if quest numeric counter equals N |
+
+## Flag conditions
+
+Scene flags are evaluated directly — no `scene.` prefix needed:
+
+```
+condition: door_unlocked == "true"
+condition: counter >= 3
+```
+
+Flags are string or number key-value pairs set via the `set` DSL command or by action code.
 
 ## Operators
 
@@ -46,10 +60,10 @@ This scenario only fires **after** the player fought the wolf but **before** the
 ### Multiple quest dependencies
 
 ```scenario
-condition: PrologQuest.hasTag("met_marao") && MeetingMurakamiQuest.hasTag("recruited") && PlayerInventory.hasItem("key")
+condition: PrologQuest.hasTag("met_marao") && MeetingMurakamiQuest.hasTag("recruited")
 ```
 
-All three conditions must be met.
+Both conditions must be met.
 
 ### Either/or branching
 
@@ -70,44 +84,26 @@ The tutorial hasn't been done yet, but the player has woken up or is in the alle
 ### Status-based progression
 
 ```scenario
-condition: PrologQuest.status >= 2
+condition: PrologQuest.Status >= 2
 ```
 
 Runs when PrologQuest reaches status 2 or higher.
 
-## Scene flag conditions
-
-Scene flags are boolean values set via `action scene.set_flag`:
+### Using DataStatus for numeric progress
 
 ```scenario
-condition: scene.hasFlag("door_unlocked")
+condition: MainQuest.DataStatus >= 10
 ```
 
-Set from another scenario:
+Runs when the quest's numeric progress counter reaches 10 or more.
+
+### Combining quest conditions with flags
 
 ```scenario
-action scene.set_flag flag=door_unlocked value=true
+condition: PrologQuest.hasTag("met_marao") && boss_battle == "done"
 ```
 
-## Inventory conditions
-
-Check if the player has specific items:
-
-```scenario
-condition: PlayerInventory.hasItem("food/ration", 3)
-condition: PlayerInventory.hasItem("weapon/iron_sword")
-```
-
-The optional second argument is the minimum count (default: 1).
-
-## Party conditions
-
-Check if a character is in the party:
-
-```scenario
-condition: PlayerParty.hasMember("Murakami")
-condition: PlayerParty.notHasMember("Murakami")
-```
+Runs when the prolog tag is set AND the scene flag `boss_battle` equals `"done"`.
 
 ## Condition evaluation order
 

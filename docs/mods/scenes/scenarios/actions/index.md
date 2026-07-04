@@ -29,8 +29,11 @@ Triggers the "new party member" UI notification for character `Murakami`.
 ### Battle initiation
 
 ```scenario
+action battle.set_core core=CardBattle
 action battle.init scene=town_entry enemies=wolf_2,werewolf_girl_1 quest_id=MeetingMurakamiQuest new_tag=boss_battle
 ```
+
+`battle.set_core` selects the combat ruleset (e.g. `CardBattle`, `FFBattle`) before `battle.init` starts the encounter.
 
 | Parameter | Description |
 |---|---|
@@ -42,10 +45,10 @@ action battle.init scene=town_entry enemies=wolf_2,werewolf_girl_1 quest_id=Meet
 ### Cooking workbench
 
 ```scenario
-action toggle_cooking_workbench
+action ui.toggle_panel name=CookingPanel
 ```
 
-Toggles the cooking UI panel. No parameters — the action name alone is enough.
+Toggles a named UI panel. The action name alone is enough — no extra parameters required.
 
 ## Available action namespaces
 
@@ -63,17 +66,17 @@ Toggles the cooking UI panel. No parameters — the action name alone is enough.
 | Action | Parameters | Description |
 |---|---|---|
 | `battle.init` | `scene`, `enemies`, `quest_id`, `new_tag` | Start a battle |
-| `battle.end` | *(none)* | Force-end current battle |
-| `battle.set_type` | `type=card_battle | ff_battle` | Switch battle system |
+| `battle.set_core` | `core=CardBattle` | Select combat ruleset |
 
 ### `quest.*`
 
 | Action | Parameters | Description |
 |---|---|---|
-| `quest.set_status` | `quest_id=Q status=2` | Set quest to a specific status |
+| `quest.set_status` | `quest_id=Q status=2` | Set quest to a specific status number |
+| `quest.set_data_status` | `quest_id=Q level=3` | Set quest numeric progress counter |
 | `quest.add_tag` | `quest_id=Q tag=T` | Add a tag to a quest |
 | `quest.remove_tag` | `quest_id=Q tag=T` | Remove a tag |
-| `quest.complete` | `quest_id=Q` | Mark quest as finished |
+| `quest.send_notification` | `quest_id=Q` | Trigger "Quest Updated" UI popup |
 
 ### `inventory.*`
 
@@ -81,14 +84,25 @@ Toggles the cooking UI panel. No parameters — the action name alone is enough.
 |---|---|---|
 | `inventory.add` | `item=food/ration count=3` | Add items to inventory |
 | `inventory.remove` | `item=food/wolf_meat count=1` | Remove items |
-| `inventory.has` | `item=food/ration` | Check if item is present (used in conditions) |
 
 ### `scene.*`
 
 | Action | Parameters | Description |
 |---|---|---|
-| `scene.set_flag` | `flag=met_marao value=true` | Set a scene-level flag |
-| `scene.get_flag` | `flag=met_marao` | Read a flag (for conditions) |
+| `scene.instantiate` | `path=res://scenes/ui/CookingPanel.tscn name=CookingNode` | Load and add a PackedScene to the scene tree |
+| `scene.remove_object` | `name=CookingNode` | Remove a named node from the scene tree |
+
+### `ui.*`
+
+| Action | Parameters | Description |
+|---|---|---|
+| `ui.toggle_panel` | `name=PanelName` | Toggle visibility of a Control node by name |
+
+### `lighting.*`
+
+| Action | Parameters | Description |
+|---|---|---|
+| `lighting.clear_map` | *(none)* | Reset lighting depth/albedo maps |
 
 ## Adding a custom action from C#
 
@@ -99,12 +113,11 @@ public class OpenTreasureChestAction : IScenarioAction
 {
     public string Name => "treasure.open";
 
-    public void Execute(ActionContext ctx)
+    public void Run(IActionContext ctx)
     {
         var item = ctx.GetParam("item");
         var count = ctx.GetParamInt("count");
-        InventoryService.Add(item, count);
-        GameLogger.Log("SCENARIO", $"Gave player {count}x {item}");
+        ctx.Log("SCENARIO", $"Gave player {count}x {item}");
     }
 }
 ```

@@ -9,7 +9,6 @@ Every mod needs a manifest and optionally a properties file. These define the mo
   "name": "MyMod",
   "author": "author_name",
   "description": "What this mod does",
-  "version": "1.0.0",
   "sources": ["src/*.cs", "src/**/*.cs"],
   "depends": ["core", "interface"],
   "subscriptions": [
@@ -29,9 +28,8 @@ Every mod needs a manifest and optionally a properties file. These define the mo
 | Field | Required | Description |
 |---|---|---|
 | `name` | Yes | Human-readable mod name |
-| `author` | Yes | Author identifier |
-| `description` | Yes | Short description |
-| `version` | No | Semver (e.g. `"1.2.0"`). Recommended for distribution |
+| `author` | No | Author identifier |
+| `description` | No | Short description |
 | `sources` | No | Glob patterns for C# files to compile via Roslyn |
 | `depends` | No | List of mod IDs that must be loaded before this mod |
 | `subscriptions` | No | Scene lifecycle hooks (see below) |
