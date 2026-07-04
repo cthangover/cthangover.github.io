@@ -1,4 +1,4 @@
-![cthangover logo](img/logo.png)
+![cthangover logo](../img/logo.png)
 
 # Documentation
 

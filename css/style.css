@@ -250,6 +250,46 @@ h3 { font-size: 1.1rem; font-weight: 600; }
 }
 .nav-github:hover { color: var(--text-primary); background: var(--accent-dim); }
 
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.nav-toggle:hover {
+  background: var(--accent-dim);
+}
+
+.nav-toggle span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--text-secondary);
+  border-radius: 1px;
+  transition: all 0.25s ease;
+}
+
+body.nav-open .nav-toggle span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+body.nav-open .nav-toggle span:nth-child(2) {
+  opacity: 0;
+}
+
+body.nav-open .nav-toggle span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
 /* ========== SECTIONS ========== */
 
 section {
@@ -849,8 +889,27 @@ footer {
     transform: rotate(90deg);
   }
 
+  .nav-toggle {
+    display: flex;
+  }
+
   .nav-links {
     display: none;
+    position: absolute;
+    top: 56px;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 16px;
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 99;
+  }
+
+  body.nav-open .nav-links {
+    display: flex;
   }
 
   h1 { font-size: 2.2rem; }
@@ -1078,6 +1137,22 @@ body.docs-mode .sidebar-search {
   letter-spacing: 0.03em;
 }
 
+.sidebar-toggle {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  z-index: 250;
+}
+
 .sidebar-toggle:hover {
   background: var(--accent-dim);
 }
@@ -1139,7 +1214,13 @@ body.sidebar-open .sidebar-toggle span:nth-child(3) {
 
   body.docs-mode .sidebar-toggle {
     display: flex;
-    margin-left: auto;
+    position: fixed;
+    top: 68px;
+    right: 12px;
+    z-index: 250;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   }
 
   body.docs-mode .sidebar-resize-handle {
@@ -1147,7 +1228,7 @@ body.sidebar-open .sidebar-toggle span:nth-child(3) {
   }
 
   body.docs-mode .docs-main {
-    padding: 24px 0 60px;
+    padding: 76px 0 60px;
   }
 }
 
@@ -1174,6 +1255,31 @@ body.sidebar-open .sidebar-toggle span:nth-child(3) {
 
 body.docs-mode #navbar {
   display: none;
+}
+
+body.docs-mode .docs-back-link {
+  display: flex;
+}
+
+body.docs-mode .nav-links,
+body.docs-mode .nav-toggle,
+body.docs-mode .nav-github {
+  display: none;
+}
+
+@media (max-width: 899px) {
+  body.docs-mode #navbar {
+    display: block;
+  }
+
+  body.docs-mode .nav-brand {
+    display: none;
+  }
+
+  body.docs-mode .nav-right {
+    display: flex;
+    margin-left: 0;
+  }
 }
 
 body.docs-mode #docs {

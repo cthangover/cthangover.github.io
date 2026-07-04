@@ -124,4 +124,4 @@ quest/meeting/murakami/2 = She's safe. Murakami joined the party.
 
 ## Quest conditions — full expression reference
 
-See `mods/scenes/scenarios/dsl/conditions/` for the complete condition expression language.
+See [Conditions](../scenes/scenarios/dsl/conditions/) for the complete condition expression language.
