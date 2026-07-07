@@ -136,6 +136,118 @@
     renderSidebar(filtered);
   }
 
+  function initMermaidZoomPan(wrapper) {
+    wrapper.setAttribute("data-zoom-ready", "1");
+    var viewport = wrapper.querySelector(".mermaid");
+    if (!viewport) return;
+    var svg = viewport.querySelector("svg");
+    if (!svg) return;
+
+    var scale = 1;
+    var panX = 0, panY = 0;
+    var isPanning = false;
+    var startX, startY;
+
+    function updateTransform() {
+      viewport.style.transform = "translate(" + panX + "px, " + panY + "px) scale(" + scale + ")";
+      viewport.style.transformOrigin = "0 0";
+      wrapper.classList.toggle("is-zoomed", scale !== 1);
+    }
+
+    wrapper.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      var delta = e.deltaY > 0 ? -0.1 : 0.1;
+      var newScale = Math.max(0.3, Math.min(5, scale + delta));
+      var rect = wrapper.getBoundingClientRect();
+      var mx = e.clientX - rect.left;
+      var my = e.clientY - rect.top;
+      var ratio = newScale / scale;
+      panX = mx - ratio * (mx - panX);
+      panY = my - ratio * (my - panY);
+      scale = newScale;
+      updateTransform();
+    }, { passive: false });
+
+    wrapper.addEventListener("mousedown", function (e) {
+      isPanning = true;
+      startX = e.clientX - panX;
+      startY = e.clientY - panY;
+      wrapper.style.cursor = "grabbing";
+    });
+
+    window.addEventListener("mousemove", function (e) {
+      if (!isPanning) return;
+      panX = e.clientX - startX;
+      panY = e.clientY - startY;
+      updateTransform();
+    });
+
+    window.addEventListener("mouseup", function () {
+      isPanning = false;
+      wrapper.style.cursor = "";
+    });
+
+    var controls = document.createElement("div");
+    controls.className = "mermaid-zoom-controls";
+    controls.innerHTML = '<button class="mermaid-zoom-btn" data-action="fullscreen" title="Fullscreen"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button><button class="mermaid-zoom-btn" data-action="out" title="Zoom out">\u2212</button><button class="mermaid-zoom-btn" data-action="in" title="Zoom in">+</button><button class="mermaid-zoom-btn" data-action="reset" title="Reset">\u21BA</button>';
+    wrapper.appendChild(controls);
+
+    function toggleFullscreen() {
+      var isFS = wrapper.classList.toggle("is-fullscreen");
+      controls.querySelector('[data-action="fullscreen"]').innerHTML = isFS
+        ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 8 4 3 9 3"/><polyline points="20 16 20 21 15 21"/><line x1="4" y1="3" x2="9" y2="8"/><line x1="20" y1="21" x2="15" y2="16"/></svg>'
+        : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
+    }
+
+    controls.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-action]");
+      if (!btn) return;
+      var action = btn.getAttribute("data-action");
+      if (action === "in") {
+        scale = Math.min(5, scale + 0.25);
+      } else if (action === "out") {
+        scale = Math.max(0.3, scale - 0.25);
+      } else if (action === "reset") {
+        scale = 1;
+        panX = 0;
+        panY = 0;
+      } else if (action === "fullscreen") {
+        toggleFullscreen();
+        return;
+      }
+      updateTransform();
+    });
+
+    wrapper.addEventListener("dblclick", function (e) {
+      if (e.target.closest(".mermaid-zoom-controls")) return;
+      toggleFullscreen();
+    });
+
+    document.addEventListener("keydown", function mermaidEscHandler(e) {
+      if (e.key === "Escape" && wrapper.classList.contains("is-fullscreen")) {
+        toggleFullscreen();
+      }
+    });
+  }
+
+  function renderMermaidDiagrams() {
+    if (typeof mermaid === "undefined") return;
+    try {
+      var result = mermaid.run({ querySelector: ".mermaid" });
+      var setup = function () {
+        var wrappers = document.querySelectorAll(".mermaid-wrap:not([data-zoom-ready])");
+        for (var i = 0; i < wrappers.length; i++) {
+          initMermaidZoomPan(wrappers[i]);
+        }
+      };
+      if (result && result.then) {
+        result.then(setup);
+      } else {
+        setTimeout(setup, 0);
+      }
+    } catch (e) {}
+  }
+
   function loadPage(name) {
     if (!container) return;
     if (!name) name = "index";
@@ -145,6 +257,7 @@
     if (docsIndex[name]) {
       container.innerHTML = marked.parse(docsIndex[name]);
       updateSidebarActive(name);
+      renderMermaidDiagrams();
       return;
     }
 
@@ -156,6 +269,7 @@
         docsIndex[name] = md;
         container.innerHTML = marked.parse(md);
         updateSidebarActive(name);
+        renderMermaidDiagrams();
       },
       function (err) {
         var msg =
@@ -387,6 +501,51 @@
       useExt.renderer = {
         code: function (token) {
           var lang = token.lang || "";
+          if (lang === "mermaid" && typeof mermaid !== "undefined") {
+            try {
+              var mmId = "mermaid-" + Math.random().toString(36).slice(2, 10);
+              var isDark = document.documentElement.getAttribute("data-theme") !== "light";
+              mermaid.initialize({
+                startOnLoad: false,
+                theme: isDark ? "dark" : "default",
+                securityLevel: "loose",
+                logLevel: 4,
+                themeVariables: isDark ? {
+                  primaryColor: "#0f3460",
+                  primaryTextColor: "#e2e2f0",
+                  primaryBorderColor: "#e94560",
+                  lineColor: "#7878a0",
+                  secondaryColor: "#16213e",
+                  tertiaryColor: "#1a1a2e",
+                  background: "#111827",
+                  mainBkg: "#111827",
+                  nodeBorder: "#3a3a5a",
+                  clusterBkg: "#16213e",
+                  clusterBorder: "#2a2a4a",
+                  titleColor: "#e94560",
+                  edgeLabelBackground: "#0f3460",
+                  nodeTextColor: "#e2e2f0",
+                  labelTextColor: "#b0b0c8",
+                  textColor: "#e2e2f0",
+                  fontSize: "14px",
+                } : {},
+                flowchart: {
+                  useMaxWidth: false,
+                  htmlLabels: true,
+                  curve: "basis",
+                },
+              });
+              return (
+                '<div class="mermaid-wrap"><div id="' +
+                mmId +
+                '" class="mermaid">' +
+                token.text +
+                "</div></div>\n"
+              );
+            } catch (e) {
+              return "<pre><code>" + token.text + "</code></pre>\n";
+            }
+          }
           if (lang && hljs.getLanguage(lang)) {
             try {
               var result = hljs.highlight(token.text, { language: lang });

@@ -6,7 +6,9 @@ Every mod needs a manifest and optionally a properties file. These define the mo
 
 ```json
 {
+  "id": "my_mod",
   "name": "MyMod",
+  "version": "1.0.0",
   "author": "author_name",
   "description": "What this mod does",
   "sources": ["src/*.cs", "src/**/*.cs"],
@@ -27,7 +29,9 @@ Every mod needs a manifest and optionally a properties file. These define the mo
 
 | Field | Required | Description |
 |---|---|---|
+| `id` | No | Canonical mod identifier (falls back to folder/zip name) |
 | `name` | Yes | Human-readable mod name |
+| `version` | No | Semver version string (e.g. "1.0.0"). Used by the save system and for deduplication |
 | `author` | No | Author identifier |
 | `description` | No | Short description |
 | `sources` | No | Glob patterns for C# files to compile via Roslyn |

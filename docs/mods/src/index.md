@@ -130,6 +130,7 @@ namespace Cthangover.MyMod
 | `Cthangover.Core.Battle.IBattleCore` | Implement to create a battle system |
 | `Cthangover.Core.Scenarios.IScenarioAction` | Implement to add `action` commands to the DSL |
 | `Cthangover.Core.Scenes.ISubscriptionHandler` | Implement `OnEnter`/`OnExit` to hook into scenes |
+| `Cthangover.Core.Mods.IModSettings` | Implement to expose settings in the in-game menu |
 | `Cthangover.Core.Characters.Character` | Character data model — use `Copy()` for battles |
 | `Cthangover.Core.Characters.Attributes` | Stats container: `Health`, `Point`, `Defence`, `Attack` |
 | `Godot.Control` / `Godot.Node2D` | Standard Godot API — all available in mods |

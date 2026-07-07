@@ -98,9 +98,10 @@ Multiple mods can subscribe to the same scene — they run in priority order. Th
 
 Multiple `.scenario` files can target the same `scene:`. The one with the **lowest** `priority` number runs first. If that scenario's `condition:` is unmet, the next-highest priority scenario is tried.
 
-```
-home_kitchen_cooking.scenario  → priority: 5  (adds "Cook" option, runs first)
-home_kitchen_default.scenario  → priority: 10 (fallback, always runs)
+```mermaid
+flowchart LR
+    A["home_kitchen_cooking.scenario<br/>priority: 5"] -->|runs first| S{{"Scene:<br/>home_kitchen"}}
+    B["home_kitchen_default.scenario<br/>priority: 10"] -->|fallback| S
 ```
 
 This allows mods to extend scenes non-destructively by writing additional scenario files with lower priority numbers.

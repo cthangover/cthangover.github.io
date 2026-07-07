@@ -1371,3 +1371,105 @@ body.docs-mode .docs-sidebar {
   top: 0;
   max-height: 100vh;
 }
+
+/* Mermaid diagrams */
+.mermaid-wrap {
+  position: relative;
+  margin: 1.5em 0;
+  overflow: hidden;
+  min-height: 200px;
+  max-height: 75vh;
+  background: var(--bg-systems);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: grab;
+}
+.mermaid-wrap .mermaid {
+  display: inline-block;
+  padding: 1.5em;
+  will-change: transform;
+}
+.mermaid-wrap .mermaid svg {
+  max-width: none;
+}
+.mermaid-wrap.is-zoomed {
+  cursor: grab;
+}
+
+.mermaid-zoom-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 5;
+}
+.mermaid-wrap:hover .mermaid-zoom-controls,
+.mermaid-zoom-controls:hover {
+  opacity: 1;
+}
+.mermaid-zoom-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background 0.2s, color 0.2s;
+  padding: 0;
+}
+.mermaid-zoom-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.mermaid-wrap.is-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  margin: 0;
+  border-radius: 0;
+  border: none;
+  max-height: none;
+  background: rgba(10, 10, 25, 0.95);
+  cursor: grab;
+}
+.mermaid-wrap.is-fullscreen .mermaid {
+  padding: 2em;
+}
+.mermaid-wrap.is-fullscreen .mermaid-zoom-controls {
+  top: 16px;
+  right: 16px;
+  gap: 6px;
+  opacity: 1;
+}
+.mermaid-wrap.is-fullscreen .mermaid-zoom-btn {
+  width: 34px;
+  height: 34px;
+  font-size: 18px;
+}
+
+@media (max-width: 900px) {
+  .mermaid-wrap.is-fullscreen .mermaid {
+    padding: 1em;
+  }
+  .mermaid-wrap.is-fullscreen .mermaid-zoom-controls {
+    top: 8px;
+    right: 8px;
+    gap: 4px;
+  }
+  .mermaid-wrap.is-fullscreen .mermaid-zoom-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 15px;
+  }
+}

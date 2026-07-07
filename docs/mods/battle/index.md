@@ -4,15 +4,21 @@ The battle engine is a pluggable, mod-driven system. Each battle ruleset is impl
 
 ## Architecture overview
 
-```
-Scenario DSL        Core/Actions        Core/Battle             Mod (e.g. card_battle)
-──────────────      ────────────        ───────────             ──────────────────────
-action battle.init  BattleInitAction    BattleData              IBattleCore.Init()
-  ├─ scene=           ├─ ctx.GetParam     ├─ Scene               ├─ Character panels
-  ├─ enemies=         ├─ ctx.Battle.Init  ├─ EnemiesCards        ├─ Action executors
-  ├─ quest_id=        └─ Log event        ├─ Quest/NewTag        ├─ UI widgets
-  └─ new_tag=                             ├─ Background/Lighting └─ Status effects
-                                          └─ ActiveBattleCore
+```mermaid
+flowchart LR
+    subgraph DSL["Scenario DSL"]
+        A["action battle.init<br/>scene=<br/>enemies=<br/>quest_id=<br/>new_tag="]
+    end
+    subgraph Actions["Core / Actions"]
+        B["BattleInitAction<br/>ctx.GetParam<br/>ctx.Battle.Init<br/>Log event"]
+    end
+    subgraph Battle["Core / Battle"]
+        C["BattleData<br/>Scene<br/>EnemiesCards<br/>Quest / NewTag<br/>Background / Lighting<br/>ActiveBattleCore"]
+    end
+    subgraph Mod["Mod (e.g. card_battle)"]
+        D["IBattleCore.Init()<br/>Character panels<br/>Action executors<br/>UI widgets<br/>Status effects"]
+    end
+    A --> B --> C --> D
 ```
 
 ## Key interfaces

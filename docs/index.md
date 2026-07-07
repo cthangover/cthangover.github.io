@@ -46,6 +46,7 @@ Welcome to the cthangover documentation. Here you'll find guides, code examples,
 | [Time](mods/time/) | In-game clock, day/night phases, lighting |
 | [Recruiting](mods/recruiting/) | Character recruitment system |
 | [Save System](mods/save/) | Save/load data structure and persistence |
+| [Mod Settings](mods/settings/) | Per-mod settings in the in-game menu |
 
 ## Audio
 
@@ -59,6 +60,7 @@ Welcome to the cthangover documentation. Here you'll find guides, code examples,
 | Topic | Description |
 |---|---|
 | [Source Code](mods/src/) | C# in mods — Roslyn compilation, interfaces |
+| [Mod Settings](mods/settings/) | Expose user-configurable settings in the menu |
 | [Locale](mods/locale/) | Localization system |
 | [UI Wrappers](mods/wrappers/) | UI template wrapper system |
 | [Scene Event Metadata](mods/metadata/) | `[SceneEvent]` attribute for declarative hooks |

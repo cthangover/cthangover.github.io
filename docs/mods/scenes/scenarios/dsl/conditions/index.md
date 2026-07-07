@@ -117,8 +117,10 @@ This means:
 - Put restrictive conditions on high-priority (low number) scenarios
 - Put fallback scenarios at priority 10+ with no condition
 
-```
-priority: 5   condition: hasTag("secret_found")  → secret path
-priority: 8   condition: hasTag("chapter_2")     → chapter 2 path
-priority: 10  condition: none                     → default path (always runs if nothing else matches)
+```mermaid
+flowchart LR
+    A["priority: 5<br/>condition: hasTag<span/>secret_found"] -->|match| S
+    B["priority: 8<br/>condition: hasTag<span/>chapter_2"] -->|if not, try| S
+    C["priority: 10<br/>condition: none"] -->|fallback| S
+    S{{"Match?"}} -->|yes| SCENE["Execute Scenario"]
 ```
