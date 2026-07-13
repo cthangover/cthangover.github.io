@@ -21,6 +21,42 @@ condition: QuestId.method("arg") [&& || ! expr ...]
 | `DataStatus >= N` | True if quest numeric counter is N or higher |
 | `DataStatus == N` | True if quest numeric counter equals N |
 
+## Custom GDScript conditions
+
+Mods can add custom condition names via GDScript. A GDScript with `get_condition_name()` + `evaluate(flags, args)` is auto-registered into the condition parser.
+
+`scripts/weather_conditions.gd`:
+```gdscript
+extends RefCounted
+
+func get_condition_name():
+	return "gds.is_rain"
+
+func evaluate(flags, args):
+	return flags.get("weather", "") == "rain"
+```
+
+Usage in scenario:
+```scenario
+condition: gds.is_rain
+```
+
+With arguments:
+```gdscript
+func get_condition_name():
+	return "gds.flag_equals"
+
+func evaluate(flags, args):
+	var expected = args.get("0", "")
+	return flags.get("custom_flag", "") == expected
+```
+
+```scenario
+condition: gds.flag_equals("victory")
+```
+
+GDScript conditions take priority over the built-in `QuestParser` — so `gds.is_rain` is resolved as a condition, not as a quest expression. See [GDScript in Mods](site/docs/mods/src/gdscript) for details.
+
 ## Flag conditions
 
 Scene flags are evaluated directly — no `scene.` prefix needed:

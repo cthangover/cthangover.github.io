@@ -170,6 +170,8 @@ public class MyModSettings : IModSettings
 }
 ```
 
+![Mod Settings example view](docs/mods/settings/mod_example.png)
+
 ### Example with enum
 
 ```csharp
@@ -187,6 +189,8 @@ new ModSettingDefinition
     }
 }
 ```
+
+![Mod Settings example view](docs/mods/settings/mod_example_enum.png)
 
 The `Options` dictionary maps internal values (stored in the blob) to localisation keys (shown in the dropdown). The mod provides translations in its `locale/` files.
 
@@ -229,8 +233,9 @@ The `Version` field is persisted and available on load so the mod can detect sch
 
 - **One `IModSettings` per mod** — create a single implementation in your assembly.
 - **Always provide `DefaultValue`** — used when no persisted value exists and on Reset.
-- **Use `DataBlob` key-value API** — `GetInt/SetInt`, `GetFloat/SetFloat`, `GetString/SetString`, `GetBool/SetBool`.
+- **Use `DataBlob` key-value API** — `GetInt/SetInt`, `GetFloat/SetFloat`, `GetString/SetString`, `GetBool/GetBool`.
 - **Always call with defaults** — `blob.GetInt("key", defaultVal)` so missing keys don't break.
 - **Key names are persistent** — changing a `Key` creates a new setting; the old value is lost.
 - **Provide localisation** — add translations for all `Name` and `Options` values in `locale/`.
 - **The `version` field in `manifest.json`** is used by the save system; settings use the separate `DataBlob.Version` for schema versioning.
+- **Declare `"sources"` in manifest.json** — your `.cs` files must be listed in the `sources` field of `manifest.json` for the compiler to pick them up. See [Manifest — sources](../configs/index.md#manifestjson) for details.

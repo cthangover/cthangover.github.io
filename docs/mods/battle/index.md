@@ -45,6 +45,8 @@ Each battle action type (attack, defence, stun, item, etc.) has an executor:
 
 Executors are registered through `ActionExecutorHub`, which routes actions by ID at runtime.
 
+GDScript mods can register executors as well — a `.gd` file with `get_action_id()` + `execute(action, user, target)` is auto-registered into the global executor registry. See [GDScript in Mods](site/docs/mods/src/gdscript) for the full API.
+
 ### `IBattleContext` — Battle state
 
 Provides read access to current battle participants, turn order, and active effects.

@@ -1,6 +1,6 @@
 # Scenario Actions
 
-The `action` command bridges the DSL to C# game systems. It invokes named actions registered via the `IActionProvider` interface.
+The `action` command bridges the DSL to game systems. Actions can be implemented in **C#** (via `IScenarioAction` + Roslyn compilation) or in **GDScript** (via `get_name()` + `run(ctx)` auto-detection).
 
 ## Syntax
 
@@ -104,7 +104,7 @@ Toggles a named UI panel. The action name alone is enough — no extra parameter
 |---|---|---|
 | `lighting.clear_map` | *(none)* | Reset lighting depth/albedo maps |
 
-## Adding a custom action from C#
+## Adding a custom action
 
 Define an action class in your mod's `src/`:
 
@@ -139,3 +139,31 @@ Then use in scenarios:
 ```scenario
 action treasure.open item=food/ration count=5
 ```
+
+### From GDScript (no Roslyn needed)
+
+Create `scripts/my_actions.gd`:
+
+```gdscript
+extends RefCounted
+
+func get_name():
+	return "my.quest_activate"
+
+func run(ctx):
+	var questId = ctx.GetParam("quest_id")
+	ctx.Quests.SetStatus(questId, "Active")
+	ctx.Quests.SendNotification(questId)
+	ctx.Log("EVENT", "Quest " + questId + " activated via GDScript")
+```
+
+Declare in `manifest.json`:
+
+```json
+{
+  "name": "My GDScript Mod",
+  "gd_sources": ["scripts/*.gd"]
+}
+```
+
+The kernel auto-discovers `get_name()` + `run()` and registers the action — no factory or provider code needed. The `ctx` parameter provides access to all game subsystems (Quests, Character, Battle, Inventory, etc.). See [GDScript in Mods](site/docs/mods/src/gdscript) for the full action context API.

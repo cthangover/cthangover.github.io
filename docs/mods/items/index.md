@@ -26,7 +26,7 @@ JSON-defined items — consumables, resources, and recipe items — with localiz
 | `Cost` | Base price in the game economy |
 | `Sprite` | Path to the item icon under the mod's sprites directory |
 | `ItemType` | Type tag(s), comma-separated: `Food`, `Resource`, `Quest`, `Recipe`, `Used`, `TargetUsed` |
-| `ItemAction` | Action ID resolved via `IItemAction` factory — C# class that defines the item's use effect |
+| `ItemAction` | Action ID resolved via `IItemAction` factory — can be a C# class or a GDScript with `get_item_action_id()` + `use(item)`. Defines the item's use effect |
 
 ### ItemType values
 
@@ -152,4 +152,4 @@ recipe/wolf_meat_to_ration/desc = A recipe for cooking wolf meat safely
 2. Add it to `items/items.json`: `"${type/id}"`
 3. Add locale keys for name and description
 4. Optionally add a sprite icon
-5. If the item has an active use, implement an `IItemAction` C# class and reference it via the factory
+5. If the item has an active use, reference it via the factory — implement either an `IItemAction` C# class or a GDScript with `get_item_action_id()` + `use(item)`. See [GDScript in Mods](site/docs/mods/src/gdscript) for details.

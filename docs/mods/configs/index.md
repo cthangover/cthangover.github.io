@@ -12,6 +12,7 @@ Every mod needs a manifest and optionally a properties file. These define the mo
   "author": "author_name",
   "description": "What this mod does",
   "sources": ["src/*.cs", "src/**/*.cs"],
+  "gd_sources": ["scripts/*.gd"],
   "depends": ["core", "interface"],
   "subscriptions": [
     {
@@ -35,6 +36,7 @@ Every mod needs a manifest and optionally a properties file. These define the mo
 | `author` | No | Author identifier |
 | `description` | No | Short description |
 | `sources` | No | Glob patterns for C# files to compile via Roslyn |
+| `gd_sources` | No | Glob patterns for `.gd` GDScript files to compile via Godot's engine |
 | `depends` | No | List of mod IDs that must be loaded before this mod |
 | `subscriptions` | No | Scene lifecycle hooks (see below) |
 
@@ -42,6 +44,12 @@ Every mod needs a manifest and optionally a properties file. These define the mo
 
 - `"src/*.cs"` — all `.cs` files in `src/`, one level deep
 - `"src/**/*.cs"` — all `.cs` files recursively
+
+### GDScript sources — `gd_sources`
+
+- `"scripts/*.gd"` — all `.gd` files in `scripts/`, one level deep
+
+GDScript files are compiled by Godot's GDScript engine (no Roslyn needed). A single `.gd` file can implement multiple interfaces simultaneously — actions, conditions, battle executors, item actions, and mod initializers. See [GDScript in Mods](site/docs/mods/src/gdscript) for the full API reference.
 
 ### Dependencies
 

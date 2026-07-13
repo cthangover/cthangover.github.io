@@ -60,6 +60,7 @@ Welcome to the cthangover documentation. Here you'll find guides, code examples,
 | Topic | Description |
 |---|---|
 | [Source Code](mods/src/) | C# in mods — Roslyn compilation, interfaces |
+| [Developer Tools](mods/tools/) | Custom editor windows and toolbar integration |
 | [Mod Settings](mods/settings/) | Expose user-configurable settings in the menu |
 | [Locale](mods/locale/) | Localization system |
 | [UI Wrappers](mods/wrappers/) | UI template wrapper system |
