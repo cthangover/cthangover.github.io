@@ -14,6 +14,7 @@ Welcome to the cthangover documentation. Here you'll find guides, code examples,
 | [Effects](mods/effects/) | Visual effect textures |
 | [Interactive Objects](mods/interactives/) | Clickable scene objects with hit areas and actions |
 | [Items](mods/items/) | Item system — consumables, resources, recipes |
+| [Property Patches](mods/patches/) | Extend entity properties from another mod without redefining JSON |
 | [Skills](mods/skills/) | Card-based skill system |
 | [Sounds](mods/sounds/) | Sound effect definitions |
 | [Shaders](mods/shaders/) | Custom shader effects |
@@ -25,6 +26,7 @@ Welcome to the cthangover documentation. Here you'll find guides, code examples,
 | [Configs — manifest.json](mods/configs/) | Mod manifest reference |
 | [Game Config](mods/configs/game_config) | Default game settings |
 | [Mod Config](mods/configs/mod_config) | Mod system cache and file discovery |
+| [Catalog & Network](mods/catalog/) | Online mod catalog schema, merging, and export |
 
 ## Scenarios & DSL
 
@@ -59,9 +61,9 @@ Welcome to the cthangover documentation. Here you'll find guides, code examples,
 
 | Topic | Description |
 |---|---|
-| [Source Code](mods/src/) | C# in mods — Roslyn compilation, interfaces |
+| [Source Code (C#)](mods/src/) | C# in mods — Roslyn compilation, interfaces |
+| [GDScript in Mods](mods/src/gdscript/) | Scenario actions, conditions, battle, items, lifecycle |
 | [Developer Tools](mods/tools/) | Custom editor windows and toolbar integration |
-| [Mod Settings](mods/settings/) | Expose user-configurable settings in the menu |
 | [Locale](mods/locale/) | Localization system |
 | [UI Wrappers](mods/wrappers/) | UI template wrapper system |
 | [Scene Event Metadata](mods/metadata/) | `[SceneEvent]` attribute for declarative hooks |

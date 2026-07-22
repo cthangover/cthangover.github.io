@@ -1,0 +1,140 @@
+# Patches
+
+Patches let one mod add or override properties of entities defined in another mod — without rewriting their JSON files entirely.
+
+- **`"Id": "EntityName"`** — apply only to the entity with this ID.
+- **`"Id": "*"`** — wildcard: applies to **all** entities of this type, serving as a fallback value. An entity's own JSON-defined properties always take precedence over wildcard values.
+
+Works for characters (`characters`) and items (`items`).
+
+## Overview
+
+Each mod can contain an optional `patches/` directory:
+
+```filestree
+mods/
+└── my_mod/
+    └── patches/
+        ├── characters.json    ← patches for characters
+        └── items.json         ← patches for items
+```
+
+## Format
+
+Standard `{"Items": [...]}` wrapper. Each entry contains an `Id` and arbitrary properties to add:
+
+```json
+{
+  "Items": [
+    {
+      "Id": "Marao",
+      "TestPatched": 42,
+      "TestDefault": 100
+    },
+    {
+      "Id": "*",
+      "TestDefault": -20,
+      "TestGlobalPatch": 1
+    }
+  ]
+}
+```
+
+## Property Resolution Order
+
+When creating an entity, its properties are assembled in layers. Each subsequent layer overwrites keys from the previous ones:
+
+| Layer | Source | Priority |
+|---|---|---|
+| 1 | Entity's own properties (from its JSON) | Base |
+| 2 | Wildcard patches `"*"` (in mod load order) | Higher |
+| 3 | Targeted patches by `Id` (in mod load order) | Highest |
+
+## Patches from Different Mods
+
+Patches **accumulate**: each mod adds its entries to the list for the target ID. When applied, they are iterated in load order, and a later mod overwrites keys of an earlier one.
+
+Mod A:
+```json
+{ "Items": [{ "Id": "*", "Test": -20, "Strength": 10 }] }
+```
+
+Mod B (loaded after A):
+```json
+{ "Items": [{ "Id": "*", "Test": 0 }] }
+```
+
+Result for all characters: `{ "Test": 0, "Strength": 10 }` — `Test` overridden, `Strength` preserved.
+
+## Full Example
+
+### Mod A — defines a character
+
+```json
+// mods/mod_a/characters/player/hero.json
+{
+  "Id": "Hero",
+  "Health": 100,
+  "Attack": 20,
+  "Strength": 15
+}
+```
+
+### Mod B — adds patches
+
+```json
+// mods/mod_b/patches/characters.json
+{
+  "Items": [
+    { "Id": "Hero", "Test": 50, "CritChance": 15 },
+    { "Id": "*", "Test": -20, "CritChance": 5, "GlobalBuff": 10 }
+  ]
+}
+```
+
+### Result for character `Hero`
+
+| Property | Value | Source |
+|---|---|---|
+| `Strength` | 15 | Entity properties |
+| `Test` | **50** | Specific patch `Hero` overrode wildcard `-20` |
+| `CritChance` | **15** | Specific patch `Hero` overrode wildcard `5` |
+| `GlobalBuff` | **10** | Wildcard patch `*` |
+
+### Result for `Wolf` (no specific patch)
+
+| Property | Value | Source |
+|---|---|---|
+| `Test` | **-20** | Wildcard `*` |
+| `CritChance` | **5** | Wildcard `*` |
+| `GlobalBuff` | **10** | Wildcard `*` |
+
+## Items
+
+Everything works identically for items. `ItemInfo` accepts arbitrary JSON keys via `[JsonExtensionData]`, which end up in `Item.Properties` (mirroring characters via `CharacterAttributes.Properties`).
+
+```json
+// patches/items.json
+{
+  "Items": [
+    { "Id": "food/ration", "Durability": 99, "SpecialProp": true },
+    { "Id": "*", "Durability": 50, "GlobalItemProp": "patched" }
+  ]
+}
+```
+
+## Test Mod
+
+See `mods/test_defaults_and_patches/` — demonstrates the system:
+
+```filestree
+mods/test_defaults_and_patches/
+├── manifest.json
+└── patches/
+    ├── characters.json    ← Maraо: TestPatched=42, TestDefault=100; *: TestDefault=-20, TestGlobalPatch=1
+    └── items.json         ← food/ration: Durability=99; *: Durability=50, GlobalItemProp=patched
+```
+
+## Pages
+
+- [Array Operations & Identity Keys](arrays-and-identity.md) — $add/$remove/$set, per-field merge, identity key detection

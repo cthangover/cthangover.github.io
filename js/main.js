@@ -58,11 +58,12 @@
     if (!container) return;
 
     var html = "";
-    for (var i = 1; i <= 26; i++) {
+    for (var i = 1; ; i++) {
       var num = i < 10 ? "0" + i : "" + i;
       var titleKey = "sys_" + num + "_title";
       var descKey = "sys_" + num + "_desc";
-      var title = strings[titleKey] || "System " + i;
+      var title = strings[titleKey];
+      if (!title) break;
       var desc = strings[descKey] || "";
 
       html += '<details class="sys-details">';

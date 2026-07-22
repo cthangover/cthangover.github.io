@@ -4,15 +4,17 @@ Character portrait images displayed during dialogue scenes, positioned via `firs
 
 ## Directory structure
 
-```
-avatars/{character_name}/{expression}.png
+```filestree
+avatars/
+└── {character_name}/
+    └── {expression}.png
 ```
 
 ## Real example — Murakami
 
 From `mods/murakami/avatars/murakami/`:
 
-```
+```filestree
 murakami/
 ├── normal.png      # neutral expression
 ├── think.png       # thoughtful
@@ -53,7 +55,7 @@ text "- What are you doing here alone?" key=murakami/alone first=marao/think
 
 The same expression naming convention works for any character:
 
-```
+```filestree
 avatars/
 ├── marao/
 │   ├── normal.png

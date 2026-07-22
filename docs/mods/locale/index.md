@@ -4,7 +4,7 @@ All in-game text lives in `.properties` files, organized by mod. The engine reso
 
 ## Directory structure
 
-```
+```filestree
 locale/
 ├── en.properties               # UI text, English
 ├── ru.properties               # UI text, Russian

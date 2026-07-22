@@ -13,8 +13,8 @@ Mods can be distributed as `.zip` archives instead of loose folders. The kernel 
 
 The zip must have the same structure as a loose mod folder:
 
-```
-my_mod.zip
+```filestree
+my_mod.zip/
 ├── manifest.json
 ├── src/
 │   └── MyCode.cs
@@ -97,7 +97,7 @@ The kernel does **not** enforce version conflicts — multiple versions of the s
 
 The project includes test zip mods in `mods/` — these demonstrate the zip loading system:
 
-```
+```filestree
 mods/
 ├── test_mod_1.zip
 ├── test_mod_2.zip

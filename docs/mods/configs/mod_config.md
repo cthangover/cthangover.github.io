@@ -4,8 +4,9 @@ Mod system configuration loaded from `config/mod_config.json`. Controls file dis
 
 ## File location
 
-```
-config/mod_config.json
+```filestree
+config/
+└── mod_config.json
 ```
 
 ## Full schema
@@ -13,6 +14,8 @@ config/mod_config.json
 ```json
 {
   "use_assembly_cache": false,
+  "catalog_ignore_patterns": [".*","bin","obj"],
+  "catalog_urls": [],
   "texture_extensions": [".png", ".jpg", ".jpeg"],
   "audio_extensions": [".ogg", ".wav"],
   "shader_extensions": [".gdshader", ".gdshaderinclude"],
@@ -43,6 +46,8 @@ config/mod_config.json
 | Field | Type | Description |
 |---|---|---|
 | `use_assembly_cache` | bool | Cache compiled mod assemblies to disk. Saves compilation time on restart |
+| `catalog_ignore_patterns` | string[] | File/directory patterns excluded when computing `install_sha256` for catalog export. Default: `[".*"]` excludes all dot-prefixed entries (`.godot/`, `.import/`, `.gitignore`, etc.) |
+| `catalog_urls` | string[] | URLs of catalog JSON files to fetch for the online mod browser. Multiple URLs are merged — metadata from highest version wins, `downloads` arrays are combined |
 | `texture_extensions` | string[] | File extensions treated as textures |
 | `audio_extensions` | string[] | File extensions treated as audio streams |
 | `shader_extensions` | string[] | File extensions treated as shader files |

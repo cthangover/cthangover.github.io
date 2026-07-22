@@ -4,8 +4,9 @@ Default game configuration loaded from `config/game_config.json` at startup. Def
 
 ## File location
 
-```
-config/game_config.json
+```filestree
+config/
+└── game_config.json
 ```
 
 ## Full schema

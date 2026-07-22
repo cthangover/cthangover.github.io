@@ -4,9 +4,10 @@ Wrapper templates (`.wrappertmpl`) define the structure of UI container widgets.
 
 ## Directory structure
 
-```
-wrappers/default.wrappertmpl
-wrappers/custom_layout.wrappertmpl
+```filestree
+wrappers/
+├── default.wrappertmpl
+└── custom_layout.wrappertmpl
 ```
 
 ## What wrappers do

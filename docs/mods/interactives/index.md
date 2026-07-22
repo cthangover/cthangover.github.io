@@ -103,7 +103,7 @@ Coordinates are in **normalised viewport coordinates (0..1)**, where `(0,0)` = t
 
 ## Directory structure
 
-```
+```filestree
 interactives/
 ├── interactives.json          # index file
 ├── kitchen_door.json

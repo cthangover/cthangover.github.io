@@ -4,7 +4,7 @@ The `condition:` metadata field uses a simple expression language to control whi
 
 ## Syntax
 
-```
+```scenario
 condition: QuestId.method("arg") [&& || ! expr ...]
 ```
 
@@ -61,7 +61,7 @@ GDScript conditions take priority over the built-in `QuestParser` — so `gds.is
 
 Scene flags are evaluated directly — no `scene.` prefix needed:
 
-```
+```scenario
 condition: door_unlocked == "true"
 condition: counter >= 3
 ```
@@ -155,8 +155,8 @@ This means:
 
 ```mermaid
 flowchart LR
-    A["priority: 5<br/>condition: hasTag<span/>secret_found"] -->|match| S
-    B["priority: 8<br/>condition: hasTag<span/>chapter_2"] -->|if not, try| S
+    A["priority: 5<br/>condition: hasTag<br/>secret_found"] -->|match| S
+    B["priority: 8<br/>condition: hasTag<br/>chapter_2"] -->|if not, try| S
     C["priority: 10<br/>condition: none"] -->|fallback| S
     S{{"Match?"}} -->|yes| SCENE["Execute Scenario"]
 ```

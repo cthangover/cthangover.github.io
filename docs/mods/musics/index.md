@@ -4,7 +4,7 @@ Background music tracks (`.ogg`) organized into playlists with ambient/combat ca
 
 ## Directory structure
 
-```
+```filestree
 music/
 ├── track_name_1.ogg
 ├── track_name_2.ogg

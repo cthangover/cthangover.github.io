@@ -4,7 +4,7 @@ One-shot sound effect files (`.ogg`) organized by category, referenced from scen
 
 ## Directory structure
 
-```
+```filestree
 sounds/
 ├── battle/           # combat sounds
 │   ├── hit.ogg
@@ -30,7 +30,7 @@ sounds/
 
 From `mods/core/sounds/`:
 
-```
+```filestree
 sounds/
 ├── record_scratch.ogg         # comedic timing effect
 ├── battle/
@@ -51,7 +51,7 @@ sounds/
 
 From `mods/card_battle/sounds/`:
 
-```
+```filestree
 sounds/
 ├── card_pick.ogg              # picking up a card
 ├── card_drop.ogg              # placing a card on target

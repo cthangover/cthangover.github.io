@@ -1,6 +1,6 @@
 # DSL Command Reference
 
-Complete reference to all 30 commands in the Scenario DSL, grouped by category.
+Complete reference to all 31 commands in the Scenario DSL, grouped by category.
 
 ---
 
@@ -324,6 +324,28 @@ A no-op command. Useful as a placeholder during development.
 ```scenario
 empty
 ```
+
+---
+
+## Notifications
+
+### `notify`
+Queues a notification banner in the top-left corner of the screen. Notifications appear one by one, stack vertically, and auto-dismiss after 10 seconds. Use for quest updates, item pickups, or any non-blocking informational messages.
+
+```scenario
+notify "Quest updated: Find the key"
+```
+
+```scenario
+notify "Received: Health Potion"
+```
+
+| Parameter | Description |
+|---|---|
+| (inline) | The notification text to display |
+| `key=` | Locale key for localization (takes priority over inline text) |
+
+Notifications are queued in a buffer — they appear in order and will wait if the screen already has the maximum number of visible notifications (4). The 10-second timer starts only when the notification becomes visible, not when it is queued.
 
 ---
 

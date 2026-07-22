@@ -4,7 +4,7 @@ Godot `.gdshader` and `.gdshaderinclude` files that provide visual effects: pixe
 
 ## Directory structure
 
-```
+```filestree
 shaders/
 ├── pixel_art.gdshader
 ├── pixel_art_post_process.gdshader
@@ -14,7 +14,7 @@ shaders/
 ├── avatar.gdshader
 ├── default.gdshader
 ├── effect_anim.gdshader
-├── noise_simplex.gdshaderinclude
+└── noise_simplex.gdshaderinclude
 ```
 
 ## Real example shaders

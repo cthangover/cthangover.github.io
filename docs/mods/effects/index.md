@@ -4,15 +4,16 @@ Visual effect textures used in battles, scene transitions, and interactive feedb
 
 ## Directory structure
 
-```
-effects/{effect_name}.png   (or .spritesheet)
+```filestree
+effects/
+└── {effect_name}.png   (or .spritesheet)
 ```
 
 ## Real example — Core effects
 
 From `mods/core/effects/`:
 
-```
+```filestree
 effects/
 ├── cards/            # card battle animations
 │   ├── attack.png

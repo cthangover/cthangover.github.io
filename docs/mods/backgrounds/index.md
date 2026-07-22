@@ -4,16 +4,18 @@ Scene background images with optional depth maps for parallax effects and dynami
 
 ## Directory structure
 
-```
-backgrounds/{scene_name}/{image_name}.png
-backgrounds/{scene_name}/{image_name}_depth.png   # optional depth map
+```filestree
+backgrounds/
+└── {scene_name}/
+    ├── {image_name}.png
+    └── {image_name}_depth.png   # optional depth map
 ```
 
 ## Real example — Murakami meeting
 
 From `mods/murakami/backgrounds/town/meetingmurakami/`:
 
-```
+```filestree
 meetingmurakami/
 ├── 00002-1920617752.png       # wolf tracks at the door
 ├── 00002-1920617752_depth.png # depth map for lighting

@@ -25,7 +25,7 @@ JSON-defined characters — both player-controlled and enemies — with attribut
   "Depravity":   5,
   "Discipline":  -10,
 
-  "Actions":     "physics/attack,physics/defence",
+  "Actions":     ["physics/attack", "physics/defence"],
   "Loot": [
     {
       "ItemId":      "food/wolf_meat",
@@ -57,8 +57,8 @@ JSON-defined characters — both player-controlled and enemies — with attribut
 | `RecruitmentChance` | int | % chance to recruit after defeat (0–100) |
 | `Depravity` | int | Morality stat modifier |
 | `Discipline` | int | Discipline stat modifier |
-| `Actions` | string | Comma-separated action IDs (e.g. `"physics/attack,physics/defence"`) |
-| `Loot` | array | Item drops with `ItemId`, `MinCount`, `MaxCount`, `Probability` |
+| `Actions` | array of string | Action IDs (e.g. `["physics/attack", "physics/defence"]`). Supports `$add`, `$remove`, `$set` in patches |
+| `Loot` | array of objects | Item drops. Identity key: **`ItemId`** — patches match by this field for per-field merge |
 
 ## Real examples
 
@@ -141,7 +141,7 @@ The root `characters.json` registers characters using a `$ref` syntax:
 2. Add it to the index: `"${type/id}"` in `characters/characters.json`
 3. Create avatar images under `avatars/{id}/`
 4. Register locale keys for the name in `locale/en.properties`:
-   ```
-   characters/{type}/{id} = My Character Name
-   ```
+```
+characters/{type}/{id} = My Character Name
+```
 5. Reference in battle init: `action battle.init enemies=my_char_id`
