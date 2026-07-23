@@ -42,10 +42,10 @@ text "- What are you doing here alone?" key=murakami/alone first=marao/think
 2. Add `.png` files for each expression you need
 3. The character's JSON definition sets `"Image"` to the base path:
 
-```json
+```jsonc
 {
-  "Id": "Murakami",
-  "Image": "characters/player/murakami"
+  "Id": "Murakami",                                        // Unique character identifier
+  "Image": "characters/player/murakami"                    // Base path to character textures
 }
 ```
 

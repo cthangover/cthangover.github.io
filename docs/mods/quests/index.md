@@ -4,11 +4,15 @@ Quest definitions with status-based progression and tag-based conditions that co
 
 ## JSON structure
 
-```json
+```jsonc
 {
+  // Wrapping array — all quests are listed under Items
   "Items": [{
+    // Unique quest identifier (PascalCase); used in scenario condition expressions
     "Id": "QuestId",
+    // Locale key prefix for the quest's display name in the journal
     "Name": "quest/locale/prefix",
+    // Maps integer status codes to locale keys for journal descriptions at each stage
     "StatusToDescription": {
       "0": "locale_key_for_status_0",
       "1": "locale_key_for_status_1",
@@ -30,11 +34,14 @@ Quest definitions with status-based progression and tag-based conditions that co
 
 ### Prologue quest — `core/quests/quests.json`
 
-```json
+```jsonc
 {
   "Items": [{
+    // Quest ID — checked in scenario condition expressions
     "Id": "PrologQuest",
+    // Locale key prefix → "Prologue"
     "Name": "quest/prolog",
+    // Status descriptions: 0=cold, 1=look around, 2=found recipe book
     "StatusToDescription": {
       "0": "quest/prolog/0",
       "1": "quest/prolog/1",
@@ -46,11 +53,14 @@ Quest definitions with status-based progression and tag-based conditions that co
 
 ### Meeting Murakami quest — `murakami/quests/quests.json`
 
-```json
+```jsonc
 {
   "Items": [{
+    // Quest ID — used in scenario conditions like MeetingMurakamiQuest.hasTag(...)
     "Id": "MeetingMurakamiQuest",
+    // Locale key prefix → "The Girl at the Edge of Town"
     "Name": "quest/meeting/murakami",
+    // Status descriptions for each quest stage
     "StatusToDescription": {
       "0": "quest/meeting/murakami/0",
       "1": "quest/meeting/murakami/1",

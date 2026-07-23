@@ -4,13 +4,19 @@ Skills are card-based abilities that characters can acquire, equip, and use in b
 
 ## JSON structure
 
-```json
+```jsonc
 {
+  // Unique skill ID — used for lookups and save data
   "Id": "slave_master",
+  // Locale key for the skill's display name on the card
   "Name": "skills/slave_master/name",
+  // Locale key for the skill's tooltip/description text
   "Description": "skills/slave_master/desc",
+  // Path to card artwork sprite, resolved from the characters/skills mod group
   "Image": "slave_master",
+  // Skill activation type: "Active", "Passive", or "ForCharacter"
   "Type": "Passive",
+  // Rarity tier: "Common", "Uncommon", "Rare", "Epic", or "Legendary"
   "Rare": "Legendary"
 }
 ```
@@ -62,8 +68,9 @@ Skill ownership is tracked in `SkillData`:
 
 Skills are registered via index files, same pattern as items and characters:
 
-```json
+```jsonc
 {
+  // $ref entries — ${slave_master} expands to skills/slave_master.json with its contents merged in
   "Items": [
     "${slave_master}"
   ]

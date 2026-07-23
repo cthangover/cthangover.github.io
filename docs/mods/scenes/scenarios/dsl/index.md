@@ -221,17 +221,6 @@ When enabled, the shader system adjusts warm/cool tones based on in-game time.
 
 ---
 
-## Effects & Animation
-
-### `effect`
-Triggers a visual effect at a position or on a target.
-
-```scenario
-effect splash at center
-effect stun on enemy
-effect shake intensity=0.5 duration=0.3
-```
-
 ### `delay`
 Pauses script execution for N seconds.
 
@@ -278,13 +267,14 @@ interactive_clear
 ```
 
 ### `interactive_set`
-Replaces all interactives with a new set.
+Enables, disables, shows, or hides a specific interactive object.
 
 ```scenario
-interactive_set lamp_1,lamp_2,cabinet_door
+interactive_set kitchen_lamp enabled=false
+interactive_set cabinet_door visible=true
 ```
 
-Comma-separated list of interactive names.
+Supported named parameters: `enabled=true|false`, `visible=true|false`.
 
 ---
 

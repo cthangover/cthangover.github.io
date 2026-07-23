@@ -9,17 +9,15 @@ Mods can include C# source files that are compiled at runtime via Roslyn. This a
 3. The assembly is loaded into the running game
 4. Types implementing known interfaces (`IMod`, `IBattleCore`, `ISubscriptionHandler`, etc.) are auto-discovered
 
-## Required interface — `IMod`
+## Required interface — `IModInitializer`
 
 Every mod with C# code implements this:
 
 ```csharp
-public interface IMod
+public interface IModInitializer
 {
-    string Id { get; }
-    string Name { get; }
-    string Version { get; }
-    void Initialize(IModContext context);
+    void OnModLoaded(string modId);
+    void OnModResourcesReady();
 }
 ```
 
@@ -90,21 +88,19 @@ Key patterns visible here:
 `mods/my_mod/src/MyMod.cs`:
 
 ```csharp
-using Cthangover.Core;
+using Cthangover.Core.Mods;
 using Cthangover.Core.Utils;
 using Godot;
 
 namespace Cthangover.MyMod
 {
-    public class MyMod : IMod
+    public class MyMod : IModInitializer
     {
-        public string Id => "my_mod";
-        public string Name => "My First Mod";
-        public string Version => "1.0.0";
+        public void OnModLoaded(string modId) { }
 
-        public void Initialize(IModContext context)
+        public void OnModResourcesReady()
         {
-            GameLogger.Log("MY_MOD", "Initialized!", LogLevel.Message);
+            GameLogger.Log("MY_MOD", "Мой мод загружен!", LogLevel.Message);
         }
     }
 }
@@ -112,12 +108,12 @@ namespace Cthangover.MyMod
 
 `mods/my_mod/manifest.json`:
 
-```json
+```jsonc
 {
-    "name": "My First Mod",
-    "author": "you",
-    "description": "Learning how to write C# mods",
-    "sources": ["src/MyMod.cs"]
+    "name": "My First Mod",                                // Human-readable mod name
+    "author": "you",                                       // Author credit
+    "description": "Learning how to write C# mods",        // Short description
+    "sources": ["src/MyMod.cs"]                            // Glob patterns for C# source files to compile via Roslyn
 }
 ```
 
@@ -125,7 +121,7 @@ namespace Cthangover.MyMod
 
 | Namespace / Class | Purpose |
 |---|---|
-| `Cthangover.Core.IModContext` | Access to scene manager, character registry, logger |
+| `Cthangover.Core.Mods.IModInitializer` | Mod entry point: `OnModLoaded(string)` + `OnModResourcesReady()` |
 | `Cthangover.Core.Utils.GameLogger` | Structured logging: `GameLogger.Log(module, msg, level)` |
 | `Cthangover.Core.Battle.IBattleCore` | Implement to create a battle system |
 | `Cthangover.Core.Scenarios.IScenarioAction` | Implement to add `action` commands to the DSL |

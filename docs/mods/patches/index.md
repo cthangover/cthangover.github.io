@@ -23,18 +23,18 @@ mods/
 
 Standard `{"Items": [...]}` wrapper. Each entry contains an `Id` and arbitrary properties to add:
 
-```json
+```jsonc
 {
   "Items": [
     {
-      "Id": "Marao",
-      "TestPatched": 42,
-      "TestDefault": 100
+      "Id": "Marao",                    // Id matching: applies only to entity with this exact Id
+      "TestPatched": 42,                // Arbitrary property added via patch
+      "TestDefault": 100                // Will be layered over wildcard values
     },
     {
-      "Id": "*",
-      "TestDefault": -20,
-      "TestGlobalPatch": 1
+      "Id": "*",                        // Wildcard: applies to ALL entities as a fallback
+      "TestDefault": -20,               // Overridden by entity's own properties or specific patches
+      "TestGlobalPatch": 1              // Global property applied to all entities
     }
   ]
 }
@@ -55,12 +55,14 @@ When creating an entity, its properties are assembled in layers. Each subsequent
 Patches **accumulate**: each mod adds its entries to the list for the target ID. When applied, they are iterated in load order, and a later mod overwrites keys of an earlier one.
 
 Mod A:
-```json
+```jsonc
+// Wildcard patch adds Test and Strength to all characters
 { "Items": [{ "Id": "*", "Test": -20, "Strength": 10 }] }
 ```
 
 Mod B (loaded after A):
-```json
+```jsonc
+// Mod B (loaded after A): overwrites Test but preserves Strength
 { "Items": [{ "Id": "*", "Test": 0 }] }
 ```
 
@@ -70,11 +72,11 @@ Result for all characters: `{ "Test": 0, "Strength": 10 }` — `Test` overridden
 
 ### Mod A — defines a character
 
-```json
+```jsonc
 // mods/mod_a/characters/player/hero.json
 {
-  "Id": "Hero",
-  "Health": 100,
+  "Id": "Hero",           // Unique entity identifier for patch targeting
+  "Health": 100,          // Base properties defined by the entity itself
   "Attack": 20,
   "Strength": 15
 }
@@ -82,12 +84,12 @@ Result for all characters: `{ "Test": 0, "Strength": 10 }` — `Test` overridden
 
 ### Mod B — adds patches
 
-```json
+```jsonc
 // mods/mod_b/patches/characters.json
 {
   "Items": [
-    { "Id": "Hero", "Test": 50, "CritChance": 15 },
-    { "Id": "*", "Test": -20, "CritChance": 5, "GlobalBuff": 10 }
+    { "Id": "Hero", "Test": 50, "CritChance": 15 },                    // Specific patch: applies only to Hero
+    { "Id": "*", "Test": -20, "CritChance": 5, "GlobalBuff": 10 }      // Wildcard: fallback for all other characters
   ]
 }
 ```
@@ -113,12 +115,12 @@ Result for all characters: `{ "Test": 0, "Strength": 10 }` — `Test` overridden
 
 Everything works identically for items. `ItemInfo` accepts arbitrary JSON keys via `[JsonExtensionData]`, which end up in `Item.Properties` (mirroring characters via `CharacterAttributes.Properties`).
 
-```json
+```jsonc
 // patches/items.json
 {
   "Items": [
-    { "Id": "food/ration", "Durability": 99, "SpecialProp": true },
-    { "Id": "*", "Durability": 50, "GlobalItemProp": "patched" }
+    { "Id": "food/ration", "Durability": 99, "SpecialProp": true },  // Specific item patch by Id
+    { "Id": "*", "Durability": 50, "GlobalItemProp": "patched" }      // Wildcard: fallback for all items
   ]
 }
 ```

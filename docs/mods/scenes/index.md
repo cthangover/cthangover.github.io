@@ -4,12 +4,12 @@ Scene definitions map scene IDs to default backgrounds, ambient music, and entry
 
 ## JSON structure
 
-```json
+```jsonc
 {
-  "name": "scene_id",
-  "defaultBackground": "path/to/background",
-  "defaultAmbient": "playlist_id",
-  "defaultScenario": "scenarios/path/to/default.scenario"
+  "name": "scene_id",                                       // Unique scene identifier (referenced by switch_scene)
+  "defaultBackground": "path/to/background",                // Path to background image loaded on scene enter (or array of paths)
+  "defaultAmbient": "playlist_id",                          // Playlist ID for background music (empty = no music)
+  "defaultScenario": "scenarios/path/to/default.scenario"   // Scenario file that runs when the scene loads
 }
 ```
 
@@ -18,7 +18,7 @@ Scene definitions map scene IDs to default backgrounds, ambient music, and entry
 | Field | Description |
 |---|---|
 | `name` | Unique scene identifier (e.g. `home_kitchen`, `town_entry`). Referenced by `switch_scene` in DSL |
-| `defaultBackground` | Path to the background image loaded on scene enter (relative to `backgrounds/`) |
+| `defaultBackground` | Path to the background image loaded on scene enter (relative to `backgrounds/`). Can be a single string or an array of strings for multiple backgrounds |
 | `defaultAmbient` | Playlist ID for background music (from `music/playlists/`). Empty string = no music |
 | `defaultScenario` | Path to the scenario file that runs when the scene loads (relative to mod root) |
 
@@ -26,21 +26,21 @@ Scene definitions map scene IDs to default backgrounds, ambient music, and entry
 
 From `mods/core/scenes/`:
 
-```json
+```jsonc
 {
-  "name": "home_kitchen",
-  "defaultBackground": "home/kitchen",
-  "defaultAmbient": "",
-  "defaultScenario": "scenarios/home/home_kitchen_default.scenario"
+  "name": "home_kitchen",                                 // Scene ID — used with switch_scene and subscriptions
+  "defaultBackground": "home/kitchen",                    // Background image path (relative to backgrounds/)
+  "defaultAmbient": "",                                   // No ambient music for this scene
+  "defaultScenario": "scenarios/home/home_kitchen_default.scenario"  // Entry-point scenario
 }
 ```
 
-```json
+```jsonc
 {
-  "name": "home_vestibule",
-  "defaultBackground": "home/vestibule",
-  "defaultAmbient": "",
-  "defaultScenario": "scenarios/home/home_vestibule_default.scenario"
+  "name": "home_vestibule",                                   // Scene ID — vestibule/entrance of the player's home
+  "defaultBackground": "home/vestibule",                      // Background image path (relative to backgrounds/)
+  "defaultAmbient": "",                                       // No ambient music for this scene
+  "defaultScenario": "scenarios/home/home_vestibule_default.scenario"  // Entry-point scenario
 }
 ```
 
@@ -83,11 +83,23 @@ When the player enters a scene, the engine:
 
 Mods hook into scene lifecycle via their `manifest.json`:
 
-```json
+```jsonc
 {
   "subscriptions": [
-    { "scene": "home_kitchen", "template": "default", "code": "cooking_panel_init", "trigger": "on_enter", "priority": 10 },
-    { "scene": "home_kitchen", "template": "default", "code": "dinner_tools_hide", "trigger": "on_exit", "priority": 10 }
+    {
+      "scene": "home_kitchen",      // Target scene ID to hook into
+      "template": "default",        // Wrapper template name (from wrappers/ directory)
+      "code": "cooking_panel_init", // C# code fragment name (from subscriptions/{name}.cs)
+      "trigger": "on_enter",        // Lifecycle event: on_enter or on_exit
+      "priority": 10                // Execution order (lower = earlier); multiple mods sorted by priority
+    },
+    {
+      "scene": "home_kitchen",
+      "template": "default",
+      "code": "dinner_tools_hide",
+      "trigger": "on_exit",
+      "priority": 10
+    }
   ]
 }
 ```

@@ -14,31 +14,36 @@ When a patch modifies a JSON **array** property (e.g. `Skills`, `Perks`, `Tags`)
 ### Examples
 
 **Base character definition** (in `characters/player/marao.json`):
-```json
-{ "Id": "Marao", "Skills": ["slash", "block"] }
+```jsonc
+// Base entity definition
+{ "Id": "Marao", "Skills": ["slash", "block"] }  // Id is the entity identifier; Skills is the array to patch
 ```
 
 **Add elements** — a cooking mod extends skills:
-```json
+```jsonc
 // patches/characters.json
+// $add appends elements to the existing array (creates if missing)
 { "Items": [{ "Id": "Marao", "Skills$add": ["cook"] }] }
 ```
 Result: `["slash", "block", "cook"]`
 
 **Remove elements** — a balance patch removes a skill:
-```json
+```jsonc
+// $remove deletes matching elements from the array (no-op if missing)
 { "Items": [{ "Id": "Marao", "Skills$remove": ["block"] }] }
 ```
 Result: `["slash", "cook"]`
 
 **Replace entirely** — a weapon overhaul resets skills:
-```json
+```jsonc
+// $set replaces the entire array (explicit form, same as bare key)
 { "Items": [{ "Id": "Marao", "Skills$set": ["sword", "shield_bash"] }] }
 ```
 Result: `["sword", "shield_bash"]`
 
 **Overwrite (bare key)** — equivalent to `$set`:
-```json
+```jsonc
+// Bare key overwrites the entire array (same as $set); previous values discarded
 { "Items": [{ "Id": "Marao", "Skills": ["slash", "block"] }] }
 ```
 Result: `["slash", "block"]` (previous values are discarded)
@@ -47,14 +52,14 @@ Result: `["slash", "block"]` (previous values are discarded)
 
 All three operations can be combined across mod layers. Processing order follows the standard property pipeline (entity → wildcard `*` → specific `Id`):
 
-```json
+```jsonc
 // Entity base: ["slash", "block"]
 
-// Wildcard patch:
+// Wildcard patch: $add appends "dodge" to ALL entities first
 { "Items": [{ "Id": "*", "Skills$add": ["dodge"] }] }
 // → ["slash", "block", "dodge"]
 
-// Specific patch:
+// Specific patch: $remove deletes "slash" from Marao only
 { "Items": [{ "Id": "Marao", "Skills$remove": ["slash"] }] }
 // → ["block", "dodge"]
 ```
@@ -65,10 +70,10 @@ All three operations can be combined across mod layers. Processing order follows
 
 This system applies to **any** array property on any entity type — characters, items, and any mod-defined extras. There is no special-casing for specific property names.
 
-```json
-// Works for any array property:
-{ "Items": [{ "Id": "sword/iron", "CraftingMaterials$add": ["steel_ingot"] }] }
-{ "Items": [{ "Id": "*", "Tags$add": ["undead"] }] }
+```jsonc
+// Works for any array property — no special-casing needed
+{ "Items": [{ "Id": "sword/iron", "CraftingMaterials$add": ["steel_ingot"] }] }   // Specific item patch
+{ "Items": [{ "Id": "*", "Tags$add": ["undead"] }] }                                // Wildcard: tags all entities
 ```
 
 Scalar properties (int, float, bool, string) still use **last-wins** semantics — the suffix convention only affects JSON array values.
@@ -97,17 +102,17 @@ For arrays of **objects** (e.g. `Loot`, `Rewards`, `Drops`), the system matches 
 
 ### Per-field merge example
 
-```json
-// Base entity:
+```jsonc
+// Base entity: object array with ItemId as identity key
 { "Loot": [
-    {"ItemId": "food/wolf_meat", "MinCount": 1, "MaxCount": 1, "Probability": 100},
-    {"ItemId": "resource/branches", "MinCount": 1, "MaxCount": 1, "Probability": 100}
+    {"ItemId": "food/wolf_meat", "MinCount": 1, "MaxCount": 1, "Probability": 100},    // Matched by ItemId
+    {"ItemId": "resource/branches", "MinCount": 1, "MaxCount": 1, "Probability": 100}  // Matched by ItemId
 ]}
 
-// Balance patch:
+// Balance patch: uses $add/$remove on the object array
 { "Items": [{ "Id": "wolf_1",
-    "Loot$add": [{"ItemId": "food/ration", "Probability": 50}],
-    "Loot$remove": [{"ItemId": "resource/branches"}]
+    "Loot$add": [{"ItemId": "food/ration", "Probability": 50}],        // Adds new entry
+    "Loot$remove": [{"ItemId": "resource/branches"}]                    // Removes by identity match
 }]}
 
 // Result:
@@ -120,18 +125,19 @@ For arrays of **objects** (e.g. `Loot`, `Rewards`, `Drops`), the system matches 
 
 When `$add` finds an existing element with the same identity value, the patch **overwrites only the specified properties**, preserving unmentioned fields from the base:
 
-```json
+```jsonc
 // Base: {"ItemId": "food/bread", "MinCount": 1, "MaxCount": 2, "Probability": 50}
-// Patch: {"Loot$add": [{"ItemId": "food/bread", "Probability": 80}]}
+// Patch: {"Loot$add": [{"ItemId": "food/bread", "Probability": 80}]}   // Matches by ItemId, merges only Probability
 // Result: {"ItemId": "food/bread", "MinCount": 1, "MaxCount": 2, "Probability": 80}
-//         (Probability overridden, MinCount/MaxCount preserved from base)
+//         (Probability overridden, MinCount/MaxCount preserved from base — per-field merge)
 ```
 
 ### Removing with identity key
 
 The `$remove` operation only needs the identity field — other fields in the remove object are ignored:
 
-```json
+```jsonc
+// $remove only needs the identity field (ItemId); other fields are ignored
 { "Items": [{ "Id": "wolf_1", "Loot$remove": [{"ItemId": "food/wolf_meat"}] }] }
 ```
 
@@ -139,21 +145,21 @@ The `$remove` operation only needs the identity field — other fields in the re
 
 Any mod can introduce a new array of objects in a character or item JSON, and patches immediately work with per-field merge — as long as objects have an `Id` or `*Id` field:
 
-```json
-// Mod A defines a quest with rewards:
+```jsonc
+// Mod A defines a quest with rewards (identity key: Id)
 {
   "Id": "daily_hunt",
   "Name": "Daily Hunt",
   "Rewards": [
-    {"Id": "gold", "Count": 100},
+    {"Id": "gold", "Count": 100},     // Identity field "Id" detected automatically
     {"Id": "exp", "Count": 50}
   ]
 }
 
 // Mod B patches the rewards without knowing Mod A's internals:
 { "Items": [{ "Id": "daily_hunt",
-    "Rewards$add": [{"Id": "gold", "Count": 200}],   // overwrites Count, preserves Id
-    "Rewards$remove": [{"Id": "exp"}]                 // removes entire exp entry
+    "Rewards$add": [{"Id": "gold", "Count": 200}],   // Matched by Id → overwrites Count, preserves Id
+    "Rewards$remove": [{"Id": "exp"}]                 // Matched by Id → removes entire exp entry
 }]}
 
 // Result Rewards: [{"Id": "gold", "Count": 200}]

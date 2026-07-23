@@ -4,22 +4,36 @@ Every mod needs a manifest and optionally a properties file. These define the mo
 
 ## `manifest.json` — full schema
 
-```json
+```jsonc
 {
+  // Canonical mod identifier (falls back to folder name if omitted)
   "id": "my_mod",
+  // Human-readable name shown in the mod menu (required)
   "name": "MyMod",
+  // Semver version — used for saves and deduplication
   "version": "1.0.0",
+  // Author identifier (arbitrary string)
   "author": "author_name",
+  // Short description for the mod menu and catalog
   "description": "What this mod does",
+  // Glob patterns for C# files to compile via Roslyn
   "sources": ["src/*.cs", "src/**/*.cs"],
+  // Glob patterns for GDScript files (.gd)
   "gd_sources": ["scripts/*.gd"],
+  // List of mod IDs that must be loaded before this mod
   "depends": ["core", "interface"],
+  // Scene lifecycle subscriptions
   "subscriptions": [
     {
+      // Scene name to hook into
       "scene": "home_kitchen",
+      // UI template (usually "default")
       "template": "default",
+      // C# code fragment name (injected into wrapper template)
       "code": "my_init_handler",
+      // Trigger moment: "on_enter" or "on_exit"
       "trigger": "on_enter",
+      // Execution order (lower = runs first)
       "priority": 10
     }
   ]
@@ -53,7 +67,7 @@ GDScript files are compiled by Godot's GDScript engine (no Roslyn needed). A sin
 
 ### Dependencies
 
-```json
+```jsonc
 "depends": ["core"]
 ```
 
@@ -63,20 +77,20 @@ The kernel resolves dependencies in topological order. Circular dependencies cau
 
 Subscriptions let mods run C# code when a scene loads or unloads:
 
-```json
+```jsonc
 "subscriptions": [
   {
-    "scene": "home_kitchen",
-    "template": "default",
-    "code": "cooking_panel_init",
-    "trigger": "on_enter",
-    "priority": 10
+    "scene": "home_kitchen",        // Scene to hook into
+    "template": "default",          // UI template
+    "code": "cooking_panel_init",   // C# code fragment name (injected into wrapper template)
+    "trigger": "on_enter",          // Run when entering the scene
+    "priority": 10                  // Lower runs first
   },
   {
     "scene": "home_kitchen",
     "template": "default",
     "code": "dinner_tools_hide",
-    "trigger": "on_exit",
+    "trigger": "on_exit",           // Run when leaving the scene
     "priority": 10
   }
 ]
@@ -86,33 +100,28 @@ Subscriptions let mods run C# code when a scene loads or unloads:
 |---|---|
 | `scene` | Scene name to hook into |
 | `template` | UI template name (`"default"` for standard layout) |
-| `code` | Handler class name registered via `ISubscriptionHandler` |
+| `code` | C# code fragment name — injected into the wrapper template via `{{USER_CODE}}` and compiled at runtime |
 | `trigger` | `"on_enter"` or `"on_exit"` |
 | `priority` | Execution order (lower = runs first). Multiple mods can subscribe to the same scene |
 
-The corresponding C# class implements the subscription interface and is discovered at runtime:
-
-```csharp
-public class MySceneHandler : ISubscriptionHandler
-{
-    public void OnEnter(SceneContext ctx) { /* setup UI, spawn objects */ }
-    public void OnExit(SceneContext ctx)  { /* cleanup */ }
-}
-```
+The `code` field points to a C# source file (without `.cs` extension) at `subscriptions/{code}.cs`. Its content is injected into the wrapper template via `{{USER_CODE}}` and the combined source is compiled at runtime into a `SceneBuilderScript.Run(Node)` method. The code fragment receives the scene root node as its parameter:
 
 ## Real example — Cooking mod
 
 From `mods/cooking/manifest.json`:
 
-```json
+```jsonc
 {
   "name": "Cooking",
   "author": "ct",
   "description": "Cooking mechanic - full autonomous mod",
   "sources": ["src/*.cs"],
   "subscriptions": [
+    // Priority 10 — initialize cooking panel on enter
     { "scene": "home_kitchen", "template": "default", "code": "cooking_panel_init", "trigger": "on_enter", "priority": 10 },
+    // Priority 20 — show tools (runs after panel init)
     { "scene": "home_kitchen", "template": "default", "code": "dinner_tools_show", "trigger": "on_enter", "priority": 20 },
+    // Hide tools when leaving the kitchen
     { "scene": "home_kitchen", "template": "default", "code": "dinner_tools_hide", "trigger": "on_exit", "priority": 10 }
   ]
 }
@@ -124,18 +133,19 @@ Three handlers run on the `home_kitchen` scene: `cooking_panel_init` (priority 1
 
 From `mods/test_interactives/manifest.json`:
 
-```json
+```jsonc
 {
   "name": "Test Interactives",
   "author": "ct",
   "description": "Test mod demonstrating the interactive object system",
+  // core and interface are guaranteed to load before this mod
   "depends": ["core", "interface"]
 }
 ```
 
 ## Creating a new mod — minimal manifest
 
-```json
+```jsonc
 {
   "name": "MyFirstMod",
   "author": "you",

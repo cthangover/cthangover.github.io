@@ -11,29 +11,33 @@ config/
 
 ## Full schema
 
-```json
+```jsonc
 {
+  // Audio defaults
   "audio": {
-    "sounds_enabled": true,
-    "musics_enabled": true,
-    "ambient_enabled": true,
-    "sounds_volume": 100,
-    "musics_volume": 15,
-    "ambient_volume": 100
+    "sounds_enabled": true,       // Sound effects master toggle
+    "musics_enabled": true,       // Music master toggle
+    "ambient_enabled": true,      // Ambient sounds master toggle
+    "sounds_volume": 100,         // SFX volume (0–100)
+    "musics_volume": 15,          // Music volume (0–100)
+    "ambient_volume": 100         // Ambient volume (0–100)
   },
+  // Locale code (UI language)
   "language": "en-en",
+  // Display settings
   "display": {
-    "window_mode": 3,
-    "resolution_width": 1920,
-    "resolution_height": 1080,
-    "current_screen": 0,
-    "vsync_enabled": false,
-    "scale": 1
+    "window_mode": 3,             // 0=Windowed, 1=Min, 2=Max, 3=Fullscreen, 4=Exclusive
+    "resolution_width": 1920,     // Width in pixels
+    "resolution_height": 1080,    // Height in pixels
+    "current_screen": 0,          // Monitor index (0-based)
+    "vsync_enabled": false,       // Vertical sync
+    "scale": 1                    // UI window scale factor
   },
+  // Logging configuration
   "logging": {
-    "enabled": true,
-    "console_enabled": true,
-    "minimum_level": "Debug",
+    "enabled": true,              // Master logging on/off
+    "console_enabled": true,      // Write logs to console
+    "minimum_level": "Debug",     // Min level: Debug, Message, Warning, Error
     "enabled_categories": ["LOG_BATTLE_UI", "LOG_MODS", "..."]
   }
 }

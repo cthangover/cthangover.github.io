@@ -7,34 +7,34 @@ locally-installed mods.
 
 ## Catalog JSON Schema
 
-```json
+```jsonc
 {
-  "_catalog": {
-    "version": 1,
-    "updated_at": "2026-07-21T12:00:00Z"
+  "_catalog": {                                            // Catalog metadata envelope
+    "version": 1,                                          // Schema version of this catalog file
+    "updated_at": "2026-07-21T12:00:00Z"                   // ISO-8601 timestamp of last server update
   },
-  "mods": [
+  "mods": [                                                // List of mod entries in this catalog
     {
-      "id": "cooking",
-      "name": "Cooking",
-      "author": "ct",
-      "version": "1.2.0",
-      "description": "Cooking mechanic with 40+ recipes",
-      "category": "gameplay",
-      "tags": ["cooking", "crafting"],
-      "icon_url": "https://cdn.example.com/mods/cooking/icon.png",
-      "depends": ["core>=1", "interface>=1"],
-      "conflicts_with": [],
-      "downloads": [
+      "id": "cooking",                                     // Canonical mod identifier (matches manifest.json id)
+      "name": "Cooking",                                   // Human-readable display name
+      "author": "ct",                                      // Author credit string
+      "version": "1.2.0",                                  // Latest release version (semver)
+      "description": "Cooking mechanic with 40+ recipes",  // Short description
+      "category": "gameplay",                              // Category slug: story, characters, gameplay, visual, audio, ui, locale, library, overhaul, other
+      "tags": ["cooking", "crafting"],                     // Search/filter tags
+      "icon_url": "https://cdn.example.com/mods/cooking/icon.png", // Full URL to preview icon (PNG or JPEG)
+      "depends": ["core>=1", "interface>=1"],              // Versioned dependency strings
+      "conflicts_with": [],                                // Mutually exclusive mod IDs
+      "downloads": [                                       // Version-specific download entries with mirrors
         {
-          "version": "1.2.0",
-          "urls": [
+          "version": "1.2.0",                              // Semver version of this download entry
+          "urls": [                                        // Mirror URLs tried in order
             "https://cdn1.example.com/mods/cooking_v1.2.0.zip",
             "https://cdn2.example.com/mods/cooking_v1.2.0.zip"
           ],
-          "size_bytes": 1425367,
-          "archive_sha256": "e3b0c44298fc...",
-          "install_sha256": "a7ffc6f8bf1e..."
+          "size_bytes": 1425367,                           // File size of the zip for progress display
+          "archive_sha256": "e3b0c44298fc...",             // SHA256 of the .zip file (integrity check after download)
+          "install_sha256": "a7ffc6f8bf1e..."              // SHA256 of extracted mod content (modification detection)
         },
         {
           "version": "1.0.0",
@@ -44,10 +44,10 @@ locally-installed mods.
           "install_sha256": "b8ee..."
         }
       ],
-      "changelog": "v1.2.0: Added 5 new fish recipes.",
-      "status": "stable",
-      "min_game_version": "1.0.0",
-      "max_game_version": null
+      "changelog": "v1.2.0: Added 5 new fish recipes.",    // Optional version changelog
+      "status": "stable",                                  // stable, beta, deprecated, or archived
+      "min_game_version": "1.0.0",                         // Minimum compatible game version (semver)
+      "max_game_version": null                             // Maximum compatible game version, or null for no upper bound
     }
   ]
 }
@@ -110,13 +110,13 @@ Overwriting such a mod from the network would lose the player's changes.
 
 Catalog URLs are configured in `config/mod_config.json`:
 
-```json
+```jsonc
 {
-  "catalog_urls": [
+  "catalog_urls": [                                        // URLs to fetch catalog.json from (merged in order)
     "https://example.com/mods/catalog.json",
     "https://mirror.example.com/mods/catalog.json"
   ],
-  "catalog_ignore_patterns": [".*","bin","obj"]
+  "catalog_ignore_patterns": [".*","bin","obj"]            // Glob patterns to exclude from install_sha256 computation
 }
 ```
 
@@ -128,6 +128,8 @@ same-version entries have their `urls` lists combined (deduplicated).
 The game caches fetched catalogs to `user://catalog_cache.json`.
 Open the Network tab in the mods menu (Mods > Network) and press
 **Refresh** to clear the cache and re-fetch.
+
+Architecture note: the catalog system provides the *data source* for an HTTP catalog scanner. For details on how a custom scanner turns catalog JSON into `DiscoveredModEntry` items that the kernel can load, see [Resources — Scanners](../resources/scanners/).
 
 ## Exporting a mod to the catalog
 

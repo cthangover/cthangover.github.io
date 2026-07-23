@@ -1385,6 +1385,156 @@ body.docs-mode .docs-sidebar {
   max-height: 100vh;
 }
 
+/* ========== QUICKSTART MODE ========== */
+
+#quickstart {
+  display: none;
+}
+
+body.quickstart-mode #hero,
+body.quickstart-mode #about,
+body.quickstart-mode #features,
+body.quickstart-mode #architecture,
+body.quickstart-mode #screenshots,
+body.quickstart-mode #videos,
+body.quickstart-mode #story,
+body.quickstart-mode #systems,
+body.quickstart-mode #docs,
+body.quickstart-mode #cta,
+body.quickstart-mode footer {
+  display: none;
+}
+
+body.quickstart-mode #quickstart {
+  display: block;
+  padding: 32px 0 80px;
+  min-height: calc(100vh - 56px);
+  background: var(--bg-primary);
+}
+
+body.quickstart-mode #navbar {
+  display: block;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border);
+}
+
+body.quickstart-mode .nav-brand { display: none; }
+body.quickstart-mode .nav-links { display: none; }
+body.quickstart-mode .nav-toggle { display: none; }
+body.quickstart-mode .nav-github { display: none; }
+body.quickstart-mode .docs-back-link { display: flex; }
+body.quickstart-mode .nav-right { display: flex; margin-left: auto; }
+body.quickstart-mode .sidebar-toggle { display: none; }
+
+@media (max-width: 899px) {
+  body.quickstart-mode #quickstart {
+    padding: 76px 0 60px;
+  }
+
+  body.quickstart-mode .nav-right {
+    display: flex;
+    margin-left: 0;
+  }
+}
+
+/* Quickstart cards */
+
+.quickstart-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin: 32px 0;
+}
+
+.qs-card {
+  display: block;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  transition: all var(--transition);
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.qs-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.qs-card h3 {
+  font-size: 1.2rem;
+  margin: 0 0 10px 0;
+  color: var(--accent);
+}
+
+.qs-card p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+.qs-card .qs-card-meta {
+  display: inline-block;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  background: var(--accent-dim);
+  padding: 4px 10px;
+  border-radius: var(--radius);
+}
+
+.qs-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: all var(--transition);
+  margin: 8px 0 6px;
+}
+
+.qs-download:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent);
+  color: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.qs-download svg {
+  flex-shrink: 0;
+  transition: transform var(--transition);
+}
+
+.qs-download:hover svg {
+  transform: translateY(2px);
+}
+
+.qs-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0 28px;
+}
+
+.qs-meta span {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  padding: 5px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
 /* Mermaid diagrams */
 .mermaid-wrap {
   position: relative;

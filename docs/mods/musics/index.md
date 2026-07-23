@@ -21,13 +21,13 @@ music/
 
 ## Real example — `core/music/playlists/default.json`
 
-```json
+```jsonc
 {
-  "Scene": "default",
+  "Scene": "default",               // Playlist ID — referenced in scene JSONs and scenario commands
   "Musics": [
     {
-      "MusicType": "Ambient",
-      "MusicNames": [
+      "MusicType": "Ambient",       // Category: music for exploration/non-combat states
+      "MusicNames": [               // Track filenames without .ogg extension
         "Abyssal Void",
         "Airborne Melody",
         "Binary Prelude",
@@ -39,7 +39,7 @@ music/
       ]
     },
     {
-      "MusicType": "Combat",
+      "MusicType": "Combat",        // Category: music switched to during battles
       "MusicNames": [
         "Aura of Decay",
         "Circuit Dreams II",
@@ -63,17 +63,17 @@ music/
 
 ## Playlist JSON schema
 
-```json
+```jsonc
 {
-  "Scene": "playlist_id",
+  "Scene": "playlist_id",             // Unique playlist identifier
   "Musics": [
     {
-      "MusicType": "Force | Combat | Ambient",
-      "MusicNames": ["track_1", "track_2", "..."],
-      "Shuffle": true,
-      "Volume": 0.8,
-      "FadeInSeconds": 2.0,
-      "FadeOutSeconds": 1.5
+      "MusicType": "Force | Combat | Ambient",  // Category: Ambient (explore), Combat (battle), Force (transient→Ambient)
+      "MusicNames": ["track_1", "track_2", "..."],  // Track filenames without .ogg extension
+      "Shuffle": true,                  // Randomize playback order (default: true)
+      "Volume": 0.8,                    // Playback volume 0.0–1.0 (default: 0.8)
+      "FadeInSeconds": 2.0,             // Cross-fade duration when switching to this playlist
+      "FadeOutSeconds": 1.5             // Cross-fade duration when switching from this playlist
     }
   ]
 }
@@ -110,12 +110,12 @@ music_play
 
 Scene definitions can specify a default playlist:
 
-```json
+```jsonc
 {
-  "name": "town_entry",
-  "defaultBackground": "town/entry",
-  "defaultAmbient": "playlists/town_entry",
-  "defaultScenario": "scenarios/town/town_entry_default.scenario"
+  "name": "town_entry",                                 // Scene ID
+  "defaultBackground": "town/entry",                    // Background image path
+  "defaultAmbient": "playlists/town_entry",             // Playlist reference for ambient music
+  "defaultScenario": "scenarios/town/town_entry_default.scenario"  // Default scenario on enter
 }
 ```
 

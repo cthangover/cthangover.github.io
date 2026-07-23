@@ -45,11 +45,11 @@ The path is relative to `backgrounds/` — no `.png` extension needed.
 
 Each scene definition can specify a default background that loads when entering the scene:
 
-```json
+```jsonc
 {
-  "name": "home_kitchen",
-  "defaultBackground": "home/kitchen",
-  "defaultScenario": "scenarios/home/home_kitchen_default.scenario"
+  "name": "home_kitchen",                                  // Scene identifier
+  "defaultBackground": "home/kitchen",                     // Background image loaded when entering the scene
+  "defaultScenario": "scenarios/home/home_kitchen_default.scenario" // Default scenario to run on scene enter
 }
 ```
 

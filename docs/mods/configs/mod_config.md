@@ -11,17 +11,27 @@ config/
 
 ## Full schema
 
-```json
+```jsonc
 {
+  // Cache compiled assemblies to disk after first compilation
   "use_assembly_cache": false,
+  // File/directory patterns excluded from catalog export checksum
   "catalog_ignore_patterns": [".*","bin","obj"],
+  // Catalog JSON URLs (multiple are merged)
   "catalog_urls": [],
+  // File extensions treated as textures
   "texture_extensions": [".png", ".jpg", ".jpeg"],
+  // Audio file extensions (OGG and WAV)
   "audio_extensions": [".ogg", ".wav"],
+  // Shader file extensions
   "shader_extensions": [".gdshader", ".gdshaderinclude"],
+  // Mod subdirectories scanned for textures
   "texture_groups": ["ui", "backgrounds", "avatars", "icons", "items", "cards", "effects", "skills"],
+  // Resource cache configuration
   "cache": {
+    // Cache root directory (Godot user:// path)
     "root": "user://mod_cache/",
+    // Per-category cache size limits (LRU eviction on overflow)
     "max_sizes": {
       "avatars": 64,
       "backgrounds": 64,
@@ -66,7 +76,6 @@ Each entry in `texture_groups` corresponds to a mod subdirectory where textures 
 | `icons` | `icons/` | UI icons |
 | `items` | `items/` | Item sprites |
 | `cards` | `cards/` | Battle action card images |
-| `effects` | `effects/` | Visual effect textures |
 | `skills` | `skills/` | Skill card artwork |
 
 ### `cache` section
@@ -89,7 +98,6 @@ Each factory type has a maximum cache capacity. When exceeded, the least recentl
 | `ui` | 64 | General UI textures |
 | `music` | 64 | Music audio streams |
 | `sounds` | 64 | Sound effect audio |
-| `effects` | 64 | Effect textures |
 | `actions` | 128 | Character action definitions |
 | `characters` | 128 | Character definitions |
 | `recipes` | 128 | Recipe definitions |

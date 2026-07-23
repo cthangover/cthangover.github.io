@@ -4,14 +4,21 @@ JSON-defined items — consumables, resources, and recipe items — with localiz
 
 ## JSON structure
 
-```json
+```jsonc
 {
+  // Unique item ID in path-style format (e.g. "food/ration")
   "Id":          "type/item_id",
+  // Locale key for the item's display name
   "Name":        "locale_key_for_name",
+  // Locale key for the item's tooltip/description
   "Description": "locale_key_for_description",
+  // Base purchase price in the game economy
   "Cost":        5,
+  // Path to the item icon sprite, resolved under the mod's sprites directory
   "Sprite":      "type/item_id",
-  "ItemType":    "Food | Resource | ...",
+  // Type flags (comma-separated): Food, Resource, Quest, Recipe, Used, TargetUsed
+  "ItemType":    "Food,Resource",
+  // Action ID for the item's use effect; resolved via IItemAction factory
   "ItemAction":  "action_id"
 }
 ```
@@ -46,26 +53,38 @@ JSON-defined items — consumables, resources, and recipe items — with localiz
 
 ### Consumable — `core/items/food/ration.json`
 
-```json
+```jsonc
 {
+  // Unique item ID
   "Id": "food/ration",
+  // Locale key → "Ration"
   "Name": "items/food/ration/name",
+  // Locale key → "A daily ration unit for one person"
   "Description": "items/food/ration/desc",
+  // Base price: 5 gold
   "Cost": 5,
+  // Icon sprite path under the mod's sprites folder
   "Sprite": "food/ration",
+  // Edible item (consumes hunger stat on use)
   "ItemType": "Food"
 }
 ```
 
 ### Crafting material — `core/items/food/wolf_meat.json`
 
-```json
+```jsonc
 {
+  // Unique item ID
   "Id": "food/wolf_meat",
+  // Locale key → "Wolf cutlet"
   "Name": "items/food/wolf_meat/name",
+  // Locale key → "Raw wolf meat"
   "Description": "items/food/wolf_meat/desc",
+  // Base price: 1 gold — cheap, but important for recipes
   "Cost": 1,
+  // Icon sprite path
   "Sprite": "food/wolf_meat",
+  // Both a crafting ingredient (Resource) and edible (Food)
   "ItemType": "Resource,Food"
 }
 ```
@@ -76,12 +95,17 @@ Note: `ItemType` can be multiple values — `"Resource,Food"` means it's both a 
 
 Recipe items are items that represent a craftable recipe in the player's inventory:
 
-```json
+```jsonc
 {
+  // Unique recipe item ID
   "Id": "recipe/wolf_meat_to_ration",
+  // Locale key for the recipe name
   "Name": "recipe/wolf_meat_to_ration/name",
+  // Locale key for the recipe description
   "Description": "recipe/wolf_meat_to_ration/desc",
+  // Icon sprite path
   "Sprite": "recipe/wolf_meat_to_ration",
+  // Recipe type — unlocks in the cookbook when acquired
   "ItemType": "Recipe"
 }
 ```
@@ -90,8 +114,9 @@ Recipe items are items that represent a craftable recipe in the player's invento
 
 `items/items.json` registers items using `$ref` syntax:
 
-```json
+```jsonc
 {
+  // $ref entries — each ${...} path expands to items/{path}.json and its contents are merged in
   "Items": [
     "${food/ration}",
     "${food/wolf_meat}",
@@ -106,17 +131,24 @@ Recipe items are items that represent a craftable recipe in the player's invento
 
 Recipes are defined separately in `recipes/` and describe input→output transformations:
 
-```json
+```jsonc
 {
+  // Wrapping array — recipe definitions are listed under Items
   "Items": [{
+    // Unique recipe ID
     "Id": "recipe/wolf_meat_to_ration",
+    // Locale key for the recipe display name
     "Name": "recipe/wolf_meat_to_ration/name",
+    // Workbench type — "Cooking" is currently the only supported type
     "Type": "Cooking",
+    // Crafting time in in-game minutes
     "Time": 15,
+    // Required ingredients: Id references an item definition, Count is the quantity needed
     "Input": [
       { "Id": "food/wolf_meat", "Count": 1 },
       { "Id": "resource/branches", "Count": 2 }
     ],
+    // Produced items on successful craft
     "Output": [
       { "Id": "food/ration", "Count": 1 }
     ]

@@ -4,14 +4,21 @@ Status effects are temporary buffs, debuffs, or crowd-control effects applied to
 
 ## JSON structure
 
-```json
+```jsonc
 {
+  // Unique status effect identifier — used to look up and apply effects
   "Id": "stun",
+  // Locale key for the effect's display name in tooltips and the status panel
   "Name": "status/stun/name",
+  // Locale key explaining what the effect does
   "Description": "status/stun/desc",
+  // Effect category: "Buff" (positive), "Debuff" (negative), or "Stun" (skip turn)
   "Type": "Stun",
+  // Number of turns the effect lasts before expiring
   "Duration": 2,
+  // Behaviour set ID — resolved via StatusEffectActionFactory into IStatusActions
   "Actions": "stun",
+  // Icon filename loaded from the characters mod group
   "Icon": "stun"
 }
 ```
@@ -40,8 +47,9 @@ Status effects are temporary buffs, debuffs, or crowd-control effects applied to
 
 Status effects are registered via an index file:
 
-```json
+```jsonc
 {
+  // $ref entries — ${stun} expands to status_effects/stun.json with its contents merged in
   "Items": [
     "${stun}"
   ]

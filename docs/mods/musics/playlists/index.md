@@ -4,17 +4,17 @@ Detailed schema for music playlist configuration JSON files.
 
 ## Full schema
 
-```json
+```jsonc
 {
-  "Scene": "playlist_identifier",
+  "Scene": "playlist_identifier",       // Unique playlist ID (referenced in scene JSONs and scenario commands)
   "Musics": [
     {
-      "MusicType": "Force | Combat | Ambient",
-      "MusicNames": ["track1", "track2", "..."],
-      "Shuffle": true,
-      "Volume": 0.8,
-      "FadeInSeconds": 2.0,
-      "FadeOutSeconds": 1.5
+      "MusicType": "Force | Combat | Ambient",  // Category: Ambient (explore), Combat (battle), Force (transient)
+      "MusicNames": ["track1", "track2", "..."],  // Track filenames without .ogg extension
+      "Shuffle": true,                    // Randomize playback order (default: true)
+      "Volume": 0.8,                      // Playback volume 0.0–1.0 (default: 0.8)
+      "FadeInSeconds": 2.0,               // Cross-fade duration when switching TO this playlist
+      "FadeOutSeconds": 1.5               // Cross-fade duration when switching FROM this playlist
     }
   ]
 }
@@ -34,12 +34,12 @@ Detailed schema for music playlist configuration JSON files.
 
 ## Real example — default playlist
 
-```json
+```jsonc
 {
-  "Scene": "default",
+  "Scene": "default",               // Playlist ID
   "Musics": [
     {
-      "MusicType": "Ambient",
+      "MusicType": "Ambient",       // Exploration music
       "MusicNames": [
         "Abyssal Void", "Airborne Melody", "Binary Prelude",
         "Cinders of Dawn", "Melancholic Journey",
@@ -47,7 +47,7 @@ Detailed schema for music playlist configuration JSON files.
       ]
     },
     {
-      "MusicType": "Combat",
+      "MusicType": "Combat",        // Battle music — auto-switched by engine
       "MusicNames": [
         "Aura of Decay", "Circuit Dreams II", "Crimson Echoes",
         "Crimson Horizon", "Glass Symphony", "Hex Doom Cart",
@@ -63,10 +63,10 @@ Detailed schema for music playlist configuration JSON files.
 
 A scene can reference different playlists for different states:
 
-```json
+```jsonc
 // music/playlists/tavern.json
 {
-  "Scene": "tavern",
+  "Scene": "tavern",              // Playlist ID; referenced via "playlists/tavern"
   "Musics": [
     { "MusicType": "Ambient", "MusicNames": ["Tavern_Day", "Tavern_Night"] },
     { "MusicType": "Combat", "MusicNames": ["Tavern_Fight_01", "Tavern_Fight_02"] }
@@ -78,10 +78,10 @@ A scene can reference different playlists for different states:
 
 In scene JSON:
 
-```json
+```jsonc
 {
-  "name": "town_tavern",
-  "defaultAmbient": "playlists/tavern"
+  "name": "town_tavern",                  // Scene ID
+  "defaultAmbient": "playlists/tavern"    // References the tavern playlist by path
 }
 ```
 

@@ -30,8 +30,8 @@ Every battle system mod defines a class implementing `IBattleCore`:
 | Member | Description |
 |---|---|
 | `Id` | Unique string ID used by `battle.set_core` |
-| `ActionProvider` | Returns `IActionProvider` for registering custom scenario actions |
-| `Init(BattleData data)` | Called when battle starts — sets up UI, spawns enemies |
+| `ActionProvider` | Returns `IActionExecutorProvider` for overriding action executors |
+| `Init(Character[] playerChars, Character[] enemyChars, IBattleContext ctx)` | Called when battle starts — sets up UI, spawns enemies |
 | `Start()` | Called after Init — begins the battle loop |
 
 ### `IActionExecutor` — Ability resolution
@@ -72,23 +72,23 @@ See [Status Effects](../status_effects/) for the JSON definition format.
 ## Creating a custom battle system mod
 
 1. Create a new mod with `manifest.json`:
-   ```json
+```jsonc
    {
-     "name": "MyBattle",
-     "description": "Custom battle system",
-     "sources": ["src/**/*.cs"],
-     "depends": ["core"]
+     "name": "MyBattle",                                   // Human-readable mod name
+     "description": "Custom battle system",                // Short description
+     "sources": ["src/**/*.cs"],                           // Glob patterns for C# source files
+     "depends": ["core"]                                   // Versioned dependency strings
    }
-   ```
+```
 
 2. Implement `IBattleCore`:
    ```csharp
    public class MyBattleCore : IBattleCore
    {
        public string Id => "MyBattle";
-       public IActionProvider ActionProvider => new MyActionProvider();
+       public IActionExecutorProvider ActionProvider => new MyActionProvider();
 
-       public void Init(BattleData data)
+       public void Init(Character[] playerChars, Character[] enemyChars, IBattleContext ctx)
        {
            // Create enemy panels, character widgets, action buttons
        }
@@ -100,14 +100,18 @@ See [Status Effects](../status_effects/) for the JSON definition format.
    }
    ```
 
-3. Implement `IActionProvider` to register your action executors:
+3. Implement `IActionExecutorProvider` to provide your action executors:
    ```csharp
-   public class MyActionProvider : IActionProvider
+   public class MyActionProvider : IActionExecutorProvider
    {
-       public void Register(ActionRegistry reg)
+       public IActionExecutor GetExecutor(string actionId)
        {
-           reg.Add("mybattle.attack", () => new MyAttackExecutor());
-           reg.Add("mybattle.defend", () => new MyDefendExecutor());
+           return actionId switch
+           {
+               "mybattle.attack" => new MyAttackExecutor(),
+               "mybattle.defend" => new MyDefendExecutor(),
+               _ => null
+           };
        }
    }
    ```

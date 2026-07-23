@@ -39,13 +39,13 @@ The core uses **semver-first, string-fallback** via `VersionHelper.Compare`:
 
 Every mod's `manifest.json` must include a semver version string:
 
-```json
+```jsonc
 {
-  "name": "My Mod",
-  "version": "1.0.0",
-  "author": "...",
-  "description": "...",
-  "sources": ["src/**/*.cs"]
+  "name": "My Mod",                                        // Human-readable mod name
+  "version": "1.0.0",                                      // Semver version — used for save validation and migration detection
+  "author": "...",                                         // Author credit
+  "description": "...",                                    // Short description
+  "sources": ["src/**/*.cs"]                              // Glob patterns for C# source files
 }
 ```
 

@@ -159,10 +159,10 @@ func run(ctx):
 
 Declare in `manifest.json`:
 
-```json
+```jsonc
 {
-  "name": "My GDScript Mod",
-  "gd_sources": ["scripts/*.gd"]
+  "name": "My GDScript Mod",                               // Human-readable mod name
+  "gd_sources": ["scripts/*.gd"]                           // Glob patterns for .gd files — auto-discovered for actions, conditions, etc.
 }
 ```
 

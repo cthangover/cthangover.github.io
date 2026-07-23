@@ -419,6 +419,7 @@
     var hash = location.hash;
 
     if (hash.startsWith("#/docs/")) {
+      document.body.classList.remove("quickstart-mode");
       if (!document.body.classList.contains("docs-mode")) {
         enterDocsMode("index");
       }
@@ -732,6 +733,7 @@
     if (backLink) {
       backLink.addEventListener("click", function (e) {
         e.preventDefault();
+        if (document.body.classList.contains("quickstart-mode")) return;
         exitDocsMode();
       });
     }

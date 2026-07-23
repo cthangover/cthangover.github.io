@@ -16,10 +16,10 @@ The game builds the final load order from three inputs, applied in strict priori
 
 Every mod may declare dependencies in `manifest.json` using **versioned dependency strings**:
 
-```json
+```jsonc
 {
-  "id": "cooking",
-  "depends": ["core>=1", "interface>=1"]
+  "id": "cooking",                                         // Canonical mod identifier
+  "depends": ["core>=1", "interface>=1"]                   // Versioned dependency strings
 }
 ```
 
@@ -46,8 +46,8 @@ if both sides are parseable, otherwise as string (`Ordinal`).
 
 Appending `?` to a dependency makes it **optional**:
 
-```json
-{ "depends": ["optional_mod>=1?"] }
+```jsonc
+{ "depends": ["optional_mod>=1?"] }                        // ? suffix makes this dependency optional
 ```
 
 - If the optional mod is **not installed** → no error, the dependency is skipped.
@@ -74,10 +74,10 @@ This follows the convention used by npm, Cargo, pip, Factorio, and Minecraft Fab
 
 Mods can declare mutual incompatibility:
 
-```json
+```jsonc
 {
-  "id": "ff_battle",
-  "conflicts_with": ["card_battle"]
+  "id": "ff_battle",                                       // Canonical mod identifier
+  "conflicts_with": ["card_battle"]                        // Mutually exclusive mod IDs — if both are active, both get disabled
 }
 ```
 
@@ -145,8 +145,8 @@ The **Mods** menu shows:
 
 Manual load order is saved to `user://mod_load_order.json` as a JSON array of mod IDs:
 
-```json
-["core", "cooking", "hunting", "ui_overhaul"]
+```jsonc
+["core", "cooking", "hunting", "ui_overhaul"]              // Mod IDs in manual load order (first = highest priority)
 ```
 
 New mods (not yet in the saved order) are placed alphabetically within their
@@ -158,11 +158,11 @@ Removed mods are cleaned up automatically on the next game launch.
 
 Declare dependencies with version constraints for safety:
 
-```json
+```jsonc
 {
-  "id": "my_mod",
-  "depends": ["core>=1", "interface>=1"],
-  "version": "1.0.0"
+  "id": "my_mod",                                          // Canonical mod identifier
+  "depends": ["core>=1", "interface>=1"],                  // Versioned dependency strings
+  "version": "1.0.0"                                       // Semver version of this mod
 }
 ```
 

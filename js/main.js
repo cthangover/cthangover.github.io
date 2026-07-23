@@ -86,6 +86,7 @@
     currentLang = lang;
     localStorage.setItem(LS_KEY, lang);
     applyI18n();
+    document.dispatchEvent(new CustomEvent("langchange", { detail: lang }));
   }
 
   function updateActiveNav() {

@@ -4,33 +4,50 @@ JSON-defined characters — both player-controlled and enemies — with attribut
 
 ## JSON structure
 
-```json
+```jsonc
 {
+  // Unique character identifier — used in scenario conditions and battle init
   "Id":          "unique_id",
+  // Locale key resolved from .properties files for the display name
   "Name":        "locale_key",
+  // Path to avatar folder under avatars/
   "Image":       "avatars_path",
-  "Behaviour":   "base" | "boss" | ...,
+  // AI behaviour strategy: "base" for random actions, "boss" or any custom AI type
+  "Behaviour":   "base",
 
+  // Character level (determines scaling)
   "Level":       1,
+  // Action points available per turn
   "Point":       1,
+  // Maximum hit points
   "Health":      2000,
+  // Base defence stat (reduces incoming damage)
   "Defence":     0,
+  // Base attack stat (physical damage)
   "Attack":      500,
+  // Physical damage modifier
   "Strength":    10,
+  // Magical damage and healing modifier
   "Magic":       5,
+  // Satiety stat — depletes over time, affects hunger system
   "Fullness":    100,
+  // Experience points rewarded on defeat
   "Exp":         5,
+  // % chance to recruit after defeating this character (0–100)
   "RecruitmentChance": 0,
 
-  "Depravity":   5,
-  "Discipline":  -10,
-
+  // Action IDs available to this character; supports $add, $remove, $set in patches
   "Actions":     ["physics/attack", "physics/defence"],
+  // Loot table — items dropped on defeat; patches match by ItemId for per-field merge
   "Loot": [
     {
+      // ID of the item to drop (references an item definition)
       "ItemId":      "food/wolf_meat",
+      // Minimum number of this item to drop
       "MinCount":    1,
+      // Maximum number of this item to drop
       "MaxCount":    1,
+      // Drop probability (0–100)
       "Probability": 100
     }
   ]
@@ -64,36 +81,58 @@ JSON-defined characters — both player-controlled and enemies — with attribut
 
 ### Player character — `core/characters/player/marao.json`
 
-```json
+```jsonc
 {
+  // Player character ID — referenced throughout the game
   "Id": "Marao",
+  // Locale key for the character's display name
   "Name": "characters/player/marao",
+  // Path to the avatar folder for portraits
   "Image": "characters/player/marao",
+  // Starting level
   "Level": 1,
+  // Action points per turn
   "Point": 1,
-  "Health": 2000,
+  // Base health pool
+  "Health": 16,
+  // Base defence
   "Defence": 0,
-  "Attack": 500,
-  "Actions": "physics/attack,physics/defence"
+  // Base attack damage
+  "Attack": 5,
+  // Available combat actions
+  "Actions": ["physics/attack", "physics/defence"]
 }
 ```
 
 ### Enemy — `core/characters/enemies/wolf_1.json`
 
-```json
+```jsonc
 {
+  // Unique enemy ID for this wolf variant
   "Id": "wolf_1",
+  // Locale key for the display name
   "Name": "characters/enemies/wolf",
+  // Avatar folder path
   "Image": "characters/enemies/wolf_1",
+  // AI behaviour: "base" picks random actions
   "Behaviour": "base",
+  // Enemy level
   "Level": 1,
+  // Action points per turn
   "Point": 1,
+  // Hit points (low — this is a weak enemy)
   "Health": 15,
+  // Base defence
   "Defence": 0,
+  // Base attack damage
   "Attack": 4,
+  // XP granted on defeat
   "Exp": 5,
+  // Cannot be recruited
   "RecruitmentChance": 0,
-  "Actions": "physics/attack,physics/defence",
+  // Combat actions
+  "Actions": ["physics/attack", "physics/defence"],
+  // Loot table — drops wolf meat and branches
   "Loot": [
     { "ItemId": "food/wolf_meat", "MinCount": 1, "MaxCount": 1, "Probability": 100 },
     { "ItemId": "resource/branches", "MinCount": 1, "MaxCount": 1, "Probability": 100 }
@@ -103,18 +142,29 @@ JSON-defined characters — both player-controlled and enemies — with attribut
 
 ### Boss enemy — `core/characters/enemies/werewolf_girl_1.json`
 
-```json
+```jsonc
 {
+  // Unique boss ID
   "Id": "werewolf_girl_1",
+  // Locale key for display name
   "Name": "characters/enemies/werewolf_girl",
+  // Boss level
   "Level": 1,
+  // Hit points (higher than regular enemies)
   "Health": 25,
+  // Attack damage (stronger than regular enemies)
   "Attack": 8,
+  // XP reward (significantly higher than regular enemies)
   "Exp": 50,
+  // Morality stat modifier — recruiting this character increases depravity
   "Depravity": 5,
+  // Discipline stat modifier — recruiting this character decreases discipline
   "Discipline": -10,
+  // 50% chance to recruit after defeat
   "RecruitmentChance": 50,
-  "Actions": "physics/attack,physics/defence",
+  // Combat actions
+  "Actions": ["physics/attack", "physics/defence"],
+  // Loot table — drops 2 wolf meat at 100% probability
   "Loot": [
     { "ItemId": "food/wolf_meat", "MinCount": 2, "MaxCount": 2, "Probability": 100 }
   ]
@@ -125,8 +175,9 @@ JSON-defined characters — both player-controlled and enemies — with attribut
 
 The root `characters.json` registers characters using a `$ref` syntax:
 
-```json
+```jsonc
 {
+  // $ref entries — each ${...} path expands to characters/{path}.json and its contents are merged in
   "Items": [
     "${player/marao}"
   ]

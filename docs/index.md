@@ -11,7 +11,6 @@ Welcome to the cthangover documentation. Here you'll find guides, code examples,
 | [Avatars](mods/avatars/) | Character portrait images |
 | [Backgrounds](mods/backgrounds/) | Scene background images and depth maps |
 | [Characters](mods/characters/) | Character JSON definitions and attributes |
-| [Effects](mods/effects/) | Visual effect textures |
 | [Interactive Objects](mods/interactives/) | Clickable scene objects with hit areas and actions |
 | [Items](mods/items/) | Item system — consumables, resources, recipes |
 | [Property Patches](mods/patches/) | Extend entity properties from another mod without redefining JSON |
@@ -68,3 +67,13 @@ Welcome to the cthangover documentation. Here you'll find guides, code examples,
 | [UI Wrappers](mods/wrappers/) | UI template wrapper system |
 | [Scene Event Metadata](mods/metadata/) | `[SceneEvent]` attribute for declarative hooks |
 | [ZIP Distribution](mods/zip/) | Mod packaging and distribution |
+
+## Resources — Pluggable Infrastructure
+
+| Topic | Description |
+|---|---|
+| [Resources Overview](resources/) | Scanner → Loader → Provider pipeline |
+| [Providers](resources/providers/) | `IModFileProvider` — folder, zip, and custom backends |
+| [Scanners](resources/scanners/) | `IModScanner` — local dirs, HTTP catalogs, custom sources |
+| [Loaders](resources/loaders/) | `IModLoader` — folder, zip, remote download, archive formats |
+| [Discovery Registry](resources/discovery-registry/) | `ModDiscoveryRegistry` — auto-discovery and LIFO lookup |

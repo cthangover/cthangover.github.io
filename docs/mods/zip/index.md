@@ -33,10 +33,12 @@ The root of the zip IS the mod root — no extra wrapper folder.
 
 ## How the kernel loads zipped mods
 
-1. On startup, the kernel scans `mods/` for both folders and `.zip` files
-2. Each `.zip` is decompressed into a memory-backed filesystem
-3. The mod is loaded as if it were a folder — `manifest.json` is read, sources compiled, assets discovered
-4. Zip mods have the same priority, dependency resolution, and lifecycle as folder mods
+1. On startup, the registered mod scanners (`UserDataModScanner` and `GameDirModScanner`) enumerate filesystem entries in their respective `mods/` directories — both folders and `.zip` files are returned as `DiscoveredModEntry` items
+2. The `ZipModLoader` claims any entry path ending with `.zip` and creates a `ZipModFileProvider` — the archive is opened directly with `ZipFile.OpenRead`, building an O(1) entry lookup dictionary in memory without extracting files to disk
+3. The mod is loaded as if it were a folder — `manifest.json` is read from inside the zip, sources compiled, assets discovered
+4. Zip mods have the same dependency resolution and lifecycle as folder mods; deduplication priority is controlled by the scanner's `ModSourceRoot.Priority`, not by format type
+
+See [Resources — Loaders](../resources/loaders/) for details on how `ZipModLoader` and custom loaders work.
 
 ## Creating a .zip for distribution
 
@@ -68,7 +70,7 @@ def pack_mod(mod_path, output_path):
 ## Testing a zipped mod
 
 1. Place the `.zip` in `mods/`
-2. Remove the source folder (or keep both — the kernel prefers folders over zips if both exist)
+2. Remove the source folder (or keep both — if both a folder and a zip share the same mod ID under the same root, the kernel registers whichever it encounters first in filesystem order; same-version duplicates are skipped)
 3. Launch the game — the mod loads from the zip
 4. Check the game log for any errors
 
@@ -76,12 +78,12 @@ def pack_mod(mod_path, output_path):
 
 Include a `version` field in `manifest.json` for proper version tracking:
 
-```json
+```jsonc
 {
-  "name": "MyMod",
-  "version": "1.2.0",
-  "author": "you",
-  "description": "..."
+  "name": "MyMod",                                         // Human-readable mod name
+  "version": "1.2.0",                                      // Semver version for tracking and compatibility
+  "author": "you",                                         // Author credit
+  "description": "..."                                     // Short description of the mod
 }
 ```
 
@@ -90,8 +92,8 @@ The kernel does **not** enforce version conflicts — multiple versions of the s
 ## Zip mod limitations
 
 - **No hot-reload**: Editing files inside a zip requires repacking. Use folders during development
-- **Larger startup time**: First-time decompression adds a small delay (cached on subsequent runs)
-- **File size**: No hard limit, but very large zips (>100 MB of assets) may impact load times
+- **No filesystem paths**: `GetFileSystemPath()` always returns `null` for zip mods — Godot's `ResourceLoader` cannot load scenes or shaders directly from within a zip. Assets that require filesystem access (shaders, scenes) are extracted to the mod cache on demand
+- **File size**: No hard limit on zip size, but the entry lookup dictionary grows linearly with the number of files — very large archives (>10,000 entries) may increase the initial dictionary build time
 
 ## Existing test zips
 

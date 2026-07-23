@@ -11,13 +11,13 @@ Mods can include `.gd` (GDScript) files alongside or instead of C# source code. 
 
 ## manifest.json — gd_sources field
 
-```json
+```jsonc
 {
-  "id": "my_mod",
-  "name": "My GDScript Mod",
-  "version": "1.0.0",
-  "gd_sources": ["scripts/*.gd"],
-  "depends": ["core"]
+  "id": "my_mod",                                          // Canonical mod identifier
+  "name": "My GDScript Mod",                               // Human-readable mod name
+  "version": "1.0.0",                                      // Semver version
+  "gd_sources": ["scripts/*.gd"],                          // Glob patterns for .gd files (one level deep, no recursive **)
+  "depends": ["core"]                                      // Versioned dependency strings
 }
 ```
 
