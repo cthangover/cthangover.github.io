@@ -8,20 +8,20 @@ A GDScript that has both `get_action_id()` and `execute(action, user, target)` i
 extends RefCounted
 
 func get_action_id():
-	return "my.custom_attack"
+    return "my.custom_attack"
 
 func execute(action, user, target):
-	var result = GDBattleResult.new()
+    var result = GDBattleResult.new()
 
-	var damage = user.AttackValue * 2 - target.DefenceValue
-	if damage < 1:
-		damage = 1
+    var damage = user.AttackValue * 2 - target.DefenceValue
+    if damage < 1:
+        damage = 1
 
-	result.TargetDamage = damage
-	result.TargetDefence = target.DefenceValue
-	result.Result = true
+    result.TargetDamage = damage
+    result.TargetDefence = target.DefenceValue
+    result.Result = true
 
-	return result
+    return result
 ```
 
 ## Parameters

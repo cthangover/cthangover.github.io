@@ -6,10 +6,10 @@ A GDScript with `on_mod_loaded(modId)` or `on_mod_resources_ready()` is register
 extends RefCounted
 
 func on_mod_loaded(mod_id):
-	print("[MY_MOD] on_mod_loaded: " + mod_id)
+    print("[MY_MOD] on_mod_loaded: " + mod_id)
 
 func on_mod_resources_ready():
-	print("[MY_MOD] All mod resources are ready")
+    print("[MY_MOD] All mod resources are ready")
 ```
 
 | Hook | Called when |

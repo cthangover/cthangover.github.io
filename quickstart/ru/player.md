@@ -18,8 +18,8 @@
 mods/
 └── quickstart_player/
     ├── manifest.json
-	└── patches/
-	    └── characters.json
+    └── patches/
+        └── characters.json
 ```
 
 ---

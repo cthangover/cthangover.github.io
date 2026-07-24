@@ -9,10 +9,10 @@ A GDScript that has both `get_name()` and `run(ctx)` is registered as a **scenar
 extends RefCounted
 
 func get_name():
-	return "my.hello"
+    return "my.hello"
 
 func run(ctx):
-	ctx.Log("EVENT", "Hello from GDScript!")
+    ctx.Log("EVENT", "Hello from GDScript!")
 ```
 
 Usage in `.scenario`:
@@ -26,14 +26,14 @@ action my.hello
 extends RefCounted
 
 func get_name():
-	return "my.announce"
+    return "my.announce"
 
 func run(ctx):
-	var name = ctx.GetParam("name")
-	var count = ctx.GetParam("count")
-	if name == "":
-		name = "Unknown"
-	ctx.Log("EVENT", "Announcing: " + name + " x" + count)
+    var name = ctx.GetParam("name")
+    var count = ctx.GetParam("count")
+    if name == "":
+        name = "Unknown"
+    ctx.Log("EVENT", "Announcing: " + name + " x" + count)
 ```
 
 ```scenario
@@ -73,11 +73,11 @@ The `ctx` object provides these properties and methods:
 
 ```gdscript
 func run(ctx):
-	var qid = ctx.GetParam("quest_id")
-	if ctx.Quests.Exists(qid):
-		ctx.Quests.SetStatus(qid, "Active")
-		ctx.Quests.AddTag(qid, "started_by_gd")
-		ctx.Quests.SendNotification(qid)
+    var qid = ctx.GetParam("quest_id")
+    if ctx.Quests.Exists(qid):
+        ctx.Quests.SetStatus(qid, "Active")
+        ctx.Quests.AddTag(qid, "started_by_gd")
+        ctx.Quests.SendNotification(qid)
 ```
 
 ### GDCharacterService
@@ -131,19 +131,19 @@ Pass empty strings `""` for `questId`/`newTag` to omit them.
 extends RefCounted
 
 func get_name():
-	return "my.quest_and_char"
+    return "my.quest_and_char"
 
 func run(ctx):
-	var quest = ctx.GetParam("quest_id")
-	var hero = ctx.GetParam("hero")
+    var quest = ctx.GetParam("quest_id")
+    var hero = ctx.GetParam("hero")
 
-	ctx.Quests.SetStatus(quest, "Active")
-	ctx.Quests.AddTag(quest, "gds_managed")
-	ctx.Quests.SendNotification(quest)
+    ctx.Quests.SetStatus(quest, "Active")
+    ctx.Quests.AddTag(quest, "gds_managed")
+    ctx.Quests.SendNotification(quest)
 
-	ctx.Character.AddToParty(hero)
-	ctx.Character.SendNotification(hero)
+    ctx.Character.AddToParty(hero)
+    ctx.Character.SendNotification(hero)
 
-	if ctx.ModRegistry.IsLoaded("core"):
-		ctx.Log("EVENT", "Core is loaded, all good")
+    if ctx.ModRegistry.IsLoaded("core"):
+        ctx.Log("EVENT", "Core is loaded, all good")
 ```

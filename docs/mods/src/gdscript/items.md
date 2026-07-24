@@ -6,12 +6,12 @@ A GDScript that has both `get_item_action_id()` and `use(item)` is registered as
 extends RefCounted
 
 func get_item_action_id():
-	return "my.heal_potion"
+    return "my.heal_potion"
 
 func use(item):
-	print("[ITEM] Using: " + item.Name + " (id=" + item.Id + ")")
-	# Perform healing logic here
-	return true
+    print("[ITEM] Using: " + item.Name + " (id=" + item.Id + ")")
+    # Perform healing logic here
+    return true
 ```
 
 ## GDItem fields

@@ -9,10 +9,10 @@ A GDScript that has both `get_condition_name()` and `evaluate(flags, args)` is r
 extends RefCounted
 
 func get_condition_name():
-	return "gds.is_rain"
+    return "gds.is_rain"
 
 func evaluate(flags, args):
-	return flags.get("weather", "") == "rain"
+    return flags.get("weather", "") == "rain"
 ```
 
 Usage:
@@ -33,13 +33,13 @@ Arguments passed in parentheses become integer-keyed entries in the `args` dicti
 extends RefCounted
 
 func get_condition_name():
-	return "gds.flag_equals"
+    return "gds.flag_equals"
 
 func evaluate(flags, args):
-	var expected = args.get("0", "")
-	if expected == "":
-		return false
-	return flags.get("custom_flag", "") == expected
+    var expected = args.get("0", "")
+    if expected == "":
+        return false
+    return flags.get("custom_flag", "") == expected
 ```
 
 ```scenario

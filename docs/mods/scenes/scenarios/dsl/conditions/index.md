@@ -30,10 +30,10 @@ Mods can add custom condition names via GDScript. A GDScript with `get_condition
 extends RefCounted
 
 func get_condition_name():
-	return "gds.is_rain"
+    return "gds.is_rain"
 
 func evaluate(flags, args):
-	return flags.get("weather", "") == "rain"
+    return flags.get("weather", "") == "rain"
 ```
 
 Usage in scenario:
@@ -44,11 +44,11 @@ condition: gds.is_rain
 With arguments:
 ```gdscript
 func get_condition_name():
-	return "gds.flag_equals"
+    return "gds.flag_equals"
 
 func evaluate(flags, args):
-	var expected = args.get("0", "")
-	return flags.get("custom_flag", "") == expected
+    var expected = args.get("0", "")
+    return flags.get("custom_flag", "") == expected
 ```
 
 ```scenario

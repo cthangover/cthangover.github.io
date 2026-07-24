@@ -148,13 +148,13 @@ Create `scripts/my_actions.gd`:
 extends RefCounted
 
 func get_name():
-	return "my.quest_activate"
+    return "my.quest_activate"
 
 func run(ctx):
-	var questId = ctx.GetParam("quest_id")
-	ctx.Quests.SetStatus(questId, "Active")
-	ctx.Quests.SendNotification(questId)
-	ctx.Log("EVENT", "Quest " + questId + " activated via GDScript")
+    var questId = ctx.GetParam("quest_id")
+    ctx.Quests.SetStatus(questId, "Active")
+    ctx.Quests.SendNotification(questId)
+    ctx.Log("EVENT", "Quest " + questId + " activated via GDScript")
 ```
 
 Declare in `manifest.json`:
