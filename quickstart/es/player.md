@@ -16,21 +16,25 @@ Cada mod vive en su propia carpeta dentro de `mods/`. Crea:
 
 ```filestree
 mods/
-└── my_tweak/
+└── quickstart_player/
+    ├── manifest.json
+    └── patches/
+        └── characters.json
 ```
 
 ---
 
 ## Paso 2: manifest.json
 
-Todo mod necesita un manifiesto. Crea `mods/my_tweak/manifest.json`:
+Todo mod necesita un manifiesto. Crea `mods/quickstart_player/manifest.json`:
 
 ```jsonc
 {
-  "id": "my_tweak",                 // Identificador único del mod, usa inglés
+  "id": "quickstart_player",        // Identificador único del mod, usa inglés
   "name": "Mejora de Marao",        // Nombre mostrado en el menú de gestión de mods
   "description": "¡Mi primer mod!", // Descripción visible en la lista de mods y catálogo
-  "author": "player"                // Autor del mod (cadena arbitraria)
+  "author": "player",               // Autor del mod (cadena arbitraria)
+  "depends": ["core"]               // Dependencia del juego base (así no se requiere ordenar manualmente la carga de mods)
 }
 ```
 
@@ -40,7 +44,7 @@ Un manifiesto mínimo solo necesita `name`, pero es mejor completar también `id
 
 ## Paso 3: Parche de personaje
 
-Crea `mods/my_tweak/patches/characters.json`:
+Crea `mods/quickstart_player/patches/characters.json`:
 
 ```jsonc
 {
@@ -74,6 +78,7 @@ Inicia el juego. Entra en cualquier batalla — Marao ahora tiene:
 
 - **5000 HP** en lugar de 10
 - **1200 ATK** en lugar de 5
+- **2 PA** en lugar de 1
 - Una tercera acción **"Aturdir"** junto a "Atacar" y "Defender"
 
 ---

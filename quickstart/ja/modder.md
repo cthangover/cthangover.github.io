@@ -16,7 +16,7 @@
 
 ```filestree
 mods/
-└── alko_bar/
+└── quickstart_modder/
     ├── manifest.json
     ├── scenes/
     │   └── my_alko_bar.json              # 新しいロケーション — 酒場！
@@ -37,15 +37,15 @@ mods/
 
 ## ステップ 2：manifest.json
 
-`mods/my_scene/manifest.json`：
+`mods/quickstart_modder/manifest.json`：
 
 ```jsonc
 {
-  "id": "alko_bar",                                    // Mod ID
-  "name": "私の酒場",                                   // Modメニューに表示されるMod名
-  "description": "町に酒場シーンを追加",                  // Modメニューに表示されるModの説明
-  "author": "modder",                                  // Mod作者
-  "depends": ["core"]                                  // コアゲームへの依存（手動でMod読み込み順序を設定する必要なし）
+  "id": "alko_bar",                    // Mod ID
+  "name": "私の酒場",                   // Modメニューに表示されるMod名
+  "description": "町に酒場シーンを追加",  // Modメニューに表示されるModの説明
+  "author": "modder",                 // Mod作者
+  "depends": ["core"]                 // コアゲームへの依存（手動でMod読み込み順序を設定する必要なし）
 }
 ```
 
@@ -53,7 +53,7 @@ mods/
 
 ## ステップ 3：シーン定義
 
-`mods/my_scene/scenes/my_alko_bar.json`：
+`mods/quickstart_modder/scenes/my_alko_bar.json`：
 
 ```jsonc
 {
@@ -75,17 +75,17 @@ mods/
 
 ## ステップ 4：背景
 
-`mods/my_scene/backgrounds/my_alko_bar/bg.png` に画像を配置します。
+`mods/quickstart_modder/backgrounds/my_alko_bar/bg.png` に画像を配置します。
 
 任意のPNG画像が使用可能です。ゲームはシェーダーベースのライティングと時間帯をサポートしており — 背景は自動的に照らされます。
 
-> 画像がない場合は、一時的に `mods/core/backgrounds/home/kitchen.png` → `mods/my_scene/backgrounds/my_alko_bar/bg.png` をコピーしてください。
+> 画像がない場合は、一時的に `mods/core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png` をコピーしてください。
 
 ---
 
 ## ステップ 5：DSLシナリオ
 
-`mods/my_scene/scenarios/my_alko_bar.scenario`：
+`mods/quickstart_modder/scenarios/my_alko_bar.scenario`：
 
 ```scenario
 scene: my_alko_bar
@@ -123,7 +123,7 @@ end
 
 元の `core` ファイルに**触れずに**、町のシーンに「酒場へ行く」オプションを追加しましょう。
 
-`mods/my_scene/scenarios/town_entry_override.scenario`：
+`mods/quickstart_modder/scenarios/town_entry_override.scenario`：
 
 ```scenario
 scene: town_entry
@@ -146,7 +146,7 @@ end
 
 `town_entry` シーンには2つのシナリオがあります：
 - `priority: 10` — デフォルト（`core` Modから）
-- `priority: 1` — 私たちのもの（`my_scene` から）
+- `priority: 1` — 私たちのもの（`quickstart_modder` から）
 
 エンジンは**最も低い** `priority` のシナリオを実行します。私たちの `priority: 1` が勝ち — プレイヤーは新しいオプションを見ます。
 

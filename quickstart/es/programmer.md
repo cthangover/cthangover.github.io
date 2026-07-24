@@ -14,27 +14,27 @@ Escribirás un mod en C# que añade al juego: una acción DSL personalizada y aj
 
 ```filestree
 mods/
-└── my_code_mod/
+└── quickstart_programmer/
     ├── manifest.json
     ├── src/
-    │   ├── MyModSettings.cs
-    │   ├── MyMod.cs
-    │   └── MyEffectAction.cs
+    │   ├─── MyModSettings.cs
+    │   ├─── MyMod.cs
+    │   └─── MyEffectAction.cs
     └── locale/
-        └── ru.properties
+        └─── es.properties
 ```
 
 ---
 
 ## Paso 2: manifest.json
 
-`mods/my_code_mod/manifest.json`:
+`mods/quickstart_programmer/manifest.json`:
 
 ```jsonc
 {
   "id": "quickstart_programmer",                    // ID del mod
   "name": "My Code Mod",                            // Nombre del mod mostrado en la lista de mods
-  "description": "Nueva acción y ajustes del mod",   // Descripción del mod mostrada en la lista de mods
+  "description": "Nueva acción y ajustes del mod",  // Descripción del mod mostrada en la lista de mods
   "sources": ["src/*.cs"],                          // Patrón glob para recopilar archivos fuente (incluye todos los archivos ".cs")
   "author": "programmer",                           // Autor
   "depends": ["core"]                               // Dependencia del juego base (así no se requiere ordenar manualmente la carga de mods)
@@ -47,7 +47,7 @@ El campo `sources` especifica qué archivos C# compilar mediante Roslyn.
 
 ## Paso 3: Punto de entrada — IMod
 
-`mods/my_code_mod/src/MyMod.cs`:
+`mods/quickstart_programmer/src/MyMod.cs`:
 
 ```csharp
 using Cthangover.Core.Mods;
@@ -164,7 +164,7 @@ El motor encuentra tu clase mediante reflection y llama a `Execute`.
 
 ## Paso 6: Localización
 
-`mods/my_code_mod/locale/ru.properties`:
+`mods/quickstart_programmer/locale/es.properties`:
 
 ```properties
 mymod/effect_volume = Volumen del efecto

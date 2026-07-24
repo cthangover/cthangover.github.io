@@ -16,7 +16,7 @@ Crea la carpeta y los archivos base:
 
 ```filestree
 mods/
-└── alko_bar/
+└── quickstart_modder/
     ├── manifest.json
     ├── scenes/
     │   └── my_alko_bar.json              # ¡Nuestra nueva ubicación — el bar!
@@ -37,15 +37,15 @@ mods/
 
 ## Paso 2: manifest.json
 
-`mods/my_scene/manifest.json`:
+`mods/quickstart_modder/manifest.json`:
 
 ```jsonc
 {
-  "id": "alko_bar",                                    // ID del mod
-  "name": "Mi Bar",                                    // Nombre del mod mostrado en el menú de mods
-  "description": "Añade un bar al pueblo",              // Descripción del mod mostrada en el menú de mods
-  "author": "modder",                                  // Autor del mod
-  "depends": ["core"]                                  // Dependencia del juego base (así no se requiere ordenar manualmente la carga de mods)
+  "id": "alko_bar",                         // ID del mod
+  "name": "Mi Bar",                         // Nombre del mod mostrado en el menú de mods
+  "description": "Añade un bar al pueblo",  // Descripción del mod mostrada en el menú de mods
+  "author": "modder",                       // Autor del mod
+  "depends": ["core"]                       // Dependencia del juego base (así no se requiere ordenar manualmente la carga de mods)
 }
 ```
 
@@ -53,7 +53,7 @@ mods/
 
 ## Paso 3: Definición de la escena
 
-`mods/my_scene/scenes/my_alko_bar.json`:
+`mods/quickstart_modder/scenes/my_alko_bar.json`:
 
 ```jsonc
 {
@@ -75,17 +75,17 @@ mods/
 
 ## Paso 4: Fondo
 
-Coloca una imagen en `mods/my_scene/backgrounds/my_alko_bar/bg.png`.
+Coloca una imagen en `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`.
 
 Cualquier imagen PNG servirá. El juego soporta iluminación por shader y hora del día — el fondo se iluminará automáticamente.
 
-> Si no tienes una imagen, copia temporalmente `mods/core/backgrounds/home/kitchen.png` → `mods/my_scene/backgrounds/my_alko_bar/bg.png`.
+> Si no tienes una imagen, copia temporalmente `mods/core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`.
 
 ---
 
 ## Paso 5: Escenario DSL
 
-`mods/my_scene/scenarios/my_alko_bar.scenario`:
+`mods/quickstart_modder/scenarios/my_alko_bar.scenario`:
 
 ```scenario
 scene: my_alko_bar
@@ -123,7 +123,7 @@ end
 
 Ahora añadimos una opción "Ir al bar" a la escena del pueblo, **sin tocar** el archivo original de `core`.
 
-`mods/my_scene/scenarios/town_entry_override.scenario`:
+`mods/quickstart_modder/scenarios/town_entry_override.scenario`:
 
 ```scenario
 scene: town_entry
@@ -146,7 +146,7 @@ end
 
 La escena `town_entry` ahora tiene dos escenarios:
 - `priority: 10` — por defecto (del mod `core`)
-- `priority: 1` — el nuestro (de `my_scene`)
+- `priority: 1` — el nuestro (de `quickstart_modder`)
 
 El motor ejecuta el escenario con la **menor** `priority`. Nuestra `priority: 1` gana — el jugador ve la nueva opción.
 

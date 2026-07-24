@@ -16,21 +16,25 @@
 
 ```filestree
 mods/
-└── my_tweak/
+└── quickstart_player/
+    ├── manifest.json
+    └── patches/
+        └── characters.json
 ```
 
 ---
 
 ## 步骤 2：manifest.json
 
-每个模组都需要清单文件。创建 `mods/my_tweak/manifest.json`：
+每个模组都需要清单文件。创建 `mods/quickstart_player/manifest.json`：
 
 ```jsonc
 {
-  "id": "my_tweak",                 // 唯一模组标识符，请使用英文
-  "name": "Marao 强化",             // 在模组管理菜单中显示的名称
+  "id": "quickstart_player",      // 唯一模组标识符，请使用英文
+  "name": "Marao 强化",            // 在模组管理菜单中显示的名称
   "description": "我的第一个模组！", // 在模组列表和目录中显示的描述
-  "author": "player"                // 模组作者（任意字符串）
+  "author": "player",             // 模组作者（任意字符串）
+  "depends": ["core"]             // 依赖核心游戏（无需手动排列模组加载顺序）
 }
 ```
 
@@ -40,13 +44,13 @@ mods/
 
 ## 步骤 3：角色补丁
 
-创建 `mods/my_tweak/patches/characters.json`：
+创建 `mods/quickstart_player/patches/characters.json`：
 
 ```jsonc
 {
   "Items": [
     {
-      "Id": "Marao", // 要补丁的角色 ID（在 core 模组中定义）
+      "Id": "Marao",  // 要补丁的角色 ID（在 core 模组中定义）
 
       "Health": 5000, // 新属性值 — 覆盖原始值
       "Attack": 1200,
@@ -74,6 +78,7 @@ mods/
 
 - **5000 HP** 替代 10
 - **1200 ATK** 替代 5
+- **2 行动点** 替代 1
 - 第三个动作 **"眩晕"** 与"攻击"和"防御"并列
 
 ---

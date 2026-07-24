@@ -16,7 +16,7 @@ Tạo thư mục và các tệp cơ sở:
 
 ```filestree
 mods/
-└── alko_bar/
+└── quickstart_modder/
     ├── manifest.json
     ├── scenes/
     │   └── my_alko_bar.json              # Địa điểm mới của chúng ta — quán rượu!
@@ -37,15 +37,15 @@ mods/
 
 ## Bước 2: manifest.json
 
-`mods/my_scene/manifest.json`：
+`mods/quickstart_modder/manifest.json`：
 
 ```jsonc
 {
-  "id": "alko_bar",                                    // ID mod
+  "id": "alko_bar",                                   // ID mod
   "name": "Quán Rượu Của Tôi",                        // Tên mod hiển thị trong menu mod
-  "description": "Thêm cảnh quán rượu vào thị trấn",    // Mô tả mod hiển thị trong menu mod
-  "author": "modder",                                  // Tác giả mod
-  "depends": ["core"]                                  // Phụ thuộc vào game lõi (không cần sắp xếp thứ tự tải mod thủ công)
+  "description": "Thêm cảnh quán rượu vào thị trấn",  // Mô tả mod hiển thị trong menu mod
+  "author": "modder",                                 // Tác giả mod
+  "depends": ["core"]                                 // Phụ thuộc vào game lõi (không cần sắp xếp thứ tự tải mod thủ công)
 }
 ```
 
@@ -53,7 +53,7 @@ mods/
 
 ## Bước 3: Định nghĩa cảnh
 
-`mods/my_scene/scenes/my_alko_bar.json`：
+`mods/quickstart_modder/scenes/my_alko_bar.json`：
 
 ```jsonc
 {
@@ -75,17 +75,17 @@ mods/
 
 ## Bước 4: Hình nền
 
-Đặt hình ảnh vào `mods/my_scene/backgrounds/my_alko_bar/bg.png`.
+Đặt hình ảnh vào `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`.
 
 Bất kỳ ảnh PNG nào cũng được. Trò chơi hỗ trợ ánh sáng dựa trên shader và thời gian trong ngày — nền sẽ được chiếu sáng tự động.
 
-> Nếu không có ảnh, tạm thời sao chép `mods/core/backgrounds/home/kitchen.png` → `mods/my_scene/backgrounds/my_alko_bar/bg.png`.
+> Nếu không có ảnh, tạm thời sao chép `mods/core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`.
 
 ---
 
 ## Bước 5: Kịch bản DSL
 
-`mods/my_scene/scenarios/my_alko_bar.scenario`：
+`mods/quickstart_modder/scenarios/my_alko_bar.scenario`：
 
 ```scenario
 scene: my_alko_bar
@@ -123,7 +123,7 @@ end
 
 Bây giờ thêm tùy chọn "Đến quán rượu" vào cảnh thị trấn, **không chạm vào** tệp `core` gốc.
 
-`mods/my_scene/scenarios/town_entry_override.scenario`：
+`mods/quickstart_modder/scenarios/town_entry_override.scenario`：
 
 ```scenario
 scene: town_entry
@@ -146,7 +146,7 @@ end
 
 Cảnh `town_entry` giờ có hai kịch bản:
 - `priority: 10` — mặc định (từ mod `core`)
-- `priority: 1` — của chúng ta (từ `my_scene`)
+- `priority: 1` — của chúng ta (từ `quickstart_modder`)
 
 Engine chạy kịch bản có `priority` **thấp nhất**. `priority: 1` của chúng ta thắng — người chơi thấy tùy chọn mới.
 

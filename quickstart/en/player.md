@@ -16,21 +16,25 @@ Every mod lives in its own folder inside `mods/`. Create:
 
 ```filestree
 mods/
-└── my_tweak/
+└── quickstart_player/
+    ├── manifest.json
+    └── patches/
+        └── characters.json
 ```
 
 ---
 
 ## Step 2: manifest.json
 
-Every mod needs a manifest. Create `mods/my_tweak/manifest.json`:
+Every mod needs a manifest. Create `mods/quickstart_player/manifest.json`:
 
 ```jsonc
 {
-  "id": "my_tweak",                 // Unique mod identifier, use English
+  "id": "quickstart_player",        // Unique mod identifier, use English
   "name": "Marao Buff",             // Display name shown in the mod management menu
   "description": "My first mod!",   // Description visible in the mod list and catalog
-  "author": "player"                // Mod author (arbitrary string)
+  "author": "player",               // Mod author (arbitrary string)
+  "depends": ["core"]               // Dependency on the core game (so manual mod load ordering is not required)
 }
 ```
 
@@ -40,7 +44,7 @@ A minimal manifest only needs `name`, but it's better to fill in `id` as well. T
 
 ## Step 3: Character patch
 
-Create `mods/my_tweak/patches/characters.json`:
+Create `mods/quickstart_player/patches/characters.json`:
 
 ```jsonc
 {
@@ -74,6 +78,7 @@ Start the game. Enter any battle — Marao now has:
 
 - **5000 HP** instead of 10
 - **1200 ATK** instead of 5
+- **2 AP** instead of 1
 - A third action **"Stun"** alongside "Attack" and "Defence"
 
 ---

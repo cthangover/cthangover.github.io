@@ -6,7 +6,7 @@
 <span>Без кода</span>
 </div>
 
-Вы создадите мод с собственной сценой — комнату с диалогом, выборами и переходами. А заодно добавите опцию «В таверну» в существующую сцену кухни, не трогая оригинальные файлы.
+Вы создадите мод с собственной сценой — комнату с диалогом, выборами и переходами. А заодно добавите опцию «В бар» в существующую сцену кухни, не трогая оригинальные файлы.
 
 ---
 
@@ -16,7 +16,7 @@
 
 ```filestree
 mods/
-└── alko_bar/
+└── quickstart_modder/
     ├── manifest.json
     ├── scenes/
     │   └── my_alko_bar.json              # Наша новая локация - алко-бар!
@@ -37,7 +37,7 @@ mods/
 
 ## Шаг 2: manifest.json
 
-`mods/my_scene/manifest.json`:
+`mods/quickstart_modder/manifest.json`:
 
 ```jsonc
 {
@@ -53,7 +53,7 @@ mods/
 
 ## Шаг 3: Описание сцены
 
-`mods/my_scene/scenes/my_alko_bar.json`:
+`mods/quickstart_modder/scenes/my_alko_bar.json`:
 
 ```jsonc
 {
@@ -75,17 +75,17 @@ mods/
 
 ## Шаг 4: Фон
 
-Положите изображение в `mods/my_scene/backgrounds/my_alko_bar/bg.png`.
+Положите изображение в `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`.
 
 Подойдёт любое PNG-изображение. Игра поддерживает шейдерное освещение и время суток — фон будет автоматически освещаться.
 
-> Если нет своего изображения, временно скопируйте `mods/core/backgrounds/home/kitchen.png` → `mods/my_scene/backgrounds/my_alko_bar/bg.png`.
+> Если нет своего изображения, временно скопируйте `mods/core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`.
 
 ---
 
 ## Шаг 5: Сценарий на DSL
 
-`mods/my_scene/scenarios/my_alko_bar.scenario`:
+`mods/quickstart_modder/scenarios/my_alko_bar.scenario`:
 
 ```scenario
 scene: my_alko_bar
@@ -123,7 +123,7 @@ end
 
 Теперь добавим опцию «Зайти в бар» в сцену города, **не трогая** оригинальный файл `core`.
 
-`mods/my_scene/scenarios/town_entry_override.scenario`:
+`mods/quickstart_modder/scenarios/town_entry_override.scenario`:
 
 ```scenario
 scene: town_entry
@@ -146,9 +146,9 @@ end
 
 У сцены `town_entry` теперь два сценария:
 - `priority: 10` — стандартный (из мода `core`)
-- `priority: 1` — наш (из `my_scene`)
+- `priority: 1` — наш (из `quickstart_modder`)
 
-Движок запускает сценарий с **наименьшим** `priority`. Наш `priority: 5` побеждает — игрок видит новую опцию.
+Движок запускает сценарий с **наименьшим** `priority`. Наш `priority: 1` побеждает — игрок видит новую опцию.
 
 > Подробнее: [Scene Priority System](site/docs/mods/scenes/).
 

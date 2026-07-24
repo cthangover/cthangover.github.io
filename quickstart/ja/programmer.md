@@ -14,30 +14,30 @@
 
 ```filestree
 mods/
-└── my_code_mod/
+└── quickstart_programmer/
     ├── manifest.json
     ├── src/
-    │   ├── MyModSettings.cs
-    │   ├── MyMod.cs
-    │   └── MyEffectAction.cs
+    │   ├─── MyModSettings.cs
+    │   ├─── MyMod.cs
+    │   └─── MyEffectAction.cs
     └── locale/
-        └── ru.properties
+        └─── ja.properties
 ```
 
 ---
 
 ## ステップ 2：manifest.json
 
-`mods/my_code_mod/manifest.json`：
+`mods/quickstart_programmer/manifest.json`：
 
 ```jsonc
 {
-  "id": "quickstart_programmer",                    // Mod ID
-  "name": "My Code Mod",                            // Modリストに表示されるMod名
-  "description": "新しいアクションとMod設定",          // Modリストに表示されるModの説明
-  "sources": ["src/*.cs"],                          // ソースファイルを収集するグロブパターン（すべての ".cs" ファイルを含む）
-  "author": "programmer",                           // 作者
-  "depends": ["core"]                               // コアゲームへの依存（手動でMod読み込み順序を設定する必要なし）
+  "id": "quickstart_programmer",           // Mod ID
+  "name": "My Code Mod",                   // Modリストに表示されるMod名
+  "description": "新しいアクションとMod設定",  // Modリストに表示されるModの説明
+  "sources": ["src/*.cs"],                 // ソースファイルを収集するグロブパターン（すべての ".cs" ファイルを含む）
+  "author": "programmer",                  // 作者
+  "depends": ["core"]                      // コアゲームへの依存（手動でMod読み込み順序を設定する必要なし）
 }
 ```
 
@@ -47,7 +47,7 @@ mods/
 
 ## ステップ 3：エントリポイント — IMod
 
-`mods/my_code_mod/src/MyMod.cs`：
+`mods/quickstart_programmer/src/MyMod.cs`：
 
 ```csharp
 using Cthangover.Core.Mods;
@@ -164,7 +164,7 @@ action my_effect
 
 ## ステップ 6：ローカライゼーション
 
-`mods/my_code_mod/locale/ru.properties`：
+`mods/quickstart_programmer/locale/ja.properties`：
 
 ```properties
 mymod/effect_volume = エフェクト音量

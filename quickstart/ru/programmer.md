@@ -14,21 +14,21 @@
 
 ```filestree
 mods/
-└── my_code_mod/
+└── quickstart_programmer/
     ├── manifest.json
     ├── src/
     │   ├─── MyModSettings.cs
     │   ├─── MyMod.cs
     │   └─── MyEffectAction.cs
     └── locale/
-        └── ru.properties
+        └─── ru.properties
 ```
 
 ---
 
 ## Шаг 2: manifest.json
 
-`mods/my_code_mod/manifest.json`:
+`mods/quickstart_programmer/manifest.json`:
 
 ```jsonc
 {
@@ -47,7 +47,7 @@ mods/
 
 ## Шаг 3: Точка входа — IMod
 
-`mods/my_code_mod/src/MyMod.cs`:
+`mods/quickstart_programmer/src/MyMod.cs`:
 
 ```csharp
 using Cthangover.Core.Mods;
@@ -164,7 +164,7 @@ action my_effect
 
 ## Шаг 6: Локализация
 
-`mods/my_code_mod/locale/ru.properties`:
+`mods/quickstart_programmer/locale/ru.properties`:
 
 ```properties
 mymod/effect_volume = Громкость эффекта

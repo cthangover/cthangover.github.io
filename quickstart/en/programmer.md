@@ -14,30 +14,30 @@ You'll write a C# mod that adds to the game: a custom DSL action and settings in
 
 ```filestree
 mods/
-└── my_code_mod/
+└── quickstart_programmer/
     ├── manifest.json
     ├── src/
     │   ├─── MyModSettings.cs
     │   ├─── MyMod.cs
     │   └─── MyEffectAction.cs
     └── locale/
-        └── ru.properties
+        └─── en.properties
 ```
 
 ---
 
 ## Step 2: manifest.json
 
-`mods/my_code_mod/manifest.json`:
+`mods/quickstart_programmer/manifest.json`:
 
 ```jsonc
 {
-  "id": "quickstart_programmer",                    // Mod ID
-  "name": "My Code Mod",                            // Mod name shown in the mod list
-  "description": "New action and mod settings",       // Mod description shown in the mod list
-  "sources": ["src/*.cs"],                          // Glob pattern for collecting source files (include all ".cs" files)
-  "author": "programmer",                           // Author
-  "depends": ["core"]                               // Dependency on the core game (so manual mod load ordering is not required)
+  "id": "quickstart_programmer",                // Mod ID
+  "name": "My Code Mod",                        // Mod name shown in the mod list
+  "description": "New action and mod settings", // Mod description shown in the mod list
+  "sources": ["src/*.cs"],                      // Glob pattern for collecting source files (include all ".cs" files)
+  "author": "programmer",                       // Author
+  "depends": ["core"]                           // Dependency on the core game (so manual mod load ordering is not required)
 }
 ```
 
@@ -47,7 +47,7 @@ The `sources` field specifies which C# files to compile via Roslyn.
 
 ## Step 3: Entry point — IMod
 
-`mods/my_code_mod/src/MyMod.cs`:
+`mods/quickstart_programmer/src/MyMod.cs`:
 
 ```csharp
 using Cthangover.Core.Mods;
@@ -164,7 +164,7 @@ The engine finds your class via reflection and calls `Execute`.
 
 ## Step 6: Localization
 
-`mods/my_code_mod/locale/ru.properties`:
+`mods/quickstart_programmer/locale/en.properties`:
 
 ```properties
 mymod/effect_volume = Effect volume

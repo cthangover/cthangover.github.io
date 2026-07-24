@@ -16,7 +16,7 @@
 
 ```filestree
 mods/
-└── alko_bar/
+└── quickstart_modder/
     ├── manifest.json
     ├── scenes/
     │   └── my_alko_bar.json              # 새로운 장소 — 선술집!
@@ -37,15 +37,15 @@ mods/
 
 ## 2단계: manifest.json
 
-`mods/my_scene/manifest.json`：
+`mods/quickstart_modder/manifest.json`：
 
 ```jsonc
 {
-  "id": "alko_bar",                                    // 모드 ID
-  "name": "내 선술집",                                  // 모드 메뉴에 표시되는 모드 이름
-  "description": "마을에 선술집 씬 추가",                 // 모드 메뉴에 표시되는 모드 설명
-  "author": "modder",                                  // 모드 작성자
-  "depends": ["core"]                                  // 코어 게임 의존성 (수동으로 모드 로드 순서를 정할 필요 없음)
+  "id": "alko_bar",                     // 모드 ID
+  "name": "내 선술집",                   // 모드 메뉴에 표시되는 모드 이름
+  "description": "마을에 선술집 씬 추가",  // 모드 메뉴에 표시되는 모드 설명
+  "author": "modder",                   // 모드 작성자
+  "depends": ["core"]                   // 코어 게임 의존성 (수동으로 모드 로드 순서를 정할 필요 없음)
 }
 ```
 
@@ -53,7 +53,7 @@ mods/
 
 ## 3단계: 씬 정의
 
-`mods/my_scene/scenes/my_alko_bar.json`：
+`mods/quickstart_modder/scenes/my_alko_bar.json`：
 
 ```jsonc
 {
@@ -75,17 +75,17 @@ mods/
 
 ## 4단계: 배경
 
-`mods/my_scene/backgrounds/my_alko_bar/bg.png`에 이미지를 배치하세요.
+`mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`에 이미지를 배치하세요.
 
 어떤 PNG 이미지든 사용 가능합니다. 게임은 셰이더 기반 조명과 시간대를 지원하며 — 배경이 자동으로 조명됩니다.
 
-> 이미지가 없다면, 임시로 `mods/core/backgrounds/home/kitchen.png` → `mods/my_scene/backgrounds/my_alko_bar/bg.png`를 복사하세요.
+> 이미지가 없다면, 임시로 `mods/core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`를 복사하세요.
 
 ---
 
 ## 5단계: DSL 시나리오
 
-`mods/my_scene/scenarios/my_alko_bar.scenario`：
+`mods/quickstart_modder/scenarios/my_alko_bar.scenario`：
 
 ```scenario
 scene: my_alko_bar
@@ -123,7 +123,7 @@ end
 
 이제 원본 `core` 파일을 **건드리지 않고** 마을 씬에 "술집 가기" 옵션을 추가합니다.
 
-`mods/my_scene/scenarios/town_entry_override.scenario`：
+`mods/quickstart_modder/scenarios/town_entry_override.scenario`：
 
 ```scenario
 scene: town_entry
@@ -146,7 +146,7 @@ end
 
 `town_entry` 씬에는 이제 두 개의 시나리오가 있습니다:
 - `priority: 10` — 기본값 (`core` 모드에서)
-- `priority: 1` — 우리 것 (`my_scene`에서)
+- `priority: 1` — 우리 것 (`quickstart_modder`에서)
 
 엔진은 **가장 낮은** `priority`의 시나리오를 실행합니다. 우리의 `priority: 1`이 승리 — 플레이어가 새 옵션을 봅니다.
 

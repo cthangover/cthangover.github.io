@@ -16,21 +16,25 @@
 
 ```filestree
 mods/
-└── my_tweak/
+└── quickstart_player/
+    ├── manifest.json
+    └── patches/
+        └── characters.json
 ```
 
 ---
 
 ## ステップ 2：manifest.json
 
-すべてのModにマニフェストが必要です。`mods/my_tweak/manifest.json` を作成：
+すべてのModにマニフェストが必要です。`mods/quickstart_player/manifest.json` を作成：
 
 ```jsonc
 {
-  "id": "my_tweak",                 // 一意のMod識別子、英語を使用
+  "id": "quickstart_player",       // 一意のMod識別子、英語を使用
   "name": "Marao強化",              // Mod管理メニューに表示される名前
   "description": "初めてのMod！",    // Modリストとカタログに表示される説明
-  "author": "player"                // Mod作者（任意の文字列）
+  "author": "player",              // Mod作者（任意の文字列）
+  "depends": ["core"]              // コアゲームへの依存（手動でMod読み込み順序を設定する必要なし）
 }
 ```
 
@@ -40,13 +44,13 @@ mods/
 
 ## ステップ 3：キャラクターパッチ
 
-`mods/my_tweak/patches/characters.json` を作成：
+`mods/quickstart_player/patches/characters.json` を作成：
 
 ```jsonc
 {
   "Items": [
     {
-      "Id": "Marao", // パッチ対象のキャラクターID（core Modで定義）
+      "Id": "Marao",  // パッチ対象のキャラクターID（core Modで定義）
 
       "Health": 5000, // 新しいプロパティ値 — 元の値を上書き
       "Attack": 1200,
@@ -74,6 +78,7 @@ mods/
 
 - **5000 HP** （10の代わりに）
 - **1200 ATK** （5の代わりに）
+- **2 AP** （1の代わりに）
 - 3つ目のアクション **「スタン」** が「攻撃」「防御」と並んで表示
 
 ---

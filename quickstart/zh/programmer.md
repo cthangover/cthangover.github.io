@@ -14,30 +14,30 @@
 
 ```filestree
 mods/
-└── my_code_mod/
+└── quickstart_programmer/
     ├── manifest.json
     ├── src/
-    │   ├── MyModSettings.cs
-    │   ├── MyMod.cs
-    │   └── MyEffectAction.cs
+    │   ├─── MyModSettings.cs
+    │   ├─── MyMod.cs
+    │   └─── MyEffectAction.cs
     └── locale/
-        └── ru.properties
+        └─── zh.properties
 ```
 
 ---
 
 ## 步骤 2：manifest.json
 
-`mods/my_code_mod/manifest.json`：
+`mods/quickstart_programmer/manifest.json`：
 
 ```jsonc
 {
-  "id": "quickstart_programmer",                    // 模组 ID
-  "name": "My Code Mod",                            // 模组列表中显示的模组名称
-  "description": "新动作和模组设置",                   // 模组列表中显示的模组描述
-  "sources": ["src/*.cs"],                          // 收集源文件的 glob 模式（包含所有 ".cs" 文件）
-  "author": "programmer",                           // 作者
-  "depends": ["core"]                               // 依赖核心游戏（无需手动排列模组加载顺序）
+  "id": "quickstart_programmer",   // 模组 ID
+  "name": "My Code Mod",           // 模组列表中显示的模组名称
+  "description": "新动作和模组设置",  // 模组列表中显示的模组描述
+  "sources": ["src/*.cs"],         // 收集源文件的 glob 模式（包含所有 ".cs" 文件）
+  "author": "programmer",          // 作者
+  "depends": ["core"]              // 依赖核心游戏（无需手动排列模组加载顺序）
 }
 ```
 
@@ -47,7 +47,7 @@ mods/
 
 ## 步骤 3：入口点 — IMod
 
-`mods/my_code_mod/src/MyMod.cs`：
+`mods/quickstart_programmer/src/MyMod.cs`：
 
 ```csharp
 using Cthangover.Core.Mods;
@@ -164,7 +164,7 @@ action my_effect
 
 ## 步骤 6：本地化
 
-`mods/my_code_mod/locale/ru.properties`：
+`mods/quickstart_programmer/locale/zh.properties`：
 
 ```properties
 mymod/effect_volume = 特效音量

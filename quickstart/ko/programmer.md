@@ -14,30 +14,30 @@
 
 ```filestree
 mods/
-└── my_code_mod/
+└── quickstart_programmer/
     ├── manifest.json
     ├── src/
-    │   ├── MyModSettings.cs
-    │   ├── MyMod.cs
-    │   └── MyEffectAction.cs
+    │   ├─── MyModSettings.cs
+    │   ├─── MyMod.cs
+    │   └─── MyEffectAction.cs
     └── locale/
-        └── ru.properties
+        └─── ko.properties
 ```
 
 ---
 
 ## 2단계: manifest.json
 
-`mods/my_code_mod/manifest.json`：
+`mods/quickstart_programmer/manifest.json`：
 
 ```jsonc
 {
-  "id": "quickstart_programmer",                    // 모드 ID
-  "name": "My Code Mod",                            // 모드 목록에 표시되는 모드 이름
-  "description": "새 액션과 모드 설정",                // 모드 목록에 표시되는 모드 설명
-  "sources": ["src/*.cs"],                          // 소스 파일 수집을 위한 glob 패턴 (모든 ".cs" 파일 포함)
-  "author": "programmer",                           // 작성자
-  "depends": ["core"]                               // 코어 게임 의존성 (수동으로 모드 로드 순서를 정할 필요 없음)
+  "id": "quickstart_programmer",      // 모드 ID
+  "name": "My Code Mod",              // 모드 목록에 표시되는 모드 이름
+  "description": "새 액션과 모드 설정",  // 모드 목록에 표시되는 모드 설명
+  "sources": ["src/*.cs"],            // 소스 파일 수집을 위한 glob 패턴 (모든 ".cs" 파일 포함)
+  "author": "programmer",             // 작성자
+  "depends": ["core"]                 // 코어 게임 의존성 (수동으로 모드 로드 순서를 정할 필요 없음)
 }
 ```
 
@@ -47,7 +47,7 @@ mods/
 
 ## 3단계: 진입점 — IMod
 
-`mods/my_code_mod/src/MyMod.cs`：
+`mods/quickstart_programmer/src/MyMod.cs`：
 
 ```csharp
 using Cthangover.Core.Mods;
@@ -164,7 +164,7 @@ action my_effect
 
 ## 6단계: 로컬라이제이션
 
-`mods/my_code_mod/locale/ru.properties`：
+`mods/quickstart_programmer/locale/ko.properties`：
 
 ```properties
 mymod/effect_volume = 이펙트 볼륨

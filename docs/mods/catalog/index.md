@@ -9,44 +9,48 @@ locally-installed mods.
 
 ```jsonc
 {
-  "_catalog": {                                            // Catalog metadata envelope
+  "catalog": {                                             // Catalog metadata envelope
     "version": 1,                                          // Schema version of this catalog file
-    "updated_at": "2026-07-21T12:00:00Z"                   // ISO-8601 timestamp of last server update
+    "updated_at": "2026-07-22T12:00:00Z"                   // ISO-8601 timestamp of last server update
   },
   "mods": [                                                // List of mod entries in this catalog
     {
-      "id": "cooking",                                     // Canonical mod identifier (matches manifest.json id)
-      "name": "Cooking",                                   // Human-readable display name
+      "id": "live2d",                                      // Canonical mod identifier (matches manifest.json id)
+      "name": "Live2D Cubism",                             // Fallback display name (used when no locale matches)
       "author": "ct",                                      // Author credit string
-      "version": "1.2.0",                                  // Latest release version (semver)
-      "description": "Cooking mechanic with 40+ recipes",  // Short description
-      "category": "gameplay",                              // Category slug: story, characters, gameplay, visual, audio, ui, locale, library, overhaul, other
-      "tags": ["cooking", "crafting"],                     // Search/filter tags
-      "icon_url": "https://cdn.example.com/mods/cooking/icon.png", // Full URL to preview icon (PNG or JPEG)
-      "depends": ["core>=1", "interface>=1"],              // Versioned dependency strings
+      "version": "1.0.0",                                  // Latest release version (semver)
+      "description": "Live2D Cubism C# runtime",           // Fallback short description (used when no locale matches)
+      "locale": [                                          // Localized name and description entries
+        {
+          "lang": "en",                                    // Language code (ISO 639-1)
+          "name": "Live2D Cubism",                         // Localized display name
+          "description": "Live2D Cubism C# runtime: model loading, rendering, physics, animation, effects"
+        },
+        {
+          "lang": "ru",
+          "name": "Live2D Cubism",
+          "description": "Live2D Cubism C# рантайм: загрузка моделей, отрисовка, физика, анимации, эффекты"
+        }
+      ],
+      "category": "library",                               // Category slug: story, characters, gameplay, visual, audio, ui, locale, library, overhaul, other
+      "tags": ["live2d", "ui", "graphics", "2d"],          // Search/filter tags
+      "icon_url": "https://github.com/cthangover/mods-live2d/blob/master/mod.png?raw=true", // Full URL to preview icon (PNG or JPEG)
+      "depends": ["core>=1"],                              // Versioned dependency strings
       "conflicts_with": [],                                // Mutually exclusive mod IDs
       "downloads": [                                       // Version-specific download entries with mirrors
         {
-          "version": "1.2.0",                              // Semver version of this download entry
+          "version": "1.0.0",                              // Semver version of this download entry
           "urls": [                                        // Mirror URLs tried in order
-            "https://cdn1.example.com/mods/cooking_v1.2.0.zip",
-            "https://cdn2.example.com/mods/cooking_v1.2.0.zip"
+            "https://github.com/cthangover/mods-live2d/releases/download/mod/live2d-v1.0.0.zip"
           ],
-          "size_bytes": 1425367,                           // File size of the zip for progress display
-          "archive_sha256": "e3b0c44298fc...",             // SHA256 of the .zip file (integrity check after download)
-          "install_sha256": "a7ffc6f8bf1e..."              // SHA256 of extracted mod content (modification detection)
-        },
-        {
-          "version": "1.0.0",
-          "urls": ["https://cdn1.example.com/mods/cooking_v1.0.0.zip"],
-          "size_bytes": 980000,
-          "archive_sha256": "d4a1b3...",
-          "install_sha256": "b8ee..."
+          "size_bytes": 1831899,                           // File size of the zip for progress display
+          "archive_sha256": "075a3f582919b26b39afc1fd66d1e4a91cab0e521d6ca36f746c248e1ee82c9a", // SHA256 of the .zip file (integrity check after download)
+          "install_sha256": "db738a14cda17a358d3a0132b97a382978bf9db7b7ea3db750b346b943ba57e6",  // SHA256 of extracted mod content (modification detection)
+          "changelog": null                                // Optional changelog for this specific version
         }
       ],
-      "changelog": "v1.2.0: Added 5 new fish recipes.",    // Optional version changelog
-      "status": "stable",                                  // stable, beta, deprecated, or archived
-      "min_game_version": "1.0.0",                         // Minimum compatible game version (semver)
+      "status": "beta",                                    // stable, beta, deprecated, or archived
+      "min_game_version": null,                            // Minimum compatible game version (semver)
       "max_game_version": null                             // Maximum compatible game version, or null for no upper bound
     }
   ]
@@ -57,8 +61,8 @@ locally-installed mods.
 
 | Field | Type | Description |
 |---|---|---|
-| `_catalog.version` | int | Schema version of this catalog file |
-| `_catalog.updated_at` | string | ISO-8601 timestamp of last server update |
+| `catalog.version` | int | Schema version of this catalog file |
+| `catalog.updated_at` | string | ISO-8601 timestamp of last server update |
 | `mods` | array | List of mod entries |
 
 ### Per-mod entry
@@ -66,10 +70,11 @@ locally-installed mods.
 | Field | Type | Description |
 |---|---|---|
 | `id` | string | Canonical mod identifier (must match the mod's `manifest.json` `id`) |
-| `name` | string | Human-readable name |
+| `name` | string | Fallback display name (used when no `locale` entry matches the player's language) |
 | `author` | string | Author credit |
-| `version` | string | Semver version of the latest release (e.g. "1.2.0") |
-| `description` | string | Short description |
+| `version` | string | Semver version of the latest release (e.g. "1.0.0") |
+| `description` | string | Fallback short description (used when no `locale` entry matches the player's language) |
+| `locale` | object[] | Localized name/description entries for different languages (see below) |
 | `category` | string | Category slug: `story`, `characters`, `gameplay`, `visual`, `audio`, `ui`, `locale`, `library`, `overhaul`, `other` |
 | `tags` | string[] | Search/filter tags |
 | `icon_url` | string | Full URL to preview icon (PNG or JPEG) |
@@ -81,10 +86,22 @@ locally-installed mods.
 | `downloads[].size_bytes` | int | File size of the zip (for progress display) |
 | `downloads[].archive_sha256` | string | SHA256 of the .zip file itself (integrity check after download) |
 | `downloads[].install_sha256` | string | SHA256 of the extracted mod content (modification detection) |
-| `changelog` | string | Optional version changelog |
+| `downloads[].changelog` | string | Optional changelog describing what changed in this specific version |
 | `status` | string | `stable`, `beta`, `deprecated`, or `archived` |
 | `min_game_version` | string | Minimum compatible game version (semver) |
 | `max_game_version` | string | Maximum game version, or null |
+
+### `locale[]` sub-fields
+
+Each entry in the `locale` array has three fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `lang` | string | Language code (ISO 639-1, e.g. `"en"`, `"ru"`) |
+| `name` | string | Localized display name |
+| `description` | string | Localized short description |
+
+Resolution order: exact language match → fallback to `"en"` → first entry in the array → top-level `name`/`description`.
 
 ## Checksums
 

@@ -16,7 +16,7 @@ Create the folder and base files:
 
 ```filestree
 mods/
-└── alko_bar/
+└── quickstart_modder/
     ├── manifest.json
     ├── scenes/
     │   └── my_alko_bar.json              # Our new location — the booze bar!
@@ -37,13 +37,13 @@ mods/
 
 ## Step 2: manifest.json
 
-`mods/my_scene/manifest.json`:
+`mods/quickstart_modder/manifest.json`:
 
 ```jsonc
 {
   "id": "alko_bar",                                    // Mod ID
   "name": "My Booze Bar",                              // Mod name shown in the mod menu
-  "description": "Adds a booze bar scene to the town",  // Mod description shown in the mod menu
+  "description": "Adds a booze bar scene to the town", // Mod description shown in the mod menu
   "author": "modder",                                  // Mod author
   "depends": ["core"]                                  // Dependency on the core game (so manual mod load ordering is not required)
 }
@@ -53,7 +53,7 @@ mods/
 
 ## Step 3: Scene definition
 
-`mods/my_scene/scenes/my_alko_bar.json`:
+`mods/quickstart_modder/scenes/my_alko_bar.json`:
 
 ```jsonc
 {
@@ -75,17 +75,17 @@ mods/
 
 ## Step 4: Background
 
-Place an image at `mods/my_scene/backgrounds/my_alko_bar/bg.png`.
+Place an image at `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`.
 
 Any PNG image will work. The game supports shader-based lighting and time of day — the background will be automatically lit.
 
-> If you don't have an image, temporarily copy `mods/core/backgrounds/home/kitchen.png` → `mods/my_scene/backgrounds/my_alko_bar/bg.png`.
+> If you don't have an image, temporarily copy `mods/core/backgrounds/home/kitchen.png` → `mods/quickstart_modder/backgrounds/my_alko_bar/bg.png`.
 
 ---
 
 ## Step 5: DSL Scenario
 
-`mods/my_scene/scenarios/my_alko_bar.scenario`:
+`mods/quickstart_modder/scenarios/my_alko_bar.scenario`:
 
 ```scenario
 scene: my_alko_bar
@@ -123,7 +123,7 @@ end
 
 Now let's add a "Go to the bar" option to the town scene, **without touching** the original `core` file.
 
-`mods/my_scene/scenarios/town_entry_override.scenario`:
+`mods/quickstart_modder/scenarios/town_entry_override.scenario`:
 
 ```scenario
 scene: town_entry
@@ -146,7 +146,7 @@ end
 
 The `town_entry` scene now has two scenarios:
 - `priority: 10` — default (from the `core` mod)
-- `priority: 1` — ours (from `my_scene`)
+- `priority: 1` — ours (from `quickstart_modder`)
 
 The engine runs the scenario with the **lowest** `priority`. Our `priority: 1` wins — the player sees the new option.
 

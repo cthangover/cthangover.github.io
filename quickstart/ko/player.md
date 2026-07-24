@@ -16,21 +16,25 @@
 
 ```filestree
 mods/
-└── my_tweak/
+└── quickstart_player/
+    ├── manifest.json
+    └── patches/
+        └── characters.json
 ```
 
 ---
 
 ## 2단계: manifest.json
 
-모든 모드에는 매니페스트가 필요합니다. `mods/my_tweak/manifest.json` 생성:
+모든 모드에는 매니페스트가 필요합니다. `mods/quickstart_player/manifest.json` 생성:
 
 ```jsonc
 {
-  "id": "my_tweak",                 // 고유 모드 식별자, 영어 사용
+  "id": "quickstart_player",        // 고유 모드 식별자, 영어 사용
   "name": "Marao 강화",             // 모드 관리 메뉴에 표시되는 이름
   "description": "내 첫 모드!",      // 모드 목록과 카탈로그에 표시되는 설명
-  "author": "player"                // 모드 작성자 (임의의 문자열)
+  "author": "player",               // 모드 작성자 (임의의 문자열)
+  "depends": ["core"]               // 코어 게임 의존성 (수동으로 모드 로드 순서를 정할 필요 없음)
 }
 ```
 
@@ -40,13 +44,13 @@ mods/
 
 ## 3단계: 캐릭터 패치
 
-`mods/my_tweak/patches/characters.json` 생성:
+`mods/quickstart_player/patches/characters.json` 생성:
 
 ```jsonc
 {
   "Items": [
     {
-      "Id": "Marao", // 패치할 캐릭터 ID (core 모드에서 정의됨)
+      "Id": "Marao",  // 패치할 캐릭터 ID (core 모드에서 정의됨)
 
       "Health": 5000, // 새 속성 값 — 원본을 덮어씀
       "Attack": 1200,
@@ -74,6 +78,7 @@ mods/
 
 - **5000 HP** (10 대신)
 - **1200 ATK** (5 대신)
+- **2 AP** (1 대신)
 - 세 번째 액션 **"기절"** 이 "공격" 및 "방어"와 함께 표시
 
 ---
