@@ -32,6 +32,7 @@ Welcome to the cthangover documentation. Here you'll find guides, code examples,
 | Topic | Description |
 |---|---|
 | [Scenes](mods/scenes/) | Scene definitions and lifecycle |
+| [Runtime TSCN Scenes](mods/scenes/tscn-runtime/) | Loading Godot `.tscn` scene files at runtime from mods |
 | [Scenarios](mods/scenes/scenarios/) | `.scenario` format and metadata |
 | [Scenario Actions](mods/scenes/scenarios/actions/) | `action` command reference |
 | [DSL Commands](mods/scenes/scenarios/dsl/) | Full command reference (30 commands) |
