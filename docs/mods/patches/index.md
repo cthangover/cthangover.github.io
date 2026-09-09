@@ -9,15 +9,29 @@ Works for characters (`characters`) and items (`items`).
 
 ## Overview
 
-Each mod can contain an optional `patches/` directory:
+Each mod can contain an optional `patches/` directory. Patch sources are
+collected by `PatchResolver` (`Core/Mods/Resolvers/Impls/PatchResolver.cs`),
+which scans **both** layouts per entity type:
 
 ```filestree
 mods/
 └── my_mod/
     └── patches/
-        ├── characters.json    ← patches for characters
-        └── items.json         ← patches for items
+        ├── characters.json         ← flat file: patches for characters
+        ├── items.json              ← flat file: patches for items
+        └── characters/             ← directory form: any *.json inside is scanned too
+            ├── player.json
+            └── enemies.json
 ```
+
+- Flat files: `patches/{entityType}.json` (e.g. `patches/characters.json`)
+- Directory form: every `.json` inside `patches/{entityType}/`
+
+Both forms use the same format below; results from all mods are grouped by
+target entity id. From C#, patches are collected via the static facade
+`Patches.Collect(entityType)`, which proxies through
+`ModManager.Instance.GetResolver<PatchResolver>()` (results are cached per
+type until `ClearCache()`).
 
 ## Format
 
@@ -136,6 +150,28 @@ mods/test_defaults_and_patches/
     ├── characters.json    ← Maraо: TestPatched=42, TestDefault=100; *: TestDefault=-20, TestGlobalPatch=1
     └── items.json         ← food/ration: Durability=99; *: Durability=50, GlobalItemProp=patched
 ```
+
+## Array Operations & Public Helpers
+
+Besides scalar last-wins overwrites, patch keys can carry array operation
+suffixes — `$add`, `$remove`, and `$set` (parsed by
+`ArrayMergeHelper.ParseArrayOperation`). These enable appending, removing, and
+explicitly replacing array elements, including per-field merging of object
+arrays matched by identity keys. See
+[Array Operations & Identity Keys](arrays-and-identity.md) for the full
+reference.
+
+Mechanically, `JsonPatchMerger.Merge` applies all patches whose entry id is
+`"*"` (the wildcard targeting every entity of the type) first, then the
+patches matching the concrete entity id.
+
+Public helpers on `JsonPatchMerger` (`Core/Mods/Patches/JsonPatchMerger.cs`)
+are available to C# code:
+
+| Member | Purpose |
+|---|---|
+| `DetectIdentityKey(JsonElement)` | Auto-detects the identity field of an object array from its JSON: `"Id"` first, then the first property ending in `Id`; returns `null` if none |
+| `BuildMergeKeys<T>()` | Reflects over type `T` and returns a map of list-typed property → identity key for element types implementing `IMergeable` |
 
 ## Pages
 

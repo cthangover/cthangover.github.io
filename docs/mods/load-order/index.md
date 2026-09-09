@@ -77,11 +77,18 @@ Mods can declare mutual incompatibility:
 ```jsonc
 {
   "id": "ff_battle",                                       // Canonical mod identifier
-  "conflicts_with": ["card_battle"]                        // Mutually exclusive mod IDs — if both are active, both get disabled
+  "conflicts_with": ["card_battle"]                        // Declared incompatible mod IDs — informational only
 }
 ```
 
-If both mods are active, **both are disabled** with a conflict warning shown in the UI.
+!!! warning "Declarative metadata only"
+    `conflicts_with` is parsed from the manifest and copied into catalog
+    exports, but it is **never enforced at runtime**. Declaring a conflict
+    disables nothing, blocks nothing, and shows no UI warning — two mods
+    that declare each other as conflicting will still load and run
+    together. Treat this field purely as informational metadata (e.g. for
+    catalogs and mod platforms); do not rely on it to prevent broken
+    combinations.
 
 ### Layer 2: Manual order — user preference
 
@@ -125,7 +132,7 @@ which resources it overrides and which mods override its resources.
 On load, the game validates all dependency versions:
 
 - If a required dependency is missing or its version is too low/too high → the mod is disabled with an error.
-- If a `conflicts_with` mod is also active → both mods are disabled.
+- `conflicts_with` is **not validated** — see the warning above; declared conflicts never disable anything.
 - Disable reasons are **accumulated** (not overwritten) and shown in the UI status label.
 - Cascade: if mod A is disabled, all mods depending on A are also disabled.
 
@@ -138,7 +145,7 @@ The **Mods** menu shows:
 - **Enable/disable toggle** — disable cascades to dependents
 - **▲▼ buttons** — move mod up/down in load order
 - **State** — button is greyed out when movement is blocked by dependency constraints
-- **Status** — shows all reasons a mod is disabled (version mismatch, missing dependency, conflict)
+- **Status** — shows all reasons a mod is disabled (version mismatch, missing dependency)
 - **Conflicts** — list of resources overridden by or overridden in this mod
 
 ## Storage
@@ -167,5 +174,5 @@ Declare dependencies with version constraints for safety:
 ```
 
 - Use `>=1` (not `>=1.0.0`) — trailing zeros are unnecessary due to zero-padding comparison.
-- Declare `conflicts_with` if your mod is incompatible with another.
+- Declare `conflicts_with` for documentation/catalog purposes if your mod is incompatible with another — remember it is informational only and not enforced.
 - Use `?` for optional soft dependencies.

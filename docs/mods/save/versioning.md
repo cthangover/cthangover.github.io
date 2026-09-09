@@ -10,21 +10,23 @@ During phase-1 validation the core compares `ModMetadata.ModVersion` from the sa
 
 ### Comparison strategy
 
-The core uses **semver-first, string-fallback** via `VersionHelper.Compare`:
+The core uses **per-segment comparison** via `VersionHelper.Compare` (Core/Utils/VersionHelper.cs). There is no `System.Version` parsing anywhere — the algorithm is:
 
-1. If both strings parse as `System.Version` (`major.minor[.build[.revision]]`), compare numerically. This handles `"1.0" < "2.0"`, `"9.0" < "10.0"`, etc.
-2. Otherwise, fall back to ordinal string comparison (`String.CompareOrdinal`). Works for free-form tags like `"Enigma1.5"`, `"alpha-3"`, `"beta-1"`, `"v2"`.
+1. Both strings are trimmed and split on `.`. The shorter segment array is padded with `"0"` to equal length (`"1.0"` equals `"1.0.0"`).
+2. Segments are compared **pairwise, left to right**. For each position: if *both* segments parse as `int`, they are compared numerically (handles `"9" < "10"`); otherwise that segment pair is compared with an ordinal string comparison (`String.CompareOrdinal`).
+3. The first non-zero comparison decides the result.
+
+Consequences: a segment like `"1b"` does **not** parse as int, so it compares **ordinally**, not numerically. Mixed versions are fine — each segment independently picks numeric or ordinal comparison.
 
 ### Supported version formats
 
-| Format | Example | Type |
+| Format | Example | Comparison |
 |---|---|---|
-| Strict semver | `1.0.0`, `2.5.3.1` | Numeric |
-| Short semver | `1.0`, `0.1` | Numeric |
-| Letter in version | `1b.2.0`, `1c.0.1` | Numeric (parsed by `Version`) |
-| Prefixed tags | `v1`, `v2.0` | String fallback |
-| Codename-style | `Enigma1.5`, `Enigma2.0` | String fallback |
-| Alpha/beta tags | `alpha-1`, `beta-3` | String fallback |
+| Numeric segments | `1.0.0`, `2.5.3.1`, `1.0` | Numeric per segment; shorter string padded with `"0"` |
+| Letter in a segment | `1b.2.0` | That segment compares ordinally (`"1b"` vs `"10"` is ordinal, not numeric) |
+| Prefixed tags | `v1`, `v2.0` | Ordinal per segment (`"v2" > "v10"` ordinally) |
+| Codename-style | `Enigma1.5`, `Enigma2.0` | Ordinal per segment |
+| Alpha/beta tags | `alpha-1`, `beta-3` | Ordinal per segment |
 
 ### Validation rules
 

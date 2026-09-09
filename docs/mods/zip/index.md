@@ -70,7 +70,7 @@ def pack_mod(mod_path, output_path):
 ## Testing a zipped mod
 
 1. Place the `.zip` in `mods/`
-2. Remove the source folder (or keep both — if both a folder and a zip share the same mod ID under the same root, the kernel registers whichever it encounters first in filesystem order; same-version duplicates are skipped)
+2. Remove the source folder (or keep both — if both a folder and a zip share the same mod ID, only one loads: a higher version always wins regardless of enumeration order; when versions are equal the first-encountered entry wins within the same root priority, and a lower-priority root always loses)
 3. Launch the game — the mod loads from the zip
 4. Check the game log for any errors
 
@@ -87,7 +87,12 @@ Include a `version` field in `manifest.json` for proper version tracking:
 }
 ```
 
-The kernel does **not** enforce version conflicts — multiple versions of the same mod will both load, which may cause issues. Use version numbers for player information and mod platform compatibility checks.
+The kernel **does** enforce version deduplication — `ModRegistry.RegisterCandidates()` keys candidates by mod `Id`, so only **one** version of a given mod ever loads:
+
+- Within the same root priority: a candidate with a **higher version replaces** the already-registered one (logged as a warning); an equal or lower version is **skipped with a warning** — for equal versions, first-encountered wins.
+- A candidate from a **lower-priority root never replaces** one from a higher-priority source, regardless of version.
+
+Use version numbers for player information and mod platform compatibility checks.
 
 ## Zip mod limitations
 
@@ -101,9 +106,9 @@ The project includes test zip mods in `mods/` — these demonstrate the zip load
 
 ```filestree
 mods/
-├── test_mod_1.zip
-├── test_mod_2.zip
-└── test_mod_3.zip
+├── test_mod.zip
+├── test_mod_a.zip
+└── test_mod_b.zip
 ```
 
 These are minimal mods used in automated tests to verify zip loading works correctly.

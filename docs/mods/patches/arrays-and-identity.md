@@ -84,11 +84,26 @@ Scalar properties (int, float, bool, string) still use **last-wins** semantics �
 
 > ⚠ **IMPORTANT CONVENTION: the identity field MUST be named `Id` (or end in `Id`, like `ItemId`, `QuestId`, `ActionId`).**
 >
-> The system **automatically detects** this field. No registration, no config, no C# code needed.
+> For mod-defined (extra-property) arrays this field is **auto-detected** — no registration, no config, no C# code needed.
+> For **typed** C# array properties there is a second path: if the element type
+> implements `IMergeable`, its `MergeKeyProperty` value is used **first**, taking
+> priority over the naming convention (see below).
 
 For arrays of **objects** (e.g. `Loot`, `Rewards`, `Drops`), the system matches elements by an **identity field** instead of raw JSON text. This enables **per-field merge**: a patch can update a single property of an existing object without repeating all its fields.
 
 ### How identity detection works
+
+Resolution order per property:
+
+1. **Interface first** — if the entity type is known and the array property's
+   element type implements `IMergeable` (`Core/Mods/Patches/IMergeable.cs`,
+   a single `MergeKeyProperty` string property), the key comes from
+   `MergeKeyProperty`. The map is built by `JsonPatchMerger.BuildMergeKeys<T>()`.
+   Example: `LootEntry` (`Core/Characters/LootEntry.cs`) implements
+   `IMergeable` with `ItemId` as its key, so the typed `Loot` property always
+   merges by `ItemId`.
+2. **Convention fallback** — when no interface-provided key exists, the key is
+   auto-detected from the array JSON itself (table below).
 
 | Array element type | Detection | Identity field |
 |---|---|---|
@@ -165,4 +180,8 @@ Any mod can introduce a new array of objects in a character or item JSON, and pa
 // Result Rewards: [{"Id": "gold", "Count": 200}]
 ```
 
-**No C# code, no interface, no registration.** The convention `Id` / `*Id` is all that's needed.
+**No C# code, no interface, no registration** is needed for mod-defined
+extra-property arrays — the `Id` / `*Id` convention is all that's required.
+The `IMergeable` interface is an optional, higher-priority path for typed C#
+array properties (see the resolution order above); it does not need to be
+implemented for convention-based detection to work.

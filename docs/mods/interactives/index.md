@@ -104,13 +104,13 @@ Coordinates are in **normalised viewport coordinates (0..1)**, where `(0,0)` = t
 
 ```filestree
 interactives/
-├── interactives.json          # index file
 ├── kitchen_door.json
 └── treasure_chest.json
 ```
 
+There is no index file. `InteractiveResolver.CollectInteractiveDefsRecursive` scans every `*.json` file under the mod's `interactives/` folder recursively (including subfolders) and reads each one as a `{"Items": [...]}` envelope.
+
 ## Adding a new interactive object
 
-1. Create `interactives/{id}.json` with the full definition
-2. Add it to the index: `"${id}"` in `interactives/interactives.json`
-3. In a scenario, activate it: `interactive_add my_object`
+1. Create `interactives/{id}.json` with the full definition — it will be picked up automatically
+2. In a scenario, activate it: `interactive_add my_object`

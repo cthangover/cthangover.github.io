@@ -208,34 +208,33 @@ mymod/diff_normal = Normal
 mymod/diff_hard = Hard
 ```
 
-### Versioned migration
+### Schema changes
 
-When your settings schema changes (added/removed keys), use `DataBlob.Version` to handle migration:
+**`DataBlob.Version` is NOT persisted for mod settings.** `ModSettingsRegistry.SaveModSettings` writes only the key-value payload (`blob.GetBytes()`), and on load the registry constructs a fresh `DataBlob(payload)`, which resets `Version` to its default of 1. (`Version` *is* persisted through the main save system's `SavePackage` — just not here.)
+
+Detect schema changes by reading keys with defaults instead — missing keys resolve to your fallback values, so added fields need no migration logic:
 
 ```csharp
 public void WriteValues(DataBlob blob)
 {
-    blob.Version = 2;
     blob.SetFloat("explosion_radius", _explosionRadius);
-    blob.SetFloat("knockback_force", _knockbackForce); // new in v2
+    blob.SetFloat("knockback_force", _knockbackForce); // added later
 }
 
 public void ReadValues(DataBlob blob)
 {
     _explosionRadius = blob.GetFloat("explosion_radius", 1.5f);
-    _knockbackForce = blob.GetFloat("knockback_force", 3.0f);
+    _knockbackForce = blob.GetFloat("knockback_force", 3.0f); // default for old saves
 }
 ```
-
-The `Version` field is persisted and available on load so the mod can detect schema changes.
 
 ## Important rules
 
 - **One `IModSettings` per mod** — create a single implementation in your assembly.
 - **Always provide `DefaultValue`** — used when no persisted value exists and on Reset.
-- **Use `DataBlob` key-value API** — `GetInt/SetInt`, `GetFloat/SetFloat`, `GetString/SetString`, `GetBool/GetBool`.
+- **Use `DataBlob` key-value API** — `GetInt/SetInt`, `GetFloat/SetFloat`, `GetString/SetString`, `GetBool/SetBool`.
 - **Always call with defaults** — `blob.GetInt("key", defaultVal)` so missing keys don't break.
 - **Key names are persistent** — changing a `Key` creates a new setting; the old value is lost.
 - **Provide localisation** — add translations for all `Name` and `Options` values in `locale/`.
-- **The `version` field in `manifest.json`** is used by the save system; settings use the separate `DataBlob.Version` for schema versioning.
+- **The `version` field in `manifest.json`** is used by the save system for validation; mod settings have no persisted schema version (`DataBlob.Version` is reset to 1 on load) — handle schema changes via read-with-defaults.
 - **Declare `"sources"` in manifest.json** — your `.cs` files must be listed in the `sources` field of `manifest.json` for the compiler to pick them up. See [Manifest — sources](../configs/index.md#manifestjson) for details.

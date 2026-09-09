@@ -6,37 +6,33 @@ Detailed schema for music playlist configuration JSON files.
 
 ```jsonc
 {
-  "Scene": "playlist_identifier",       // Unique playlist ID (referenced in scene JSONs and scenario commands)
+  "Scene": "scene_name",                // Scene name this playlist targets ("default" = fallback for any scene)
   "Musics": [
     {
       "MusicType": "Force | Combat | Ambient",  // Category: Ambient (explore), Combat (battle), Force (transient)
-      "MusicNames": ["track1", "track2", "..."],  // Track filenames without .ogg extension
-      "Shuffle": true,                    // Randomize playback order (default: true)
-      "Volume": 0.8,                      // Playback volume 0.0–1.0 (default: 0.8)
-      "FadeInSeconds": 2.0,               // Cross-fade duration when switching TO this playlist
-      "FadeOutSeconds": 1.5               // Cross-fade duration when switching FROM this playlist
+      "MusicNames": ["track1", "track2", "..."]   // Track filenames without .ogg extension
     }
   ]
 }
 ```
 
+These are the only supported fields. There is no shuffle flag — a random track
+is picked each time playback starts or advances. Fading is hard-coded in the
+engine (~1s delay, then a volume ramp) and cannot be configured per playlist.
+
 ## Field details
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `Scene` | string | *(required)* | Unique playlist ID. Referenced in scene JSONs (`defaultAmbient`) and scenario commands (`music playlists/{id}`) |
-| `MusicType` | string | *(required)* | Category: `Ambient` (exploration), `Combat` (battle), `Force` (transient, normalised to `Ambient`). Engine auto-switches `Ambient` ↔ `Combat` on battle state changes |
-| `MusicNames` | string[] | *(required)* | Track filenames without extension. Must match `.ogg` files in `music/` |
-| `Shuffle` | bool | `true` | Whether to randomize playback order |
-| `Volume` | float | `0.8` | Playback volume, 0.0 to 1.0 |
-| `FadeInSeconds` | float | `1.0` | Cross-fade duration when switching TO this playlist |
-| `FadeOutSeconds` | float | `1.0` | Cross-fade duration when switching FROM this playlist |
+| Field | Type | Description |
+|---|---|---|
+| `Scene` | string | Scene name this playlist applies to (`"default"` is used when no playlist matches the loaded scene) |
+| `MusicType` | string | Category: `Ambient` (exploration), `Combat` (battle), `Force` (transient, normalised to `Ambient`). A scene named `Battle` switches playback to `Combat`, otherwise `Ambient` plays |
+| `MusicNames` | string[] | Track filenames without extension. Must match `.ogg` files in `music/` |
 
 ## Real example — default playlist
 
 ```jsonc
 {
-  "Scene": "default",               // Playlist ID
+  "Scene": "default",               // Scene name; "default" is the fallback playlist
   "Musics": [
     {
       "MusicType": "Ambient",       // Exploration music
@@ -61,12 +57,12 @@ Detailed schema for music playlist configuration JSON files.
 
 ## Multiple playlists example
 
-A scene can reference different playlists for different states:
+A single playlist can cover different states by defining multiple `MusicType` buckets:
 
 ```jsonc
-// music/playlists/tavern.json
+// music/playlists/tavern.json — applies to the scene named "tavern"
 {
-  "Scene": "tavern",              // Playlist ID; referenced via "playlists/tavern"
+  "Scene": "tavern",
   "Musics": [
     { "MusicType": "Ambient", "MusicNames": ["Tavern_Day", "Tavern_Night"] },
     { "MusicType": "Combat", "MusicNames": ["Tavern_Fight_01", "Tavern_Fight_02"] }
@@ -76,25 +72,31 @@ A scene can reference different playlists for different states:
 
 ## Scene integration
 
-In scene JSON:
+Playlist selection happens per scene, automatically. When a scene loads,
+`PlaylistFactory.CreatePlaylist(sceneName)` uses the playlist whose `Scene`
+matches the scene name (falling back to `"default"`):
 
 ```jsonc
 {
-  "name": "town_tavern",                  // Scene ID
-  "defaultAmbient": "playlists/tavern"    // References the tavern playlist by path
+  "name": "town_tavern"    // Scene ID — playlists with "Scene": "town_tavern" apply here
 }
 ```
 
-In scenario DSL:
+Note: `defaultAmbient` in a scene JSON is unrelated to playlists — it plays an
+ambient sound loop via the sound system (`AudioService.PlayAmbient`), not music.
 
-```scenario
-music playlists/tavern
-```
+The scenario command `music <id>` also does not switch playlists; it plays a
+single track by id.
 
 ## How the engine switches playlists
 
-1. Scene loads → checks `defaultAmbient` → starts playing `Ambient` tracks
-2. Battle starts → engine switches to `Combat` tracks from the same playlist
-3. Battle ends → switches back to `Ambient`
-4. Scene changes → new scene's `defaultAmbient` takes over, with fade
-5. `music playlists/{id}` command → manual override, forces switch regardless of game state
+1. Scene loads → `PlaylistFactory.CreatePlaylist(sceneName)` picks the playlist whose `Scene` matches (fallback `"default"`) → starts playing `Ambient` tracks
+2. A scene named `Battle` switches `MusicType` to `Combat` → tracks come from that playlist's `Combat` bucket; on returning to a non-battle scene, playback resumes with `Ambient`
+3. Scene changes → the new scene's playlist takes over, with the hard-coded fade
+4. Multi-mod note: if several mods define playlists for the same scene, the last loaded mod replaces each `MusicType` bucket entirely (last one wins)
+
+Playback always picks a random track from the active category bucket — there is
+no ordered or shuffle-flagged mode.
+
+Music types: `Force`, `Combat`, `Ambient`. Mixer buses (`MixerType`): `Sounds`,
+`Musics`, `Ambient` — music plays through the dedicated `Musics` bus.

@@ -8,10 +8,10 @@ Time is tracked in `TimeData` as a single tick counter, from which all other val
 
 | Property | Type | Description |
 |---|---|---|
-| `Tick` | `long` | Raw clock tick (increments by 1 per in-game minute) |
+| `Tick` | `long` field | Raw clock tick (increments by 1 per in-game minute) |
 | `Years` | `int` | Current year |
-| `Months` | `int` | Current month (1–12) |
-| `Days` | `int` | Current day (1–30) |
+| `Months` | `int` | Current month (0–11) |
+| `Days` | `int` | Current day (0–29) |
 | `Hours` | `int` | Current hour (0–23) |
 | `Minutes` | `int` | Current minute (0–59) |
 | `Text` | `string` | Formatted display string (`"HH:MM"`) |
@@ -25,7 +25,7 @@ Time is tracked in `TimeData` as a single tick counter, from which all other val
 | `IsEvening` | True between 18:00 and 21:59 |
 | `IsNight` | True between 22:00 and 05:59 |
 | `Phase` | `PhaseType` enum: `Morning`, `Day`, `Evening`, `Night` |
-| `Normalized` | Float representing current hour position (0.0–1.0), used by lighting shaders |
+| `Normalized` | Float hour of day — `Hours + Minutes / 60f`, range 0.0–23.983 — used by lighting shaders |
 
 ## Time phases
 

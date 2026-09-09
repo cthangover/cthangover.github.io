@@ -16,12 +16,13 @@ From `mods/murakami/avatars/murakami/`:
 
 ```filestree
 murakami/
-├── normal.png      # neutral expression
-├── think.png       # thoughtful
-├── fear_1.png      # scared
-├── fear_2.png      # terrified
-└── what.png        # confused
+├── normal_1.png      # neutral expression
+├── normal_2.png      # neutral variant
+├── fear_1.png        # scared
+└── fear_2.png        # terrified
 ```
+
+The compile-time catalog (`Avatars.cs`) additionally lists `murakami/normal_3`. Expressions are referenced as `<character>/<expression>` without the `.png` extension in DSL parameters (`first=` / `second=`).
 
 ## Usage in scenarios
 
@@ -49,7 +50,7 @@ text "- What are you doing here alone?" key=murakami/alone first=marao/think
 }
 ```
 
-4. Use in scenarios: `first=murakami/think` or `second=murakami/fear_1`
+4. Use in scenarios: `first=murakami/normal_1` or `second=murakami/fear_1`
 
 ## Multiple characters in dialogue
 
@@ -58,13 +59,17 @@ The same expression naming convention works for any character:
 ```filestree
 avatars/
 ├── marao/
-│   ├── normal.png
-│   ├── think.png
-│   └── what.png
+│   ├── sad.png
+│   ├── smile.png
+│   └── think.png
 └── murakami/
+    ├── normal_1.png
+    ├── normal_2.png
     ├── fear_1.png
     └── fear_2.png
 ```
+
+Note that the on-disk set and the compile-time catalog may differ slightly: `Avatars.cs` lists additional marao expressions (`angry`, `what`, `relax`) and a murakami `normal_3`, while marao's `sad` exists only as a file. Always check the mod's avatar directory for what is actually available.
 
 ## Format requirements
 

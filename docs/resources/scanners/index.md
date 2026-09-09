@@ -9,7 +9,7 @@ This replaces the old hardcoded `ResolveModsRoots()` method. Instead of the kern
 ```csharp
 public interface IModScanner : IModDiscoveryProvider
 {
-    string Name { get; }                          // "AppData", "GameDir", "HTTP Catalog", ...
+    string Name { get; }                          // "UserData", "GameDir", "HTTP Catalog", ...
     bool IsCanProvide(string url);                // Accessibility guard — does the root exist?
     IEnumerable<ModSourceRoot> GetRoots();        // Roots this scanner knows about, with priorities
     IEnumerable<DiscoveredModEntry> Discover(string rootUrl);  // Enumerate mods at a root
@@ -64,12 +64,14 @@ var roots = scanner.GetRoots();
 
 ### `GameDirModScanner` — built-in mods
 
-Scans the game's own mods directory. Lower priority (1) — user mods with the same ID override built-in ones.
+Scans the game's own mods directory. Lower priority than user mods at runtime — user mods with the same ID override built-in ones.
 
 | Context | Root returned |
 |---|---|
 | Runtime | Globalised `res://mods/` path, priority 1 |
-| Editor | `"mods"` (project-relative), priority 0 |
+| Editor / tests (`GameEnvironment.IsRuntime == false`) | `"mods"` (project-relative), priority 0 |
+
+Note that in editor/test environments this scanner's priority (0) equals `UserDataModScanner`'s — the runtime-only precedence difference does not apply outside the Godot runtime.
 
 ## Adding a custom scanner via a mod
 

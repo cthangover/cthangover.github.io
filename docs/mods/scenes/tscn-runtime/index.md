@@ -289,9 +289,11 @@ namespace MyMod
 5. In your mod code, load and build:
 
 ```csharp
-var sceneNode = TscnScenes.LoadAndBuild("your_mod_id", "scenes/my_scene.tscn");
+var sceneNode = TscnScenes.LoadAndBuild("scenes/my_scene.tscn");
 GetParent().AddChild(sceneNode);
 ```
+
+`TscnScenes.LoadAndBuild(string scenePath)` takes a single argument — the mod-relative scene path. There is no mod ID parameter: the resolver locates the owning mod by looking up which loaded mod contains that file, walking mods in load-order priority.
 
 ## Extending the parser
 

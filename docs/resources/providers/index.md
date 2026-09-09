@@ -15,7 +15,7 @@ public interface IModFileProvider : IDisposable
     string ReadFileText(string path);            // Read UTF-8 text, or null
     byte[] ReadFileBinary(string path);          // Read binary, or null
     Stream OpenStream(string path);              // Open a seekable stream
-    string GetFileSystemPath(string path);       // Absolute path, or null for non-filesystem providers
+    string GetFileSystemPath(string path);       // Absolute path, or null (missing file / non-filesystem provider)
     string ResolveIncludePath(string includePath, string currentPath);  // Resolve relative includes
 }
 ```
@@ -33,6 +33,10 @@ var provider = new FolderModFileProvider("mods/my_mod", "my_mod");
 string text = provider.ReadFileText("manifest.json");
 string fsPath = provider.GetFileSystemPath("scenes/battle.tscn");  // absolute path
 ```
+
+Note that `GetFileSystemPath` returns **`null` when the file does not exist** —
+not just for non-filesystem providers. Callers must handle the null return for
+missing files as well.
 
 ### `ZipModFileProvider`
 

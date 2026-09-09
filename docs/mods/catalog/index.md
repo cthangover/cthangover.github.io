@@ -83,7 +83,7 @@ locally-installed mods.
 | `downloads` | object[] | Version-specific download entries with mirrors |
 | `downloads[].version` | string | Semver version of this download entry |
 | `downloads[].urls` | string[] | Mirror URLs for the .zip archive (tried in order) |
-| `downloads[].size_bytes` | int | File size of the zip (for progress display) |
+| `downloads[].size_bytes` | long | File size of the zip (for progress display) |
 | `downloads[].archive_sha256` | string | SHA256 of the .zip file itself (integrity check after download) |
 | `downloads[].install_sha256` | string | SHA256 of the extracted mod content (modification detection) |
 | `downloads[].changelog` | string | Optional changelog describing what changed in this specific version |
@@ -133,9 +133,11 @@ Catalog URLs are configured in `config/mod_config.json`:
     "https://example.com/mods/catalog.json",
     "https://mirror.example.com/mods/catalog.json"
   ],
-  "catalog_ignore_patterns": [".*","bin","obj"]            // Glob patterns to exclude from install_sha256 computation
+  "catalog_ignore_patterns": [".*", "bin", "obj"]          // Glob patterns to exclude from install_sha256 computation
 }
 ```
+
+The **code default** for `catalog_ignore_patterns` is `[".*"]` (`ModConfig.CatalogIgnorePatterns`), which excludes all dot-prefixed entries. The `config/mod_config.json` shipped with the game extends this to `[".*", "bin", "obj"]` to also skip build output directories.
 
 Multiple URLs are merged — when the same mod appears in two catalogs,
 the entry with the highest `version` wins for metadata (name, description,
@@ -161,8 +163,9 @@ Both files go into the mods root directory. The JSON snippet can be
 copied to clipboard and pasted into the catalog JSON you host online.
 
 Ignore patterns for the SHA256 computation can be customized in
-`mod_config.json` via `catalog_ignore_patterns` default `[".*","bin","obj"]`
-excludes all dot-prefixed entries.
+`mod_config.json` via `catalog_ignore_patterns`. The code default `[".*"]`
+excludes all dot-prefixed entries; the shipped `config/mod_config.json`
+adds `"bin"` and `"obj"`.
 
 ## Mod status display
 

@@ -24,12 +24,13 @@ Engine subscribers use these priorities:
 
 | Subscriber | Priority | Purpose |
 |------------|----------|---------|
-| `ApplySceneDefaults` | 0 | Scene background |
-| `PlaySceneAmbient` | 5 | Audio |
-| `UpdateMusicType` | 10 | Music |
-| `ComposeEvents` | 15 | Enqueue scenario events |
-| `RunSubscriptions` | 20 | Manifest `on_enter` callbacks |
-| `InteractiveManager` | 25 | Interactive objects |
+| `SceneManager` internals | 0 | Scene background (`ApplySceneDefaults`) |
+| `SceneManager` internals | 5 | Audio (`PlaySceneAmbient`) |
+| `SceneManager` internals | 10 | Music (`UpdateMusicType`) |
+| `SceneSubscriptionRegistry` | 20 | Manifest `on_enter`/`on_exit` callbacks |
+| `SceneContextNode` | 0 (default) | Clears cached node lookups and interactive objects on `scene_exited` |
+
+Note that scenario event composition (`ComposeEvents`) is **not** a bus subscriber — it runs synchronously inside `SceneManager.SwitchScene`.
 
 ### Game state events
 
@@ -40,15 +41,15 @@ Engine subscribers use these priorities:
 | `QuestTagChangedEvent` | `"quest_tag_changed"` | `quest_id`, `tag`, `added` (bool) |
 | `InventoryChangedEvent` | `"inventory_changed"` | `item_id`, `delta`, `new_count` |
 | `TimeTickEvent` | `"time_tick"` | `time_tick`, `normalized_time` |
-| `RecruitJoinedEvent` | `"recruit_joined"` | `recruit_id`, `recruit_name` |
-| `RecruitLeftEvent` | `"recruit_left"` | `recruit_id`, `recruit_name` |
+| `RecruitJoinedEvent` | `"recruit_joined"` | `recruit_id`, `recruit_name` *(declared, not yet published by the engine)* |
+| `RecruitLeftEvent` | `"recruit_left"` | `recruit_id`, `recruit_name` *(declared, not yet published by the engine)* |
 
 ### UI events
 
 | Event | Key | Payload |
 |-------|-----|---------|
-| `DialogStartedEvent` | `"dialog_started"` | (empty — dialog queue has started) |
-| `DialogEndedEvent` | `"dialog_ended"` | (empty — dialog queue has ended) |
+| `DialogStartedEvent` | `"dialog_started"` | `dialog_id`, `speaker` *(declared, not yet published by the engine)* |
+| `DialogEndedEvent` | `"dialog_ended"` | `dialog_id` *(the class declares it, but the engine currently publishes an empty instance)* |
 | `NotificationRequestedEvent` | `"notification_requested"` | `text`, `category` |
 
 ### Mod lifecycle events
@@ -181,3 +182,35 @@ ModEventBus.Instance.ClearForMod("my_mod");
 
 This covers both typed (C#) and string (GDScript) subscriptions for that mod.
 GDScript mods automatically get `ClearForMod` called on reload via `ModGDScriptLoader`.
+
+## Typed layer reference
+
+The typed C# layer lives in `Core/Events/ModEventBus.cs`. All three methods are static and constrained to `T : ModEvent`:
+
+| Method | Signature | Notes |
+|---|---|---|
+| `Subscribe<T>` | `Subscribe<T>(Action<T> handler, int priority = 0, string modId = null)` | `priority` is only meaningful for `[LifecycleEvent]` classes (lower = earlier); ignored otherwise |
+| `Unsubscribe<T>` | `Unsubscribe<T>(Action<T> handler)` | Removes a single typed handler |
+| `Publish<T>` | `Publish<T>(T evt)` | Calls all typed handlers first, then auto-bridges to the string layer |
+
+### Auto-bridge via `[EventKey]`
+
+On `Publish<T>`, the bus reads the event class's `[EventKey("snake_case_key")]` attribute (`Core/Events/EventKeyAttribute.cs`) and broadcasts a `Dictionary` on that key so GDScript subscribers receive the same event. Public instance properties **declared on the event class itself** become snake_case keys (`SceneName` → `scene_name`); inherited `ModEvent` members are not included, and `Node` references pass through unwrapped. An event class without `[EventKey]` does not bridge — only typed C# subscribers receive it.
+
+### `[LifecycleEvent]` and delivery order
+
+Marking an event class with `[LifecycleEvent]` (`Core/Events/LifecycleEventAttribute.cs`) enables priority-ordered delivery: every `Subscribe<T>` call re-sorts that event's subscriber list by `priority`, so lower numbers fire first. Without the attribute, handlers run in subscription order.
+
+### Base class `ModEvent`
+
+All typed events derive from `ModEvent` (`Core/Events/ModEvent.cs`), which carries two members available to every handler:
+
+| Member | Type | Meaning |
+|---|---|---|
+| `SenderModId` | `string` | Sending mod (`null` = engine) |
+| `Tick` | `long` | Game-time tick at publish time (from `GameData.Instance.Runtime.Time`); `0` if `GameData` is not yet initialized |
+
+### Cleanup API
+
+- `ClearForMod(string modId)` — removes all subscriptions registered with that `modId`, across both the typed and string layers. Called on mod unload/reload.
+- `ClearAll()` — wipes every subscription on both layers.

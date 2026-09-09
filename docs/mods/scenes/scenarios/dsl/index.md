@@ -1,6 +1,6 @@
 # DSL Command Reference
 
-Complete reference to all 31 commands in the Scenario DSL, grouped by category.
+Complete reference to the Scenario DSL commands: 29 keywords registered in the command strategy registry, plus `select`/`option`, which are handled specially by the parser (32 commands total, grouped by category).
 
 ---
 
@@ -18,16 +18,27 @@ option "Explore" key=choice/explore -> :explore
 - Must be followed by one or more `option` commands
 - The `key=` parameter references a locale key for localization
 - If no `key=`, the text itself is displayed
+- Supports the same `first=`/`second=` avatar parameters as `text`
+
+A `select` with no following `option` commands is silently dropped from the queue — no error is raised.
 
 ### `option`
-Defines a choice within a `select` block.
+Defines a choice within a `select` block. Three ways to specify the jump target:
 
 ```scenario
+# Arrow form
 option "Leave" key=rooms/kitchen/opt_exit -> :exit
+
+# Named parameter form
+option "Leave" key=rooms/kitchen/opt_exit goto=exit
+
+# Bare positional label form
+option "Leave" :exit
 ```
 
 - Text can be a literal or a `key=` locale reference
-- `->` points to a `:label` to jump to when chosen
+- All three target forms are equivalent; the `->` arrow takes priority when several are present
+- An `option` outside a `select` block is ignored
 
 ### `:label`
 Anchor point for jumps. Must start with `:` at the beginning of a line.
@@ -44,8 +55,16 @@ Labels are local to the scenario file. They cannot be jumped to from other scena
 Unconditional jump to a label.
 
 ```scenario
-goto :cleanup
+goto -> :cleanup
 ```
+
+or equivalently:
+
+```scenario
+goto target=cleanup
+```
+
+> **Note:** The bare form `goto :cleanup` is **not** supported — it is silently ignored by the parser. Always use the `->` arrow or the `target=` parameter.
 
 Useful for skipping optional content or implementing complex branching without nested options.
 
@@ -79,12 +98,18 @@ background_color "#1a1a2e"
 Useful for transitions, flashbacks, or UI overlays.
 
 ### `background_show_hide`
-Shows or hides the background layer.
+Animates the background layer in or out with a fade.
 
 ```scenario
 background_show_hide hide
-background_show_hide show
+background_show_hide show duration=0.5 wait=true
 ```
+
+| Parameter | Description |
+|---|---|
+| (positional) | `show` or `hide` (defaults to `show`; any other value is treated as `hide`) |
+| `duration=` | Fade duration in seconds (default `1`) |
+| `wait=` | `wait=true` pauses the script until the fade animation completes |
 
 ### `switch_scene`
 Transitions to a different scene.
@@ -96,6 +121,14 @@ switch_scene Battle
 
 The target is a scene name defined in `scenes/{name}.json`.
 
+| Parameter | Description |
+|---|---|
+| (positional) | Scene name to switch to |
+| `speed=` | Transition speed as a float (default `4`) |
+| `hidden=` | `hidden=true` transitions showing only the scene background |
+
+The names `mainmenu`, `menu`, and `battle` are built-in: they are routed to the engine's native Godot scenes (main menu / battle) instead of mod-defined scenes.
+
 ### `foreground`
 Sets or clears the foreground layer image (rendered above characters).
 
@@ -103,6 +136,17 @@ Sets or clears the foreground layer image (rendered above characters).
 foreground "effects/rain"
 foreground ""
 ```
+
+### `effect`
+Plays a visual effect by ID. The syntax is `effect <effect_id>`:
+
+```scenario
+effect rain_overlay
+```
+
+The ID references a Godot scene (`.tscn`/`.scn`) from the mod's `effects/` resource group, resolved via the effect factory and instantiated above the scene. The script continues immediately — the effect plays independently and persists until its own lifetime ends.
+
+> **Note:** Effect scenes are only loadable from **folder mods** — zip mods skip them with a warning, because `PackedScene` cannot be reconstructed from raw bytes in managed code.
 
 ---
 
@@ -120,16 +164,28 @@ text "- Dear lady!" key=meeting/greeting first=marao/think second=murakami/fear_
 | `key=` | Locale key for the text content |
 | `first=` | Left-side avatar: `{character}/{expression}` |
 | `second=` | Right-side avatar |
+| `hide_color=` | `hide_color=true` shows avatars in shader-based silhouette mode (color suppressed) — useful for flashbacks or unknown speakers |
+| `wait=` | `wait=false` advances the script immediately without waiting for a click |
 | (inline) | If no `key=`, the text is displayed literally |
 
-### `p_text`
-Displays text in first-person mode (no dialogue box, centered overlay).
+### `ptext`
+Like `text`, but enables runtime `${var}` variable substitution in the text content.
 
 ```scenario
-p_text "I should check what's making that noise..."
+set player_name Marao
+ptext "Well met, ${player_name}!"
 ```
 
-Used for internal monologue, narration, or atmospheric text.
+The dialogue box is still shown, and `first=`/`second=` avatar parameters work the same as in `text`. Use `ptext` whenever you need to interpolate variables into a line; plain `text` does not substitute variables. Variables that are not set resolve to `?`.
+
+| Parameter | Description |
+|---|---|
+| `key=` | Locale key for the text content (substitution still applies after lookup) |
+| `first=` | Left-side avatar: `{character}/{expression}` |
+| `second=` | Right-side avatar |
+| `hide_color=` | `hide_color=true` shows avatars in shader-based silhouette mode |
+| `wait=` | `wait=false` advances the script immediately without waiting for a click |
+| (inline) | If no `key=`, the text is displayed literally (with `${var}` substitution) |
 
 ### `title`
 Displays a large centered title, often used for chapter/section headers.
@@ -231,13 +287,48 @@ delay 1.0
 text "Oh."
 ```
 
-### `animation`
-Plays a named animation on a character or the scene.
+Extended forms:
 
 ```scenario
-animation fade_in duration=1.0
-animation marao/walk
+# Invisible pause — no dialogue box activity
+delay 1.5 hidden
+
+# Pause with a caption shown during the wait
+delay 3.0 "Meanwhile, across town..."
+
+# Same, but the caption is resolved from a locale key
+delay 3.0 "..." key=scene/meanwhile_caption
 ```
+
+- The duration defaults to `1` second if omitted
+- `hidden` can also be given as a named parameter: `delay 1.5 hidden=true`
+- `key=` only applies when a text to display was given
+
+### `animation`
+Plays a sprite animation. Supports two forms:
+
+Single sprite base with frame controls:
+
+```scenario
+animation marao/walk start=0 count=6 speed=8.0 loop=true
+```
+
+Multiple explicit sprites:
+
+```scenario
+animation sprites=town/rain_1,town/rain_2,town/rain_3 speed=4.0 loop=true
+```
+
+| Parameter | Description |
+|---|---|
+| (positional) | Sprite base path (first form only) |
+| `sprites=` | Comma-separated sprite list (alternative to positional base) |
+| `start=` | First frame index (default `0`, first form only) |
+| `count=` | Number of frames to play (default `1`) |
+| `speed=` | Playback speed as a float multiplier (default `1.0`) |
+| `loop=` | `true`/`false` — loop the animation (defaults to `true` when omitted) |
+
+There is no `duration=` parameter — control timing via `speed=` and `count=`.
 
 ---
 
@@ -301,12 +392,14 @@ Used for cutscenes where you want the background visible without UI.
 ## Variables & Logic
 
 ### `set`
-Sets a named variable for later use in conditions.
+Stores a variable in the dialog runtime's variable store for later use — readable via `${var}` substitution in `ptext` lines and via `ctx.GetParam(...)` in actions.
 
 ```scenario
-set met_murakami = true
-set door_locked = false
+set met_murakami true
+set door_locked false
 ```
+
+The syntax is **space-separated**: first token is the name, second token is the value. Do not write `set name = value` with spaced equals — the parser stores the literal `"="` as the value. A `name=value` token (no spaces around `=`) is treated as a named argument, which is a different mechanism and not how `set` reads its operands.
 
 ### `empty`
 A no-op command. Useful as a placeholder during development.
@@ -354,8 +447,25 @@ Separates the YAML-like metadata header from the script body. Must appear on its
 
 ### `->` — Jump Operator
 
-Used exclusively within `option` commands to point to `:label` targets.
+Used in `option` and `goto` commands to point to `:label` targets.
 
 ```scenario
 option "Go inside" -> :enter
 ```
+
+### `${path}` — Include Directive
+
+Inside `.scenario` scripts and other mod text files, `${ path/to/file }` is replaced with the full content of the referenced file at **mod resolution time** — before the script is ever parsed. This happens while the mod loader reads the file (the same mechanism used by `ScenarioResolver` and the other text-based resolvers).
+
+```scenario
+# dialogue/intro.scenario
+${ events/common_ambience.txt }
+background "town/meetingmurakami/00079"
+```
+
+- Includes are resolved relative to the mod root and may be nested (an included file can contain includes of its own)
+- If the path does not resolve and `path + ".json"` exists, that file is used instead
+- Circular includes are detected and reported as errors; resolution fails for the affected file
+- Whitespace inside the braces is allowed (`${ path }`)
+
+Do not confuse this with the runtime `${var}` substitution in dialogue text (see `ptext`): includes are expanded once when the mod loads, variables are substituted every time the line is shown.

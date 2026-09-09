@@ -38,7 +38,7 @@ config/
     "enabled": true,              // Master logging on/off
     "console_enabled": true,      // Write logs to console
     "minimum_level": "Debug",     // Min level: Debug, Message, Warning, Error
-    "enabled_categories": ["LOG_BATTLE_UI", "LOG_MODS", "..."]
+    "enabled_categories": ["SAVE", "MODS", "..."]
   }
 }
 ```
@@ -82,43 +82,51 @@ config/
 
 ### Available log categories
 
+Categories are plain strings passed to `GameLogger.Log(category, ...)` — **no `LOG_` prefix**.
+
 | Category | Covers |
 |---|---|
-| `LOG_BATTLE_UI` | Battle interface events |
-| `LOG_MODS` | General mod loading |
-| `LOG_MODS_ZIP` | ZIP mod provider |
-| `LOG_MODS_COMPILE` | Roslyn C# compilation |
-| `LOG_MODS_REGISTRY` | Mod registry operations |
-| `LOG_AI` | AI decision-making |
-| `LOG_AI_DEBUG` | AI debug tracing |
-| `LOG_AUDIO` | Audio playback |
-| `LOG_BATTLE` | Battle engine events |
-| `LOG_CACHE` | Mod cache operations |
-| `LOG_CARD` | Card battle actions |
-| `LOG_CHAIN` | Event chain execution |
-| `LOG_COND` | Condition evaluation |
-| `LOG_CONFIG` | Configuration loading |
-| `LOG_DIALOG` | Dialog system |
-| `LOG_EVENT` | General events |
-| `LOG_GAME` | Game lifecycle |
-| `LOG_GD_PLUGIN` | Godot editor plugin |
-| `LOG_ITEMS` | Item/inventory events |
-| `LOG_LANG` | Localization loading |
-| `LOG_LIGHT` | Lighting system |
-| `LOG_QUEST` | Quest system |
-| `LOG_SAVE` | Save/load operations |
-| `LOG_SCENE` | Scene transitions |
-| `LOG_SERIALIZE` | JSON serialization |
-| `LOG_SHADER` | Shader operations |
-| `LOG_STATUS` | Status effects |
-| `LOG_TEST` | Test runner |
-| `LOG_TOOLBOX` | Dev tools |
-| `LOG_UI` | UI events |
-| `LOG_VIEW` | View box navigation |
-| `LOG_WIDGET` | Widget lifecycle |
-| `LOG_FACTORY` | Factory loading |
-| `LOG_LIGHT_TRACE` | Light ray tracing debug |
+| `AUDIO` | Audio playback |
+| `BATTLE` | Battle engine events |
+| `BATTLE_UI` | Battle interface events |
+| `CATALOG` | Remote mod catalog refresh/cache |
+| `COND` | Condition evaluation |
+| `CONFIG` | Configuration loading |
+| `CONVERTER` | Scenario converter |
+| `DOWNLOADER` | Mod downloads |
+| `DUPLICATE` | Duplicate singleton detection warnings |
+| `EVENT_BUS` | Mod event bus subscriptions |
+| `FACTORY` | Factory loading |
+| `GAME` | Game lifecycle |
+| `GDS_MOD` | GDScript mod loading |
+| `INTERACTIVE` | Interactive objects/layers |
+| `LANG` | Localization loading |
+| `MODS` | General mod loading |
+| `MODS_ASSEMBLY` | Mod assembly loading |
+| `MODS_COMPILE` | Roslyn C# compilation |
+| `MODS_EXPORT` | Mod export |
+| `MODS_INIT` | Mod initialization |
+| `MODS_NATIVE` | Native library handling in mods |
+| `MODS_REGISTRY` | Mod registry operations |
+| `MODS_SAVE` | Mod save dispatch |
+| `MODS_SETTINGS` | Mod settings persistence |
+| `QUEST` | Quest system |
+| `SAVE` | Save/load operations |
+| `SCENE` | Scene transitions |
+| `SCENE_CTX` | Scene context nodes |
+| `SCENE_REGISTRY` | Scene subscription registry |
+| `SHADER` | Shader operations |
+| `TEST` | Test runner (SceneSwitcher) |
+| `TSCN` | `.tscn` scene resolution/parsing |
+| `TSCN_TEST` | `.tscn` test driver |
+| `UI` | UI events |
+
+> **Warning**: the `enabled_categories` whitelist filter is currently **commented out** inside `GameLogger.Log` — category filtering is inert, and all categories are logged regardless of this setting.
+
+### Log output files
+
+Logs are written to `user://logs/cthangover.log`; entries with level `Error` are also duplicated to `user://logs/cthangover_errors.log`. A `--log-file=<path>` command-line argument overrides the log file location.
 
 ## Runtime settings persistence
 
-User-adjusted settings are persisted to `user://settings.cfg` (INI format), separate from this config file. The `game_config.json` only provides defaults — changes made in the settings menu are saved per-user.
+User-adjusted settings are persisted to `user://settings.json` as indented JSON (`SettingsData.ConfigPath`), separate from this config file. The `game_config.json` only provides defaults — changes made in the settings menu are saved per-user. Note that this is JSON, not an INI `.cfg` file.

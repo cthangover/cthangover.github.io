@@ -39,12 +39,47 @@ Shaders are referenced by filename (no extension) in the engine. They can be:
 
 1. **Assigned to materials** in Godot scenes via the engine
 2. **Overridden by mods** — if a mod provides a shader with the same name, it replaces the default
-3. **Applied to specific nodes** via C# code:
+3. **Applied to specific nodes** via C# code, using the static `Shaders` facade
+   (backed by `ShaderResolver`):
 
 ```csharp
-var material = node.Material as ShaderMaterial;
-material.SetShader(ShaderLoader.Get("pixel_art"));
+var shader = Shaders.Resolve("pixel_art");
+if (shader != null)
+{
+    var material = node.Material as ShaderMaterial;
+    material.Shader = shader;
+}
 ```
+
+The `Shaders` facade exposes:
+- `Collect()` — all `.gdshader` files across mods, keyed by logical name
+- `Resolve(name)` — loads the `Shader` resource by name (`null` if not found)
+- `TryGetCached(name)` — returns a previously resolved, still-valid instance
+
+At runtime, `ShaderModReplacer.PatchScene(Node)` walks freshly instantiated
+scenes and swaps every `ShaderMaterial` whose original resource path matches a
+mod-provided shader name. The same pass also performs **texture overrides**:
+`TextureRect` and `Sprite2D` nodes have their textures matched by resource
+filename against the mod texture registry and replaced the same way — so
+`PatchScene` is not limited to shaders.
+
+## Engine-side consumers
+
+The engine ships a dedicated `Control` node that consumes a mod-provided
+shader: `PixelArtPostProcess` (`Core/Shaders/PixelArtPostProcess.cs`). On
+`_Ready` it builds a full-viewport `ColorRect`, loads the
+`pixel_art_post_process` shader via the mod system, and exposes an
+`[Export] float PixelSize` property that drives the shader's `pixel_size`
+uniform — adjusting it from the Godot inspector updates the effect live.
+
+## Shipped core shaders
+
+Besides the interface shaders listed above, the `core` mod ships its own shader
+family in `mods/core/shaders/`: a set of `2d_cubism_*.gdshader` files
+(`mask`, `mask_mul`, `mask_add`, `mask_mix` — each also in an `_inv` inverted
+variant — plus `norm_mul` / `norm_add` / `norm_mix`) used for Cubism-style
+sprite masking and normal blending. The folder also contains
+`SHADER_CONTRACT.md`, which documents the conventions these shaders follow.
 
 ## Minimal custom shader example
 

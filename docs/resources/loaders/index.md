@@ -4,6 +4,26 @@ A **loader** takes a single mod entry URL (returned by a scanner's `Discover()`)
 
 Loaders are matched to entries via `IsCanProvide(url)` — the first loader that says "I can handle this" (in LIFO order) gets to create the provider.
 
+## Base interface — `IModDiscoveryProvider`
+
+Both `IModLoader` and `IModScanner` extend a common base,
+`IModDiscoveryProvider` (`Core/Mods/Discovery/IModDiscoveryProvider.cs`):
+
+```csharp
+public interface IModDiscoveryProvider
+{
+    string Name { get; }                // Human-readable name for log messages ("Folder", "Zip", ...)
+    bool IsCanProvide(string url);      // Can this provider handle the given path or URL?
+}
+```
+
+The shared contract is what lets `ModDiscoveryRegistry` discover both kinds of
+providers via `Reflections.FindAndCreate` and apply the same LIFO lookup
+semantics: the last-registered provider that answers `true` to
+`IsCanProvide` wins. For loaders `IsCanProvide` is a type-dispatch check
+(is it a folder? a zip?); for scanners it acts as an accessibility guard
+(does the directory exist?).
+
 ## Interface
 
 ```csharp

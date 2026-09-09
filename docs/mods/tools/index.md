@@ -19,7 +19,7 @@ flowchart TD
     subgraph Runtime
         MMA -->|CreateWindow| TW[ToolWindow popup]
         TB -->|AddToolButtons| BTN[Dynamic toolbar buttons]
-        BTN -->|Pressed: Get + CreateWindow| TW
+        BTN -->|Pressed: Get + ShowWindow(CreateWindow())| TW
     end
 
     subgraph Mod Assembly
@@ -62,10 +62,23 @@ Optional companion interface. Implement it alongside `IToolProvider` to add a pe
 | `LocaleKey` | `string` | Translation key for the button's tooltip or accessible label |
 | `IsVisible()` | `bool` | Return `false` to hide the button dynamically (e.g. dev-only buttons in release builds) |
 
+> ⚠ **WARNING:** `IconPath` and `LocaleKey` are declared interface members but
+> are currently **not consumed** by the `ToolBox` UI — dynamic toolbar buttons
+> are created as iconless `TextureButton` instances and only `ToolId` is read.
+> The members are kept as declared surface for future use; do not rely on them
+> having a visual effect today.
+
 ## `ToolWindow` base class
 
 Abstract base class for tool popup windows. Extends Godot's `Window`. Key features:
 
+- **Custom chrome** — the native border is removed and replaced with a custom
+  title bar (title label, maximize toggle, close button) plus drag-to-move on
+  the title bar and dedicated edge/corner resize zones around all four sides.
+- **Maximize toggle** — via the title-bar button or double-clicking the title;
+  maximized fills the game viewport, restore returns to the previous geometry.
+- **Sizing limits** — `MinSize` is 800×400; `MaxSize` equals the game viewport
+  size, so tool windows never exceed the game window.
 - **Dirty-state tracking** — `SetDirty()` / `MarkClean()` add/remove a `*` prefix on the title bar. On close with unsaved changes, a confirmation dialog appears automatically.
 - **Confirmation dialogs** — `ShowUnsavedDialog(Action)` shows a localized "unsaved changes" prompt; `ConfirmDiscardUnsaved()` provides a return-value variant.
 - **Layout helpers**:
@@ -73,7 +86,8 @@ Abstract base class for tool popup windows. Extends Godot's `Window`. Key featur
   - `CreateToolbar()` — pre-configured `HBoxContainer` with 8px spacing
   - `CreateSidebar(VBoxContainer, int width = 280)` — fixed-width `PanelContainer` with vertical scrolling
 - **Monospace font** — `GetMonospaceFont()` resolves a monospace font for code displays, falling back to `ThemeDB.FallbackFont`.
-- **Static openers** — `Open<T>()` (generic, parameterless constructor) and `ShowWindow(Window)` (for `IToolProvider`-created instances) center the window on screen.
+- **Static openers** — `Open<T>()` (generic, parameterless constructor) and `ShowWindow(Window)` (for `IToolProvider`-created instances) center the window on screen. Both apply the chrome via `SetupChrome()` before showing.
+- **Teardown hook** — override the virtual `Cleanup()` to release resources; it is called automatically from `_ExitTree` when the window leaves the tree.
 
 ## Registry
 
@@ -114,7 +128,7 @@ During `_Ready()`:
 
 1. Built-in widget references are discovered via recursive tree search (`FindWidget<T>`).
 2. Static buttons (Map, Bag, Characters, Skills, Settings, Journal) are wired.
-3. `AddToolButtons(container)` dynamically creates `TextureButton` instances from `ToolBoxButtonFactory.GetVisible()` — each button opens its tool via `ToolFactory.Get(toolId).CreateWindow()`.
+3. `AddToolButtons(container)` dynamically creates `TextureButton` instances from `ToolBoxButtonFactory.GetVisible()` — each button opens its tool via `ToolWindow.ShowWindow(tool.CreateWindow())`, so the window gets the full chrome (title bar, resize zones) and is centered, rather than being shown raw from `CreateWindow()` alone.
 
 ## Built-in tools
 

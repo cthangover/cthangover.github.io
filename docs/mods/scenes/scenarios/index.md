@@ -28,7 +28,8 @@ end
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `scene` | string | *(required)* | Scene this scenario targets. Multiple scenario files can target the same scene |
-| `priority` | int | `10` | Execution order — **lower runs first**. Mod scenarios use low numbers to override defaults |
+| `priority` | int | `0` | Execution order — **lower runs earlier**. All matching scenarios are enqueued in this order |
+| `after` | string | *(none)* | Scenario ID that must come before this one in the chain (ordering dependency) |
 | `condition` | expression | *(none)* | Quest-condition expression. Scenario only runs if true. See `dsl/conditions/` |
 | `save_allowed` | bool | `false` | Whether the player can save the game from this scene |
 | `is_one_run` | bool | `false` | If true, the scenario runs only once per playthrough. After execution, it's skipped forever |
@@ -51,7 +52,7 @@ switch_scene home_vestibule
 end
 ```
 
-### Cooking mod override (higher priority = runs first)
+### Cooking mod extension (lower priority = runs earlier)
 
 ```scenario
 scene: home_kitchen
@@ -71,7 +72,7 @@ action toggle_cooking_workbench
 end
 ```
 
-Because `priority: 5 < 10`, the cooking scenario runs **instead of** the default. It adds a "Cook" option without modifying core files.
+Because `priority: 5 < 10`, the cooking scenario is enqueued **before** the default one. Note that it does **not** replace the default — both scenarios are enqueued and run in priority order. Use `condition:` (or `is_one_run: true`) to exclude scenarios from execution, not priority.
 
 ### Bedroom with save_allowed (core)
 
@@ -107,7 +108,8 @@ The interactive lamp is added once, on first visit. Subsequent visits skip this 
 
 1. Player enters `scene: home_kitchen`
 2. Engine collects all `.scenario` files targeting `home_kitchen` across all mods
-3. Sorts by `priority` (ascending)
-4. For each scenario, evaluates `condition:` (if present)
-5. First scenario with a passing condition runs
-6. If no condition matches, the lowest-priority scenario without a condition runs (fallback)
+3. Sorts by `priority` (ascending) and resolves `after:` dependencies (topological order)
+4. For each scenario in that order, evaluates `condition:` (if present). A scenario **without** a condition always passes.
+5. **Every** scenario whose condition passes is enqueued into the scene's event chain — there is no first-match cut-off. Scenarios then execute one after another in enqueue order.
+
+Priority therefore controls *ordering*, not selection: a lower-priority number means the scenario runs earlier in the chain, alongside all other passing scenarios.

@@ -28,6 +28,10 @@ The core slot uses these blob keys:
 
 Slot preview metadata (`CurrentSceneName`, `GameTime`, `CharacterCount`) is stored in `ModMetadata.CustomData` as a JSON object, so the slot list UI can read it without deserialising game-state blobs.
 
+Subsystems **not persisted** by `BuildCoreSlot` today: there are no blob keys for `RuntimeData.BattleData` (active encounter) or `RuntimeData.SkillData` (skill unlocks/cooldowns) — this state resets between sessions.
+
+The saved `CurrentSceneName` is used for the slot-list UI and scene navigation after loading; `RuntimeData.CurrentScene` itself is not stored — it is a read-only property resolved live from the `SceneManager`/current scene at runtime.
+
 ## ModSlot
 
 | Field | Type | Description |
@@ -68,3 +72,21 @@ new DataBlob(version: 2);               // version=2, empty
 new DataBlob(version: 2, myObject);      // version=2, serialises myObject as JSON byte payload
 new DataBlob(rawBytes);                  // version=1, stores raw bytes
 ```
+
+The raw payload is also exposed directly via the public `Payload` property (`byte[]`; assigning `null` is coerced to an empty array). Unlike `GetBytes()`, reading `Payload` does **not** flush pending key-value entries into the byte array first.
+
+## SaveSlotInfo
+
+Returned by `SaveService.GetSaveSlots(slotCount)` for the load-game UI. There is no numeric slot ID/index field — the logical slot identity is `FileName` (e.g. `slot_1`).
+
+| Field | Type | Description |
+|---|---|---|
+| `FileName` | `string` | Logical slot name (e.g. `slot_1`), used as the save-file identifier |
+| `SaveTime` | `DateTime` | UTC timestamp from `SavePackage.Timestamp` (`DateTime.MinValue` for empty slots) |
+| `SceneName` | `string` | Scene at save time (from the core slot preview; `"unknown"` fallback) |
+| `ScreenshotPath` | `string` | Godot path of the thumbnail PNG (e.g. `user://saves/slot_1.png`) |
+| `HasScreenshot` | `bool` | `true` if a thumbnail PNG exists on disk |
+| `IsEmpty` | `bool` | `true` when no JSON save file exists for this slot |
+| `GameTime` | `long` | In-game time tick at save moment |
+| `CharacterCount` | `int` | Number of characters at save moment |
+| `LampPercent` | `float` | **Known placeholder**: currently always written as `0f` by `GetSaveSlots` — no real lamp data is computed yet |

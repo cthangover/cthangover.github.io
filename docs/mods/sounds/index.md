@@ -1,6 +1,6 @@
 # Sounds — Sound Effects
 
-One-shot sound effect files (`.ogg`) organized by category, referenced from scenarios via the `sound` command.
+One-shot sound effect files (`.ogg` / `.wav`) organized by category, referenced from scenarios via the `sound` command.
 
 ## Directory structure
 
@@ -22,9 +22,9 @@ sounds/
 
 ## File format
 
-- `.ogg` — Vorbis-compressed, any bitrate
+- `.ogg` (Vorbis) and `.wav` are both accepted — see `audio_extensions` in `config/mod_config.json`
 - Short duration (0.1–5 seconds) recommended for one-shot effects
-- Referenced by path without extension: `ui/click`, `battle/hit`
+- The sound id is the path relative to the mod's `sounds/` folder, minus extension: `sounds/ui/click.ogg` → `ui/click`, `battle/hit`
 
 ## Real example — `core/sounds/`
 
@@ -78,21 +78,41 @@ sound ui/notification_chime
 
 ## Usage from C#
 
+Sounds are played through `Cthangover.Core.Audio.IAudioService` (implemented by `AudioService`):
+
 ```csharp
-SoundService.Play("ui/click");
-SoundService.Play("battle/hit", volume: 0.8f, pitch: 1.2f);
+var audio = GetNodeOrNull<AudioService>("/root/AudioService");
+
+// Exact id
+audio.PlaySound("ui/click", SoundType.UI);
+
+// With random variations: picks "battle/hit_1" .. "battle/hit_3"
+audio.PlaySound("battle/hit", 3, SoundType.Timed);
 ```
 
-Optional parameters:
-- `volume` — 0.0 to 1.0
-- `pitch` — playback speed / pitch shift (0.5 = half speed, 2.0 = double speed)
-- `pan` — stereo panning (-1.0 left to 1.0 right)
+`SoundType` selects the playback pool — each type gets its own player, so a new
+`CardEffect` sound cuts the previous one while a `UI` sound plays independently:
+`Timed`, `Background`, `Foreground`, `UI`, `Notification`, `CardEffect`, `CardAction`.
+
+### Engine internals
+
+A few extra members on `AudioService` are useful for mod code:
+
+- `IsMusicPlaying()` — returns `true` when the dedicated Music player is
+  currently producing audio; lets UI display playback state without touching
+  the player node directly
+- `static LinearToDb(float linear)` — public helper converting a linear
+  amplitude (0–1) to decibels via `20 * log10(linear)`, clamped to −80 dB at
+  the bottom so zero never becomes `-infinity`
+- `MixerType` enum (`Sounds`, `Musics`, `Ambient`) — identifies the three audio
+  buses (SFX / Music / Ambient) used by `SetVolume(MixerType, float)` and
+  `SetEnabled(MixerType, bool)` for per-bus volume and mute control
 
 ## Adding a new sound
 
-1. Place the `.ogg` file in `sounds/{category}/`
-2. Reference in scenario: `sound category/filename` (no `.ogg`)
-3. No config or registration needed — the engine discovers `.ogg` files at load time
+1. Place the `.ogg` or `.wav` file in `sounds/{category}/`
+2. Reference in scenario: `sound category/filename` (no extension)
+3. No config or registration needed — audio files are discovered at load time
 
 ## Sound categories
 

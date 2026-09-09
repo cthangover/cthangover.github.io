@@ -1,6 +1,6 @@
 # Conditions — Quest Expression Language
 
-The `condition:` metadata field uses a simple expression language to control which scenarios execute based on quest state and scene flags.
+The `condition:` metadata field uses a simple expression language to control which scenarios execute based on quest state and scene flags. Boolean literals `true` and `false` are also valid condition expressions.
 
 ## Syntax
 
@@ -15,11 +15,10 @@ condition: QuestId.method("arg") [&& || ! expr ...]
 | `hasTag("tag")` | True if the quest has the specified tag |
 | `notHasTag("tag")` | True if the quest does NOT have the tag |
 | `IsActive` | True when quest Status equals `Progress` |
-| `Status >= N` | True if quest Status is N or higher |
-| `Status == N` | True if quest Status equals N |
-| `Status < N` | True if quest Status is less than N |
-| `DataStatus >= N` | True if quest numeric counter is N or higher |
-| `DataStatus == N` | True if quest numeric counter equals N |
+| `Status <op> N` | Quest status compared against number `N` |
+| `DataStatus <op> N` | Quest numeric counter compared against number `N` |
+
+Supported comparison operators (for both quest `Status`/`DataStatus` and flag comparisons): `==`, `!=`, `>`, `>=`, `<`, `<=`.
 
 ## Custom GDScript conditions
 
@@ -66,16 +65,18 @@ condition: door_unlocked == "true"
 condition: counter >= 3
 ```
 
-Flags are string or number key-value pairs set via the `set` DSL command or by action code.
+> **Important:** these flags are **not** fed by the DSL `set` command. `set` writes variables into the dialog runtime store, which are consumed by `${var}` substitution and `ctx.GetParam(...)` in actions — a separate mechanism. The flag dictionary used here is populated via `ScenarioCondition.SetFlag`, which currently has no production callers. Do not expect `set my_flag value` to make `condition: my_flag == "value"` pass.
 
 ## Operators
 
 | Operator | Description |
 |---|---|
+| `==`, `!=`, `>`, `>=`, `<`, `<=` | Comparison operators — valid for quest `Status`/`DataStatus` and flag comparisons |
 | `&&` | Logical AND — both sides must be true |
 | `\|\|` | Logical OR — at least one side must be true |
 | `!` | Logical NOT — negates the following expression |
 | `()` | Grouping for precedence |
+| `true` / `false` | Boolean literals |
 
 ## Real example — Murakami quest chain
 
@@ -144,19 +145,18 @@ Runs when the prolog tag is set AND the scene flag `boss_battle` equals `"done"`
 ## Condition evaluation order
 
 1. Engine collects all scenarios for the current scene
-2. Sorts by `priority` (ascending)
-3. Evaluates each scenario's `condition:` in order
-4. First scenario with a passing condition executes
-5. If no condition passes, the lowest-priority scenario **without** a condition runs
+2. Sorts by `priority` (ascending) and resolves `after:` dependencies
+3. Evaluates each scenario's `condition:` in that order; a scenario without a condition always passes
+4. **All** scenarios whose condition passes are enqueued into the event chain and run one after another — there is no first-match cut-off
 
 This means:
-- Put restrictive conditions on high-priority (low number) scenarios
-- Put fallback scenarios at priority 10+ with no condition
+- Conditions filter scenarios out of the chain entirely; a passing scenario never blocks later scenarios from running
+- Priority only determines execution order among passing scenarios
 
 ```mermaid
 flowchart LR
-    A["priority: 5<br/>condition: hasTag<br/>secret_found"] -->|match| S
-    B["priority: 8<br/>condition: hasTag<br/>chapter_2"] -->|if not, try| S
-    C["priority: 10<br/>condition: none"] -->|fallback| S
-    S{{"Match?"}} -->|yes| SCENE["Execute Scenario"]
+    A["priority: 5<br/>condition: hasTag<br/>secret_found"] -->|"passes"| S["Event Chain"]
+    B["priority: 8<br/>condition: hasTag<br/>chapter_2"] -->|"fails"| X["Skipped"]
+    C["priority: 10<br/>condition: none"] -->|"always passes"| S
+    S --> SCENE["Run scenarios in priority order"]
 ```

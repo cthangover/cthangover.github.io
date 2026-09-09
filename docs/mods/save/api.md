@@ -108,7 +108,9 @@ public bool OnLoad(ModSlot slot, out string errorMessage)
 }
 ```
 
-### Binary data (textures)
+### Binary data
+
+`DataBlob` can hold raw bytes: construct it from a `byte[]`, or use the binary API (`GetBytes`/`SetBytes`) to read and write raw data.
 
 ```csharp
 public void OnSave(ModSlot slot)
@@ -120,8 +122,9 @@ public bool OnLoad(ModSlot slot, out string errorMessage)
 {
     if (slot.Data.TryGetValue("Skin", out var blob))
     {
-        var tex = Texture2D.LoadFromRaw(blob.GetBytes());
-        ApplySkin(tex);
+        byte[] bytes = blob.GetBytes();
+        // Decode the bytes yourself, e.g. via Godot's Image + ImageTexture.
+        ApplySkin(bytes);
     }
 
     errorMessage = null;
@@ -149,11 +152,50 @@ slot.Metadata.MinCoreVersion = "0.2.0";
 
 On load, if the current core version is below `0.2.0`, the load is aborted with an error message.
 
+## Registration & dispatch (ModSaveableRegistry)
+
+You never invoke the registry yourself — implementations are discovered **automatically via reflection** when your mod assembly is loaded (`ModAssemblyLoader.RegisterAssembly` scans it with `Reflections.FindAndCreate<IModSaveable>` and registers every implementation under your mod's ID).
+
+| Method | When | Behaviour |
+|---|---|---|
+| `ModSaveableRegistry.RegisterAssembly(assembly, modId)` | Mod assembly load | Scans the assembly and creates one instance per `IModSaveable` implementation |
+| `CollectSaveData() : Dictionary<string, ModSlot>` | Save time | Per registered mod: builds a `ModSlot` with `ModId`, `ModName`, `ModVersion` pre-filled from `IModInfo`, then calls `OnSave(slot)` |
+| `DispatchLoad(Dictionary<string, ModSlot>) : List<string>` | Load time (phase 3) | Per registered mod whose ID is present in the loaded dictionary, calls `OnLoad(slot, out error)`; collects error strings (empty list = success) |
+
+Error handling rules:
+
+- An exception thrown from `OnSave` is logged and **that mod's slot is skipped**; other mods keep saving.
+- If you override neither load method, the defaults chain into `void OnLoadVoid(ModSlot)`, which throws `NotSupportedException` — override at least one of `bool OnLoad(...)` or `OnLoadVoid`.
+- A `false` return from `OnLoad` (or an exception from either overload) is converted to `Mod '<id>' (<name>): <message>`; any such error aborts the whole load after phase 3.
+
 ## Save slot API (SaveService)
 
-| Method | Description |
+| Member | Description |
 |---|---|
+| `Path : string` (static property) | Saves directory — globalised `user://saves` at runtime, `"saves"` otherwise |
 | `Save(string fileName)` | Build `"__core__"` slot, collect mod slots, write JSON |
 | `Load(string fileName) : bool` | Deserialize, validate + restore + dispatch |
 | `GetSaveSlots(int slotCount) : List<SaveSlotInfo>` | Enumerate slots with preview metadata |
 | `DeleteSave(string fileName)` | Delete JSON + PNG screenshot |
+
+## Slot preview API (RuntimeSerializer)
+
+| Member | Description |
+|---|---|
+| `RuntimeSerializer.ReadSlotPreview(ModMetadata meta) : CoreSlotPreview` | Deserialises the preview JSON from `ModMetadata.CustomData`; returns a default (empty) preview when the field is absent or malformed |
+| `RuntimeSerializer.CoreSlotPreview` | Nested public DTO: `CurrentSceneName` (`string`), `GameTime` (`long`), `CharacterCount` (`int`) |
+
+Lets a custom save-slot UI read slot info without deserialising any game-state blobs.
+
+## Save screenshots (SaveScreenshotService)
+
+| Method | Description |
+|---|---|
+| `CaptureAndSave(string fileName)` | Grabs the current background texture from the `ViewBox` node, downscales it to 320×180 with Lanczos interpolation, writes `user://saves/{fileName}.png` (same name sanitisation as the JSON save) |
+| `LoadScreenshot(string fileName) : Texture2D` | Reads the thumbnail PNG back as a `Texture2D`; returns `null` if the file is missing or fails to decode |
+
+Notes:
+
+- If no valid background texture exists at capture time, a solid dark-grey **64×64 fallback** image is saved instead.
+- The thumbnail is a **separate PNG file** next to the save JSON — it is not part of `SavePackage`. Only the textual preview (`CurrentSceneName`, `GameTime`, `CharacterCount`) is embedded in the save, inside `ModMetadata.CustomData` of the `"__core__"` slot (see [Data Model](data-model.md)).
+- `DeleteSave(fileName)` removes both the JSON and the PNG.

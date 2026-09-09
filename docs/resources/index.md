@@ -14,13 +14,15 @@ Loader  (IModLoader)           "I know how to open this kind of mod"
 Provider (IModFileProvider)    "I provide file access to a loaded mod"
 ```
 
-All three are discovered automatically via `Reflections.FindAndCreate<T>()` — any public, non-abstract class implementing the interface with a parameterless constructor is picked up at startup. Mod DLLs can ship their own implementations; they are registered when the mod assembly is loaded and take priority over built-in ones via LIFO lookup.
+Scanners and loaders are discovered automatically via `Reflections.FindAndCreate<T>()` and registered with `ModDiscoveryRegistry` — any public, non-abstract class implementing the interface with a parameterless constructor is picked up at startup. Mod DLLs can ship their own scanners/loaders; they are registered when the mod assembly is loaded and take priority over built-in ones via LIFO lookup.
+
+Providers are **not** part of this registry — there is no provider registry. Each loader constructs its provider directly: `FolderModLoader` creates a `FolderModFileProvider`, `ZipModLoader` creates a `ZipModFileProvider`. To supply custom storage (memory, network, database), a mod ships its own `IModLoader` whose `CreateProvider()` returns the custom `IModFileProvider`.
 
 ## Layers at a Glance
 
 | Layer | Interface | Built-in implementations | What mods can add |
 |---|---|---|---|
-| **Providers** | [`IModFileProvider`](providers/) | `FolderModFileProvider`, `ZipModFileProvider` | Custom storage backends (memory, network, database) |
+| **Providers** | [`IModFileProvider`](providers/) | `FolderModFileProvider`, `ZipModFileProvider` | Custom storage backends — shipped as an `IModLoader` that constructs them in `CreateProvider()` (see [Loaders](loaders/)) |
 | **Scanners** | [`IModScanner`](scanners/) | `UserDataModScanner`, `GameDirModScanner` | New mod sources (HTTP catalog, Steam Workshop, Git repos) |
 | **Loaders** | [`IModLoader`](loaders/) | `FolderModLoader`, `ZipModLoader` | New mod formats (.7z, .tar.gz, remote zip download) |
 | **Registry** | [`ModDiscoveryRegistry`](discovery-registry/) | Static singleton | — (mods extend via scanners & loaders, not the registry itself) |
@@ -67,4 +69,4 @@ No registration code needed — `Reflections.FindAndCreate<IModScanner>()` finds
 ## Priority and LIFO lookup
 
 - **Root priority** (`ModSourceRoot.Priority`): lower number = higher precedence in deduplication. `UserDataModScanner` uses 0 (user mods win), `GameDirModScanner` uses 1 (built-in mods are overridden).
-- **Provider LIFO order**: the **last-registered** scanner or loader that says `IsCanProvide(url) == true` wins. Since mod-added providers are registered after built-in ones, they are checked first and can override core behaviour.
+- **LIFO lookup (scanners/loaders)**: the **last-registered** scanner or loader that says `IsCanProvide(url) == true` wins. Since mod-added implementations are registered after built-in ones, they are checked first and can override core behaviour. This applies only to scanners and loaders — providers are never looked up, they are constructed by their loader.

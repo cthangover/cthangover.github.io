@@ -4,11 +4,15 @@ The central registry that auto-discovers all `IModScanner` and `IModLoader` impl
 
 ## Discovery
 
-At startup, `Reflections.FindAndCreate<T>()` scans all loaded assemblies for public, non-abstract classes implementing `IModScanner` or `IModLoader` with a parameterless constructor:
+At startup, `Reflections.FindAndCreate<T>()` scans all loaded assemblies for public, non-abstract classes implementing `IModScanner` or `IModLoader` with a parameterless constructor. `Initialize()` is idempotent — an `_initialized` guard makes repeated calls no-ops:
 
 ```csharp
 public static void Initialize()
 {
+    if (_initialized)
+        return;
+    _initialized = true;
+
     _scanners.AddRange(Reflections.FindAndCreate<IModScanner>());
     _loaders.AddRange(Reflections.FindAndCreate<IModLoader>());
 }
@@ -34,10 +38,12 @@ public static IModLoader FindLoader(string url)
 
 | Step | Registered | Order in list |
 |---|---|---|
-| Core assembly init | `UserDataModScanner`, `GameDirModScanner` | 0, 1 |
-| Core assembly init | `FolderModLoader`, `ZipModLoader` | 0, 1 |
+| Core assembly init | `UserDataModScanner`, `GameDirModScanner` | first |
+| Core assembly init | `FolderModLoader`, `ZipModLoader` | first |
 | Mod A loaded | `CommunityCatalogScanner` | End → checked first |
 | Mod B loaded | `HttpZipLoader` | End → checked first |
+
+Exact index positions of the built-in scanners/loaders are **not guaranteed** — the order within a single assembly comes from the assembly/type enumeration performed by `Reflections.FindAndCreate<T>()`. The only reliable property is relative order: mod-added implementations are always appended after built-in ones, and LIFO lookup walks from the end.
 
 After Mod A and Mod B load:
 - `FindLoader("https://example.com/mods/cool.zip")` → `HttpZipLoader` (last, checked first) ✓
@@ -84,6 +90,7 @@ foreach (var scanner in ModDiscoveryRegistry.Scanners)
         // 3. For each discovered entry, find a loader
         foreach (var entry in scanner.Discover(root.Url))
         {
+            // Entries named ".gdignore" / ".gitkeep" are skipped
             var loader = ModDiscoveryRegistry.FindLoader(entry.Url);
             if (loader == null)
                 continue;  // No loader claims this entry
@@ -96,3 +103,5 @@ foreach (var scanner in ModDiscoveryRegistry.Scanners)
     }
 }
 ```
+
+Deduplication happens afterwards in `ModRegistry.RegisterCandidates()`: candidates are keyed by mod `Id`, compared first by root priority (lower wins), then by version (higher version wins). See [Load order](../../mods/load-order/) and the zip packaging page for details.

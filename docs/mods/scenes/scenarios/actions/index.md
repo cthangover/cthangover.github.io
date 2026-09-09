@@ -57,9 +57,7 @@ Toggles a named UI panel. The action name alone is enough — no extra parameter
 | Action | Parameters | Description |
 |---|---|---|
 | `character.add_to_party` | `type=CharId` | Add character to player's party |
-| `character.remove_from_party` | `type=CharId` | Remove character from party |
 | `character.send_notification` | `type=CharId` | Show "new member" notification |
-| `character.set_stat` | `type=CharId stat=Health value=100` | Modify a character attribute |
 
 ### `battle.*`
 
@@ -72,18 +70,13 @@ Toggles a named UI panel. The action name alone is enough — no extra parameter
 
 | Action | Parameters | Description |
 |---|---|---|
-| `quest.set_status` | `quest_id=Q status=2` | Set quest to a specific status number |
-| `quest.set_data_status` | `quest_id=Q level=3` | Set quest numeric progress counter |
+| `quest.set_status` | `quest_id=Q status=Progress` | Set the quest lifecycle state by `QuestStatus` enum name: `NotStarted`, `Progress`, or `End` |
+| `quest.set_data_status` | `quest_id=Q level=3` | Set the quest numeric progress counter |
 | `quest.add_tag` | `quest_id=Q tag=T` | Add a tag to a quest |
 | `quest.remove_tag` | `quest_id=Q tag=T` | Remove a tag |
 | `quest.send_notification` | `quest_id=Q` | Trigger "Quest Updated" UI popup |
 
-### `inventory.*`
-
-| Action | Parameters | Description |
-|---|---|---|
-| `inventory.add` | `item=food/ration count=3` | Add items to inventory |
-| `inventory.remove` | `item=food/wolf_meat count=1` | Remove items |
+> **Note:** The `status` parameter is parsed as a case-insensitive `QuestStatus` **enum name** (`NotStarted` / `Progress` / `End`) via `Enums<QuestStatus>.Parse`. Use enum names in scenarios. Numeric strings such as `status=2` only happen to work because `Enum.Parse` aliases numbers to enum values — do not rely on this. For numeric progress use `quest.set_data_status` with `level=N` instead.
 
 ### `scene.*`
 
@@ -116,23 +109,25 @@ public class OpenTreasureChestAction : IScenarioAction
     public void Run(IActionContext ctx)
     {
         var item = ctx.GetParam("item");
-        var count = ctx.GetParamInt("count");
+        var count = ctx.GetParam("count");
         ctx.Log("SCENARIO", $"Gave player {count}x {item}");
     }
 }
 ```
 
-Register it in the action factory:
+`IActionContext` exposes `GetParam(string)` for reading action parameters plus the game subsystem services and `Log`/`LogWarning` methods (see `Core/Actions/IActionContext.cs`). There is no typed getter such as `GetParamInt` — parse values yourself.
+
+### Registration
+
+You do **not** need to register actions manually: every implementation of `IScenarioAction` in your mod's compiled assembly is discovered automatically by reflection when the assembly is loaded.
+
+If you need to register an assembly manually (outside the standard mod loading flow), call:
 
 ```csharp
-public class MyActionProvider : IActionProvider
-{
-    public void Register(ActionRegistry reg)
-    {
-        reg.Add("treasure.open", () => new OpenTreasureChestAction());
-    }
-}
+ScenarioActionFactory.Instance.RegisterAssembly(assembly);
 ```
+
+If two actions register the same `Name`, the earliest registration wins and later duplicates are silently ignored.
 
 Then use in scenarios:
 

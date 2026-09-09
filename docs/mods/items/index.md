@@ -49,6 +49,59 @@ JSON-defined items — consumables, resources, and recipe items — with localiz
 | `Recipe` | `0x20` | Recipe item (unlocks in cookbook) |
 | `CantDrop` | `0x80000000` | Cannot be discarded from inventory |
 
+### Extra JSON keys
+
+Any JSON key that does not match a DTO field is captured by
+`ItemInfo.ExtraProperties` (`[JsonExtensionData]`) and imported by
+`ItemFactory` into `Item.Properties` — a string-keyed `PropertyData` bag
+(`Core/Items/ItemInfo.cs`, `Core/Items/Item.cs`). Numbers import as int/float,
+booleans as bool, strings as strings; arrays and objects are stored as raw JSON
+text. Core code never reads `Properties` — the bag exists so your own C# item
+actions or scenario logic can attach custom data to items without schema
+changes.
+
+```jsonc
+{
+  "Id": "food/ration",
+  "...": "...",
+  // Captured into Properties — readable from your own code via item.Properties.GetInt("MyMod/Saturation")
+  "MyMod/Saturation": 3
+}
+```
+
+## Item actions (IItemAction)
+
+The `ItemAction` field references an implementation of `IItemAction`
+(`Core/Items/IItemAction.cs`) — the item's on-use behaviour:
+
+```csharp
+public class MyHealAction : IItemAction
+{
+    // Registry lookup key — must match the item's "ItemAction" field in JSON
+    public string ID => "mymod/heal";
+
+    public bool UseAction(IItem item)
+    {
+        // Returning FALSE aborts consumption — the item stays in the
+        // inventory and the UI can show a failure feedback instead
+        return TryHeal(item);
+    }
+}
+```
+
+Registration options:
+
+- **Auto-discovery** — on first use, `ItemActionFactory` scans every loaded
+  assembly for public `IItemAction` implementations and indexes them by `ID`.
+  A mod DLL just needs to contain the class — no registration code required.
+- **Manual registration** — `ItemActionFactory.Register(IItemAction)` adds a
+  single instance; `ItemActionFactory.RegisterAssembly(assembly)` scans one
+  assembly (used for hot-loaded mod assemblies).
+
+The special ID `"null"` (or an empty value) is an explicit no-action marker:
+`ItemActionFactory.Get` returns `null` for it, meaning the item has no use
+effect.
+
 ## Real examples
 
 ### Consumable — `core/items/food/ration.json`
@@ -139,6 +192,8 @@ Recipes are defined separately in `recipes/` and describe input→output transfo
     "Id": "recipe/wolf_meat_to_ration",
     // Locale key for the recipe display name
     "Name": "recipe/wolf_meat_to_ration/name",
+    // Locale key for the recipe description text
+    "Description": "recipe/wolf_meat_to_ration/desc",
     // Workbench type — "Cooking" is currently the only supported type
     "Type": "Cooking",
     // Crafting time in in-game minutes
@@ -160,10 +215,76 @@ Recipes are defined separately in `recipes/` and describe input→output transfo
 |---|---|
 | `Id` | Unique recipe ID |
 | `Name` | Locale key for recipe display name |
-| `Type` | Workbench type — currently only `"Cooking"` |
+| `Description` | Locale key for the recipe description text |
+| `Type` | Workbench type (`WorkbenchType` enum). The enum currently declares a single value: `"Cooking"` |
 | `Time` | Crafting time in in-game minutes |
 | `Input` | Required ingredients: `Id` (item ID) + `Count` |
 | `Output` | Produced items: `Id` (item ID) + `Count` |
+
+## Inventory API
+
+The player inventory (`Inventory` / `IInventory`, `Core/Items/Inventory.cs`)
+is an ordered list of item slots:
+
+- `Items` — `List<IItemContainer>`, each slot being `{ Item, Count }`. Slot
+  order drives UI layout; empty containers are deleted when a stack hits zero.
+- `Change` — C# event `Action<string itemId, int delta>` fired on every add/remove.
+
+All query and mutation methods are overloaded by **item id string** or by
+**`IItem` instance**:
+
+| Method | Description |
+|---|---|
+| `HasItem(id \| item)` | Does any slot hold this item? |
+| `TryGet(id \| item)` | Returns the `IItemContainer` slot, or null |
+| `CheckCount(id \| item)` | Total count across slots (0 if absent) |
+| `Add(id \| item, count = 1)` | Stacks onto an existing slot, or creates a new one by resolving the id through `ItemFactory`. Unknown ids are silently ignored |
+| `Remove(id \| item, count = 1)` | Removes items; returns `false` without changes if the slot holds fewer than `count` |
+
+Every successful mutation publishes an `InventoryChangedEvent` to the global
+`ModEventBus` — published from `Inventory.PublishInventoryChanged`
+(`Core/Items/Inventory.cs`). GDScript subscribers receive it under the key
+`"inventory_changed"` with a snake_case payload:
+
+| Payload key | Type | Meaning |
+|---|---|---|
+| `item_id` | string | Affected item ID |
+| `delta` | int | Signed change amount (negative on removal) |
+| `new_count` | int | Slot count after the mutation |
+
+## GDScript bridge objects
+
+GDScripts never touch `IInventory` directly — the engine hands them wrapper
+objects:
+
+### `GDInventoryService`
+
+A `[GlobalClass]` `RefCounted` wrapping the inventory. Plain-id methods mirror
+the C# API; the `*ByItem` variants take a `GDItem` instead of an id string:
+
+| Method | Description |
+|---|---|
+| `HasItem(id)` / `HasItemByItem(gd_item)` | Item presence check |
+| `CheckCount(id)` / `CheckCountByItem(gd_item)` | Stack size lookup |
+| `Add(id, count = 1)` / `AddByItem(gd_item, count = 1)` | Add items |
+| `Remove(id, count = 1)` / `RemoveByItem(gd_item, count = 1)` | Remove items; returns success |
+
+### `GDItem`
+
+A `[GlobalClass]` snapshot passed as the `item` argument to a GDScript's
+`use(item)`:
+
+| Field | Type | Description |
+|---|---|---|
+| `Id` | string | Item identifier |
+| `Name` | string | Display name |
+| `Description` | string | Tooltip text |
+| `Cost` | int | Purchase price |
+| `ItemType` | int | `ItemType` flags as int |
+| *(internal)* | — | The wrapper keeps an internal reference to the real `IItem`; `Sprite` and `Properties` are deliberately not exposed |
+
+See [GDScript in Mods → Items](site/docs/mods/src/gdscript/items) for the
+authoring-side view.
 
 ## Locale keys
 
