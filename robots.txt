@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /*.md$
 
-Sitemap: https://cthangover.ru/sitemap.xml
+Sitemap: https://cthangover.github.io/sitemap.xml

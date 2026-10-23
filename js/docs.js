@@ -177,7 +177,7 @@
     var title = titleOf(slug);
     document.title = title + " — cthangover";
     if (canonicalLink) {
-      canonicalLink.setAttribute("href", "https://cthangover.ru/docs/" + slug);
+      canonicalLink.setAttribute("href", "https://cthangover.github.io/docs/" + slug);
     }
     if (gitEl) gitEl.href = GIT_BASE + slug + ".md";
     setSideOpen(false);
