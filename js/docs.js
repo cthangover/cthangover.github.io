@@ -9,7 +9,7 @@
   "use strict";
 
   var INDEX_URL = "docs/docs-index.json";
-  var GIT_BASE = "https://git.cthangover.ru/cthangover/cthangover/src/branch/master/site/docs/";
+  var GIT_BASE = "https://github.com/cthangover/cthangover/tree/master/site/docs/";
 
   var container = document.getElementById("docs-content");
   if (!container) return;

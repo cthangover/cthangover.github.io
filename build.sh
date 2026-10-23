@@ -25,9 +25,11 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 SRC="$HERE/../site"
 CNAME=""
 URL=""
+REPO=""
 for a in "$@"; do
   case "$a" in
     --cname=*) CNAME="${a#--cname=}" ;;
+    --repo=*) REPO="${a#--repo=}" ;;
     --url=*) URL="${a#--url=}" ;;
     *) sed -n '2,12p' "$0"; exit 2 ;;
   esac
@@ -56,6 +58,14 @@ done
 # Public address: canonical/og links of the pages and docs.js, robots.txt.
 if [ "$URL" != "https://cthangover.ru/" ]; then
   sed -i "s#https://cthangover.ru/#$URL#g" "$HERE"/*.html "$HERE"/js/*.js "$HERE"/robots.txt
+fi
+
+# Repository links: the GitHub copy must not send visitors to the Gitea server.
+if [ -n "$REPO" ]; then
+  find "$HERE" -type f \( -name "*.html" -o -name "*.js" -o -name "*.json" -o -name "*.xml" -o -name "*.txt" -o -name "*.md" \) -print0 |
+    while IFS= read -r -d "" f; do
+      sed -i -e "s|https://git.cthangover.ru/cthangover/cthangover/src/branch/master/site/docs|https://github.com/cthangover/cthangover/tree/master/site/docs|g" -e "s|https://git.cthangover.ru/cthangover/cthangover/src/branch/master/LICENSE|https://github.com/cthangover/cthangover/blob/master/LICENSE|g" -e "s|https://git.cthangover.ru/cthangover/mod_live2d/raw/branch/master/|https://raw.githubusercontent.com/cthangover/mod_live2d/master/|g" -e "s|https://git.cthangover.ru/cthangover|$REPO|g" "$f"
+    done
 fi
 
 # Sitemap: the real pages only.
