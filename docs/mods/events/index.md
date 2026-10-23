@@ -16,8 +16,8 @@ The engine publishes these events automatically. Each event has a string key
 |-------|-----|----------|------------|
 | `SceneExitedEvent` | `"scene_exited"` | lifecycle | Leaving the current scene |
 | `SceneEnteredEvent` | `"scene_entered"` | lifecycle | New scene loaded, root in tree |
-| `BattleStartedEvent` | `"battle_started"` | lifecycle | Battle core initializes |
-| `BattleEndedEvent` | `"battle_ended"` | lifecycle | Battle ends (victory/defeat) |
+| `BattleStartedEvent` | `"battle_started"` | lifecycle | Battle core initializes *(declared by `turn_battle_base`)* |
+| `BattleEndedEvent` | `"battle_ended"` | lifecycle | Battle ends (victory/defeat) *(declared by `turn_battle_base`)* |
 
 Lifecycle events support subscriber **priorities**: lower numbers fire first.
 Engine subscribers use these priorities:
@@ -27,7 +27,7 @@ Engine subscribers use these priorities:
 | `SceneManager` internals | 0 | Scene background (`ApplySceneDefaults`) |
 | `SceneManager` internals | 5 | Audio (`PlaySceneAmbient`) |
 | `SceneManager` internals | 10 | Music (`UpdateMusicType`) |
-| `SceneSubscriptionRegistry` | 20 | Manifest `on_enter`/`on_exit` callbacks |
+| `UiHost` | 30 | Shows/hides scene-scoped manifest `ui` elements on enter/exit |
 | `SceneContextNode` | 0 (default) | Clears cached node lookups and interactive objects on `scene_exited` |
 
 Note that scenario event composition (`ComposeEvents`) is **not** a bus subscriber — it runs synchronously inside `SceneManager.SwitchScene`.
@@ -36,21 +36,30 @@ Note that scenario event composition (`ComposeEvents`) is **not** a bus subscrib
 
 | Event | Key | Payload |
 |-------|-----|---------|
-| `CharacterDiedEvent` | `"character_died"` | `character_id`, `character_name`, `source` ("battle"/"world") |
+| `CharacterDiedEvent` | `"character_died"` | `character_id`, `character_name`, `source` ("battle"/"world") *(declared by `turn_battle_base`)* |
+| `CharactersDefeatedEvent` | `"characters_defeated"` | `source`, `character_ids` — a group defeat (battle won, trap); subscribers like the recruiting mod resolve ids through `CharacterFactory` |
 | `QuestStatusChangedEvent` | `"quest_status_changed"` | `quest_id`, `old_status`, `new_status` |
 | `QuestTagChangedEvent` | `"quest_tag_changed"` | `quest_id`, `tag`, `added` (bool) |
+| `QuestDataStatusChangedEvent` | `"quest_data_status_changed"` | `old`, `new` — numeric quest progress counter; carries no quest id (a change marker for condition caches) |
+| `QuestStateRestoredEvent` | `"quest_state_restored"` | (empty) — published once after a save's quest state is fully restored |
+| `FlagChangedEvent` | `"flag_changed"` | `key`, `value` — a scenario condition flag changed (`ScenarioCondition.SetFlag`) |
+| `InteractiveStateChangedEvent` | `"interactive_state_changed"` | `id` — an interactive object was removed (not published on add, so `interactive_add` re-runs stay idempotent) |
+| `MapZoneChangedEvent` | `"map_zone_changed"` | `zone_id` (empty for bulk changes), `change` — a map zone's open/visible state changed |
+| `ConditionStateChangedEvent` | `"condition_state_changed"` | `version` — something scenario conditions read changed (any of the quest/flag/interactive/map events above, or `ConditionStateMonitor.MarkStateChanged`); event chains start the next scenario from it. May arrive mid-change: read state in a deferred call, not in the handler |
 | `InventoryChangedEvent` | `"inventory_changed"` | `item_id`, `delta`, `new_count` |
 | `TimeTickEvent` | `"time_tick"` | `time_tick`, `normalized_time` |
-| `RecruitJoinedEvent` | `"recruit_joined"` | `recruit_id`, `recruit_name` *(declared, not yet published by the engine)* |
-| `RecruitLeftEvent` | `"recruit_left"` | `recruit_id`, `recruit_name` *(declared, not yet published by the engine)* |
+| `NewGameStartedEvent` | `"new_game_started"` | (empty) — published by `GameData.StartNewGame` after runtime state is wiped; mods re-seed per-session data here |
+| `RecruitJoinedEvent` | `"recruit_joined"` | `recruit_id`, `recruit_name` *(declared by the `recruiting` mod, not yet published)* |
+| `RecruitLeftEvent` | `"recruit_left"` | `recruit_id`, `recruit_name` *(declared by the `recruiting` mod, not yet published)* |
 
 ### UI events
 
 | Event | Key | Payload |
 |-------|-----|---------|
 | `DialogStartedEvent` | `"dialog_started"` | `dialog_id`, `speaker` *(declared, not yet published by the engine)* |
-| `DialogEndedEvent` | `"dialog_ended"` | `dialog_id` *(the class declares it, but the engine currently publishes an empty instance)* |
+| `DialogEndedEvent` | `"dialog_ended"` | `locker_id` — id of the event (scenario) that ran the dialog, empty for an interactive's click dialog; published exactly once per finished dialog (not on a studio restart). `dialog_id` is declared but not filled yet |
 | `NotificationRequestedEvent` | `"notification_requested"` | `text`, `category` |
+| `ShellReadyEvent` | `"shell_ready"` | `root` — the UI shell finished building; `UiHost` attaches mod panels on this event |
 
 ### Mod lifecycle events
 

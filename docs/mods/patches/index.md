@@ -3,35 +3,37 @@
 Patches let one mod add or override properties of entities defined in another mod — without rewriting their JSON files entirely.
 
 - **`"Id": "EntityName"`** — apply only to the entity with this ID.
-- **`"Id": "*"`** — wildcard: applies to **all** entities of this type, serving as a fallback value. An entity's own JSON-defined properties always take precedence over wildcard values.
+- **`"Id": "*"`** — wildcard: applies to **all** entities of this type. Its values overwrite the entity's own JSON values; a targeted patch (`"Id": "EntityName"`) is applied after the wildcard and wins over it.
 
-Works for characters (`characters`) and items (`items`).
+Works for every entity kind the game defines — `character`, `item`, `action`, `skill`, `quest`, `recipe`, `status_effect` — keyed by kind, not by directory.
 
 ## Overview
 
 Each mod can contain an optional `patches/` directory. Patch sources are
 collected by `PatchResolver` (`Core/Mods/Resolvers/Impls/PatchResolver.cs`),
-which scans **both** layouts per entity type:
+which scans **both** layouts per entity kind:
 
 ```filestree
 mods/
 └── my_mod/
     └── patches/
-        ├── characters.json         ← flat file: patches for characters
-        ├── items.json              ← flat file: patches for items
-        └── characters/             ← directory form: any *.json inside is scanned too
+        ├── character.json          ← flat file: patches for characters
+        ├── item.json               ← flat file: patches for items
+        └── character/              ← directory form: any *.json inside is scanned too
             ├── player.json
             └── enemies.json
 ```
 
-- Flat files: `patches/{entityType}.json` (e.g. `patches/characters.json`)
-- Directory form: every `.json` inside `patches/{entityType}/`
+- Flat files: `patches/{kind}.json` (e.g. `patches/character.json`)
+- Directory form: every `.json` inside `patches/{kind}/`
 
 Both forms use the same format below; results from all mods are grouped by
 target entity id. From C#, patches are collected via the static facade
-`Patches.Collect(entityType)`, which proxies through
+`Patches.Collect(kind)`, which proxies through
 `ModManager.Instance.GetResolver<PatchResolver>()` (results are cached per
-type until `ClearCache()`).
+kind until `ClearCache()`). The kind is the entity kind declared in the target
+file's envelope (`"Kind": "character"`), so a character patch is never applied
+to skills or actions.
 
 ## Format
 
@@ -46,8 +48,8 @@ Standard `{"Items": [...]}` wrapper. Each entry contains an `Id` and arbitrary p
       "TestDefault": 100                // Will be layered over wildcard values
     },
     {
-      "Id": "*",                        // Wildcard: applies to ALL entities as a fallback
-      "TestDefault": -20,               // Overridden by entity's own properties or specific patches
+      "Id": "*",                        // Wildcard: applies to ALL entities of the kind
+      "TestDefault": -20,               // Overridden by specific patches (overwrites the entity's own value)
       "TestGlobalPatch": 1              // Global property applied to all entities
     }
   ]
@@ -63,6 +65,8 @@ When creating an entity, its properties are assembled in layers. Each subsequent
 | 1 | Entity's own properties (from its JSON) | Base |
 | 2 | Wildcard patches `"*"` (in mod load order) | Higher |
 | 3 | Targeted patches by `Id` (in mod load order) | Highest |
+
+Property names match in any letter case (`"health"` patches `Health`), the same way entity JSON is read.
 
 ## Patches from Different Mods
 
@@ -99,11 +103,11 @@ Result for all characters: `{ "Test": 0, "Strength": 10 }` — `Test` overridden
 ### Mod B — adds patches
 
 ```jsonc
-// mods/mod_b/patches/characters.json
+// mods/mod_b/patches/character.json
 {
   "Items": [
     { "Id": "Hero", "Test": 50, "CritChance": 15 },                    // Specific patch: applies only to Hero
-    { "Id": "*", "Test": -20, "CritChance": 5, "GlobalBuff": 10 }      // Wildcard: fallback for all other characters
+    { "Id": "*", "Test": -20, "CritChance": 5, "GlobalBuff": 10 }      // Wildcard: applies to every character; Hero gets its own values above
   ]
 }
 ```
@@ -130,7 +134,7 @@ Result for all characters: `{ "Test": 0, "Strength": 10 }` — `Test` overridden
 Everything works identically for items. `ItemInfo` accepts arbitrary JSON keys via `[JsonExtensionData]`, which end up in `Item.Properties` (mirroring characters via `CharacterAttributes.Properties`).
 
 ```jsonc
-// patches/items.json
+// patches/item.json
 {
   "Items": [
     { "Id": "food/ration", "Durability": 99, "SpecialProp": true },  // Specific item patch by Id
@@ -139,16 +143,23 @@ Everything works identically for items. `ItemInfo` accepts arbitrary JSON keys v
 }
 ```
 
-## Test Mod
+## Test fixture
 
-See `mods/test_defaults_and_patches/` — demonstrates the system:
+`mods/test_defaults_and_patches/` is a test fixture (`"fixture": true` in its manifest): `--all-mods` and games
+never load it, so its wildcard patches cannot leak into other tests. The `property_patches` integration test
+loads it explicitly and checks the merged entities:
+
+```bash
+godot --path . --headless -- --with-mods=test_defaults_and_patches --itest=property_patches
+```
 
 ```filestree
 mods/test_defaults_and_patches/
 ├── manifest.json
+├── src/PropertyPatchesTest.cs   ← itest driver
 └── patches/
-    ├── characters.json    ← Maraо: TestPatched=42, TestDefault=100; *: TestDefault=-20, TestGlobalPatch=1
-    └── items.json         ← food/ration: Durability=99; *: Durability=50, GlobalItemProp=patched
+    ├── character.json    ← Maraо: TestPatched=42, TestDefault=100; *: TestDefault=-20, TestGlobalPatch=1
+    └── item.json         ← food/ration: Durability=99; *: Durability=50, GlobalItemProp=patched
 ```
 
 ## Array Operations & Public Helpers
@@ -176,3 +187,4 @@ are available to C# code:
 ## Pages
 
 - [Array Operations & Identity Keys](arrays-and-identity.md) — $add/$remove/$set, per-field merge, identity key detection
+- [Scene Patches](scenes.md) — patching `.tscn` scenes with inherited scenes and `metadata/_patch_*` operations

@@ -2,6 +2,26 @@
 
 JSON-defined characters — both player-controlled and enemies — with attributes, actions, skills, and loot tables.
 
+## File format
+
+Every character file is a self-describing envelope. The top-level `Kind` is the
+routing discriminator consumed by `EntityResolver`; `Items` carries the
+definitions — a file may define one character or many:
+
+```jsonc
+{
+  // Entity kind — the type discriminator, not a directory convention
+  "Kind": "character",
+  "Items": [
+    { "Id": "wolf_1", "...": "..." }
+  ]
+}
+```
+
+Directories no longer imply a type: a character file is found wherever it lives
+in the mod. Player characters and enemies are the same `character` kind —
+`CharacterFactory` resolves both through one collection.
+
 ## JSON structure
 
 ```jsonc
@@ -105,7 +125,7 @@ Be honest with yourself about what this gives you:
 
 ## Real examples
 
-### Player character — `core/characters/player/marao.json`
+### Player character — `cthangover_game/characters/player/marao.json`
 
 ```jsonc
 {
@@ -130,7 +150,7 @@ Be honest with yourself about what this gives you:
 }
 ```
 
-### Enemy — `core/characters/enemies/wolf_1.json`
+### Enemy — `cthangover_game/characters/enemies/wolf_1.json`
 
 ```jsonc
 {
@@ -166,7 +186,7 @@ Be honest with yourself about what this gives you:
 }
 ```
 
-### Boss enemy — `core/characters/enemies/werewolf_girl_1.json`
+### Boss enemy — `cthangover_game/characters/enemies/werewolf_girl_1.json`
 
 ```jsonc
 {
@@ -200,14 +220,14 @@ definition (`Core/Characters/ActionCharacter.cs`). Actions define what a
 character can do in battle — attack, defend, stun, heal — together with their
 targeting category and free-form parameters.
 
-Actions are collected from the same **`characters/`** JSON group as characters
-themselves (`ActionCharacterFactory` calls `JsonGroup.Collect<ActionCharacterInfo>("characters")`),
-so action definitions live anywhere under your mod's `characters/` folder using
-the usual `{ "Items": [...] }` envelope:
+Actions are entities in their own right, collected by `ActionCharacterFactory`
+through the shared entity resolver: the file declares `"Kind": "action"` and
+can live anywhere in the mod:
 
 ```jsonc
 {
-  // Wrapping array — action definitions are listed under Items
+  // Action files are routed by their own kind, independent of characters
+  "Kind": "action",
   "Items": [{
     // Unique action ID — referenced by characters' "Actions" arrays
     "Id": "mymod/fireball",
@@ -215,7 +235,8 @@ the usual `{ "Items": [...] }` envelope:
     "Name": "characters/action/fireball/name",
     // Locale key for the tooltip text
     "Description": "characters/action/fireball/description",
-    // Targeting category: "ToSelf", "ToAlias" (allies), or "ToEnemy"
+    // Targeting category: "ToSelf", "ToAlias" (allies), or "ToEnemy";
+    // "Passive" and "Active" are non-targeting kinds (see below)
     "Type": "ToEnemy",
     // Icon sprite path, resolved in the characters texture group
     "Image": "characters/actions/fireball",
@@ -235,9 +256,23 @@ the usual `{ "Items": [...] }` envelope:
 | `Id` | Unique action ID, used as the factory lookup key |
 | `Name` | Locale key for the display name in the battle action menu |
 | `Description` | Locale key for the tooltip |
-| `Type` | Targeting category — `ToSelf` (caster), `ToAlias` (allies), `ToEnemy` (opponents) |
+| `Type` | `ActionCharacterType` — `ToSelf` (caster), `ToAlias` (allies), `ToEnemy` (opponents), plus the non-targeting `Passive` and `Active` kinds (see below) |
 | `Image` | Icon sprite resolved via `TextureUtils.LoadFromModGroup("characters", ...)` |
 | `Values` | List of `"Key=Value"` strings populating the `Properties` bag |
+
+Besides the three in-battle targeting categories, `ActionCharacterType` declares
+two kinds handled by the character panel instead of battle executors:
+
+- **`Passive`** — never appears in an action menu. C# code checks flags via
+  `CharacterPassiveExtension.HasPassiveEffect(character, key)`, which is true when
+  any equipped passive sets that key to `true` in its `Values` (e.g.
+  `"IgnoreArmor=true"`; key names are mod-chosen — there is no registry).
+- **`Active`** — a one-shot ability used from the character panel outside battle.
+  Cooldown state lives in the action's own `Properties` bag: `ActiveCooldown`
+  (seconds, declared in your `Values`) and `LastUsed` (timestamp recorded by
+  `MarkUsed`). The helpers `IsReadyToUse(action, now)` and
+  `GetRemainingCooldown(action, now)` in `ActionCharacterActiveExtension`
+  implement the cooldown check.
 
 There are no reserved parameter keys at the definition level — core executors
 read whatever keys they care about (the stock physics actions use
@@ -245,15 +280,14 @@ read whatever keys they care about (the stock physics actions use
 executors (`IActionExecutor`) can read their own via the `GetStr` / `GetInt` /
 `GetFloat` / `GetBool` helpers on `ActionCharacter`.
 
-The core mod keeps its actions in `characters/actions/*.json` registered through
-a `characters/actions.json` index with `${}` includes:
+The cthangover_game mod keeps its actions in `characters/actions/*.json`,
+each file a standalone `Kind: "action"` envelope — there is no index file:
 
 ```jsonc
-{ "Items": [
-    ${actions/physics_attack},
-    ${actions/physics_defence},
-    ${actions/physics_stun}
-]}
+{
+  "Kind": "action",
+  "Items": [ { "Id": "physics/attack", "...": "..." } ]
+}
 ```
 
 `ActionCharacterFactory.Get(id)` returns a **copy** of the cached definition on
@@ -296,8 +330,10 @@ returns; the executor hub matches executors to actions by `ActionId`.
   `Point` to a minimum of 1 (`Health > 0 ? Health : 1`, same for `Point`);
   `Defence` and `Attack` are taken as-is, including 0.
 - **Copies on read** — `CharacterFactory.Get(id)` returns a deep copy per call
-  (`Character.Copy()`): `Attributes` are cloned and `StatusEffectQueue` is
-  re-owned by the new instance, so battle mutations never leak into templates.
+  (`Character.Copy()`): `Attributes` are cloned, so battle mutations never leak
+  into templates. The clone carries no battle-only state — status effect queues
+  are not fields of `Character`; battle code obtains them through
+  `StatusEffectService.Of(character)` (see [Status Effects](../status_effects/)).
 - **Unknown action IDs** are dropped silently when resolving the `Actions` list.
 
 ## Runtime members worth knowing
@@ -306,32 +342,23 @@ returns; the executor hub matches executors to actions by `ActionId`.
 |---|---|
 | `Character.Frame` | Small portrait `Texture2D` for list views (party roster, battle HUD). Present on the model but **not populated from JSON** by the factory |
 | `Character.Exp` | Current experience points, loaded from the template and carried into party data on recruitment |
-| `Character.StatusEffectQueue` | Queue of active status effects owned by the character; `Copy()` re-binds the clone to its new owner |
+| `StatusEffectService.Of(character)` | Active status-effect queue for a combatant. Lives in `mods/turn_battle_base` as a `ConditionalWeakTable` side table — not on `Character` — and dies with its owner; see [Status Effects](../status_effects/) |
 | `Character.Copy()` | Deep clone used everywhere the engine hands out characters (see above) |
 | `CharacterData.Create(characterType)` | Builds runtime `CharacterInfoData` from the factory template. For an **unknown ID** it does not throw — it returns a fallback entry with default attributes at level 0 |
 
 ## Character index files
 
-The root `characters.json` registers characters using a `$ref` syntax:
-
-```jsonc
-{
-  // $ref entries — each ${...} path expands to characters/{path}.json and its contents are merged in
-  "Items": [
-    "${player/marao}"
-  ]
-}
-```
-
-`${player/marao}` references `characters/player/marao.json` — its contents are merged in.
+There are none. Every character file declares its kind itself, so the old
+`characters.json` / `enemies.json` index files with `${...}` includes are gone:
+adding a character means dropping a `Kind: "character"` file anywhere in the
+mod, and later mods override earlier definitions by `Id`.
 
 ## Adding a new character from scratch
 
-1. Create `characters/{type}/{id}.json` with all required fields
-2. Add it to the index: `"${type/id}"` in `characters/characters.json`
-3. Put the portrait sprite inside your mod's `characters/` group so the `Image` path resolves (extension optional); dialog portraits, if needed, go separately under `avatars/{id}/` — see [Avatars](../avatars/)
-4. Register locale keys for the name in `locale/en.properties`:
+1. Create a JSON file anywhere in your mod with the `{ "Kind": "character", "Items": [ ... ] }` envelope and all required fields
+2. Put the portrait sprite inside your mod's `characters/` **texture** group so the `Image` path resolves (extension optional); dialog portraits, if needed, go separately under `avatars/{id}/` — see [Avatars](../avatars/)
+3. Register locale keys for the name in `locale/en.properties`:
 ```
 characters/{type}/{id} = My Character Name
 ```
-5. Reference in battle init: `action battle.init enemies=my_char_id`
+4. Reference in battle init: `action battle.init enemies=my_char_id`

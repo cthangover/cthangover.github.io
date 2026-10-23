@@ -1,0 +1,3007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>cthangover - mod resources</title>
+</head>
+<body>
+<pre>
+cthangover - mod resources
+Plain-text dump for AI agents: 36 mods, 56 scenarios.
+
+===== EXISTING MODS =====
+
+===== MOD mods/audio_base: Audio Engine =====
+manifest.json:
+{
+  "id": "audio_base",
+  "name": "Audio Engine",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Engine audio subsystem: IAudioService implementation (Music/SFX/Ambient buses), the auto-advancing music player and the audio factories (music, sounds, playlists). Replaces the former Core/Audio autoloads — the AudioModInitializer adds nodes named AudioService and MusicPlayer to the scene tree root on the boot Scenes phase, so /root/AudioService keeps resolving.",
+  "category": "engine, library",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "test_sources": ["tests/*.cs"],
+  "depends": ["shell2d_base>=1", "ui_base>=1"],
+  "ui": []
+}
+files (20):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+src/AudioFactory.cs
+src/AudioModInitializer.cs
+src/AudioService.cs
+src/MusicFactory.cs
+src/MusicPlayerBehaviour.cs
+src/MusicSceneItem.cs
+src/OggPacketParser.cs
+src/Playlist.cs
+src/PlaylistContext.cs
+src/PlaylistFactory.cs
+src/PlaylistItemInfo.cs
+src/PlaylistMusicEntry.cs
+src/SoundFactory.cs
+src/SubsystemRegistration.cs
+src/TrackPicker.cs
+tests/TrackPickerTests.cs
+
+===== MOD mods/card_battle: CardBattle =====
+manifest.json:
+{
+  "id": "card_battle",
+  "name": "CardBattle",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Card battle implementation on top of turn_battle_base: an action-card hand with attack/defence values, character cards, battle HUD, log and banners, end-turn flow and its own battle sounds.",
+  "category": "gameplay",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": [ "ui_base>=1", "turn_battle_base>=1" ]
+}
+files (62):
+manifest.json
+mod.jpg
+effects/select.png
+locale/ui_en.properties
+locale/ui_ru.properties
+scenes/action_card.tscn
+scenes/battle_actions_panel.tscn
+scenes/battle_banner.tscn
+scenes/battle_card_panel.tscn
+scenes/battle_hud.tscn
+scenes/battle_log_panel.tscn
+scenes/card_battle_screen.tscn
+scenes/character_card.tscn
+scenes/end_turn_button.tscn
+sounds/battle/card_defence_empty.ogg
+sounds/battle/card_drop_1.ogg
+sounds/battle/card_drop_2.ogg
+sounds/battle/card_drop_3.ogg
+sounds/battle/card_drop_4.ogg
+sounds/battle/card_empty.ogg
+sounds/battle/card_physics_damage.ogg
+sounds/battle/card_physics_defence.ogg
+sounds/battle/card_pick_1.ogg
+sounds/battle/card_pick_2.ogg
+sounds/battle/card_pick_3.ogg
+sounds/battle/card_pick_4.ogg
+sounds/battle/card_show_actions.ogg
+sounds/battle/card_stun_electro.ogg
+src/BattleLogHub.cs
+src/CardBattleCore.cs
+src/ICard.cs
+src/Actions/AbstractBattleAction.cs
+src/Actions/ActionPhase.cs
+src/Actions/CardBattleActionProvider.cs
+src/Actions/PhysicsAttackAction.cs
+src/Actions/PhysicsDamageActionCard.cs
+src/Actions/PhysicsDefenceAction.cs
+src/Actions/PhysicsDefenceActionCard.cs
+src/Actions/PhysicsStunActionCard.cs
+src/Player/AttackToEnemyStrategy.cs
+src/Player/CardActionStrategyFactory.cs
+src/Player/ICardActionStrategy.cs
+src/Player/SelfStrategy.cs
+src/Player/StunToEnemyStrategy.cs
+src/Player/SupportStrategy.cs
+src/StatusEffect/IStatusActions.cs
+src/StatusEffect/IStatusEffect.cs
+src/StatusEffect/StatusEffectItem.cs
+src/StatusEffect/StatusEffectQueue.cs
+src/StatusEffect/StunStatusEffect.cs
+src/UI/ActionCardNode.cs
+src/UI/BattleActionsPanel.cs
+src/UI/BattleBanner.cs
+src/UI/BattleCardPanel.cs
+src/UI/BattleHud.cs
+src/UI/BattleLogKind.cs
+src/UI/BattleLogPanel.cs
+src/UI/CardBattleScreen.cs
+src/UI/CardController.cs
+src/UI/CardDeathAnimation.cs
+src/UI/CharacterCardNode.cs
+src/UI/EndTurnButton.cs
+
+===== MOD mods/characters_base: Characters Engine =====
+manifest.json:
+{
+  "id": "characters_base",
+  "name": "Characters Engine",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Engine characters subsystem: the character and action-card factories (entity kinds 'character' and 'action'), the avatar factory and the character panel UI. Replaces the former Core/Characters factories and Core/UI/CharacterPanel — the CharactersModInitializer publishes kernel contracts (ICharacterTemplateProvider, IActionTemplateProvider, IAvatarProvider) so core code resolves templates without referencing this assembly.",
+  "category": "engine, library",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": ["shell2d_base>=1", "ui_base>=1"],
+  "ui": [
+    {
+      "id": "characters",
+      "kind": "panel",
+      "slot": "ModBeforeUIPanel",
+      "scene_path": "scenes/ui/character_panel.tscn",
+      "button": { "icon": "cards", "locale": "ui/character_panel/title", "index": 30 },
+      "priority": 10
+    }
+  ]
+}
+files (34):
+manifest.json
+mod.jpg
+characters/actions/physics_attack.json
+characters/actions/physics_attack.png
+characters/actions/physics_defence.json
+characters/actions/physics_defence.png
+characters/actions/physics_stun.json
+characters/actions/physics_stun.png
+locale/en.properties
+locale/ru.properties
+scenes/ui/action_card.tscn
+scenes/ui/action_pool.tscn
+scenes/ui/action_slot.tscn
+scenes/ui/character_card.tscn
+scenes/ui/character_panel.tscn
+src/CharactersModInitializer.cs
+src/CharactersSaveable.cs
+src/SubsystemRegistration.cs
+src/Actions/PartyAddAction.cs
+src/Characters/ActionAssignmentReset.cs
+src/Characters/ActionCharacterActiveExtension.cs
+src/Characters/ActionCharacterInfo.cs
+src/Characters/CharacterInfo.cs
+src/Characters/CharacterPassiveExtension.cs
+src/Factories/ActionCharacterFactory.cs
+src/Factories/AvatarFactory.cs
+src/Factories/CharacterFactory.cs
+src/UI/CharacterPanel/ActionCardBehaviour.cs
+src/UI/CharacterPanel/ActionCharacterUi.cs
+src/UI/CharacterPanel/ActionPoolBehaviour.cs
+src/UI/CharacterPanel/ActionSlotBehaviour.cs
+src/UI/CharacterPanel/CharacterCardBehaviour.cs
+src/UI/CharacterPanel/CharacterPanelBehaviour.cs
+src/UI/CharacterPanel/CharacterPanelPrefabs.cs
+
+===== MOD mods/cooking: Cooking =====
+manifest.json:
+{
+  "id": "cooking",
+  "name": "Cooking",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Autonomous cooking mechanic: the kitchen workbench overlay in home_kitchen with recipe-based cooking (e.g. wolf meat into rations), a ration statistics panel and the home_kitchen_cooking scenario.",
+  "category": "gameplay",
+  "sources": [
+    "src/*.cs"
+  ],
+  "test_sources": [
+    "tests/*.cs"
+  ],
+  "depends": [ "cthangover_game>=1", "ui_base>=1", "items_base>=1", "time_base>=1" ],
+  "ui": [
+    {
+      "id": "cooking_workbench",
+      "kind": "overlay",
+      "scene": "home_kitchen",
+      "slot": "ModLastPanel",
+      "scene_path": "scenes/cooking_panel.tscn",
+      "once": true,
+      "show_on_start": false,
+      "priority": 10
+    },
+    {
+      "id": "ration_stats",
+      "kind": "overlay",
+      "scene": "home_kitchen",
+      "slot": "Lastground",
+      "scene_path": "scenes/ration_statistics_panel.tscn",
+      "once": false,
+      "show_on_start": true,
+      "priority": 20
+    }
+  ],
+  "test_suites": [
+    {"id": "cooking_walk", "activate": ["--itest=cooking_walk"]}
+  ]
+}
+files (28):
+manifest.json
+mod.jpg
+backgrounds/cook_table.png
+items/recipe/cooking_recipe.png
+items/recipe/wolf_meat_to_ration.json
+locale/en.properties
+locale/ru.properties
+locale/scenarios_en.properties
+locale/scenarios_ru.properties
+recipes/cooking.json
+scenarios/home/home_kitchen_cooking.scenario
+scenes/cooking_panel.tscn
+scenes/ration_statistics_panel.tscn
+scenes/recipe_icon_item.tscn
+scenes/recipe_item.tscn
+sounds/ui/cook.ogg
+src/CookingSettings.cs
+src/CookingSettingsForTests.cs
+src/items/actions/WolfMeatToRation.cs
+src/ui/RationStatisticsPanel.cs
+src/ui/workbench/RecipeIconItemBehaviour.cs
+src/ui/workbench/RecipeItemBehaviour.cs
+src/ui/workbench/ToggleCookingPanelAction.cs
+src/ui/workbench/WorkbenchPanel.cs
+test_suites/cooking_walk/manifest.json
+test_suites/cooking_walk/src/CookingWalkTestDriverNode.cs
+test_suites/cooking_walk/src/CookingWalkTestInitializer.cs
+tests/CookingModTests.cs
+
+===== MOD mods/cthangover_game: Cthangover: Story =====
+manifest.json:
+{
+  "id": "cthangover_game",
+  "name": "Cthangover: Story",
+  "version": "2.0.0",
+  "author": "ct",
+  "description": "Story content of the Cthangover game: scenes, scenarios, characters, items, quests, backgrounds and the main game collection.",
+  "category": "story",
+  "depends": ["shell2d_base>=1", "dialog_base>=1", "interactive_base>=1", "skills_base>=1", "map_base>=1", "ui_base>=1", "characters_base>=1", "items_base>=1", "quests_base>=1", "town_pack>=1"],
+  "test_suites": [
+    {"id": "site_shots", "activate": ["--itest=site_shots"]}
+  ]
+}
+files (177):
+manifest.json
+mod.png
+avatars/marao/sad.png
+avatars/marao/smile.png
+avatars/marao/think.png
+backgrounds/black.png
+backgrounds/empty.png
+backgrounds/empty_lightmap.png
+backgrounds/map.png
+backgrounds/home/basement.png
+backgrounds/home/basement_depth.png
+backgrounds/home/bedroom.png
+backgrounds/home/bedroom_depth.png
+backgrounds/home/kitchen.png
+backgrounds/home/kitchen_depth.png
+backgrounds/home/outside.png
+backgrounds/home/outside_albedo.png
+backgrounds/home/outside_depth.png
+backgrounds/home/vestibule.png
+backgrounds/home/vestibule_depth.png
+backgrounds/home/workroom.png
+backgrounds/home/workroom_depth.png
+backgrounds/prolog/00021-1983628424.png
+backgrounds/prolog/book_ground.png
+backgrounds/prolog/cloak_ground.png
+backgrounds/prolog/marao_1.png
+backgrounds/prolog/marao_preview.png
+backgrounds/prolog/river.png
+backgrounds/prolog/start_lane.png
+backgrounds/prolog/start_lane_depth.png
+backgrounds/prolog/take_cloack.png
+backgrounds/town/cemetry_enter.png
+backgrounds/town/cemetry_enter_depth.png
+backgrounds/town/town_entry.png
+backgrounds/town/town_entry_depth.png
+characters/enemies/werewolf_girl_1.json
+characters/enemies/werewolf_girl_1.png
+characters/enemies/wolf_1.json
+characters/enemies/wolf_1.png
+characters/enemies/wolf_10.json
+characters/enemies/wolf_10.png
+characters/enemies/wolf_2.json
+characters/enemies/wolf_2.png
+characters/enemies/wolf_3.json
+characters/enemies/wolf_3.png
+characters/enemies/wolf_4.json
+characters/enemies/wolf_4.png
+characters/enemies/wolf_5.json
+characters/enemies/wolf_5.png
+characters/enemies/wolf_6.json
+characters/enemies/wolf_6.png
+characters/enemies/wolf_7.json
+characters/enemies/wolf_7.png
+characters/enemies/wolf_8.json
+characters/enemies/wolf_8.png
+characters/enemies/wolf_9.json
+characters/enemies/wolf_9.png
+characters/player/marao.json
+characters/player/marao.png
+characters/skills/slave_master.json
+effects/00275-1947611809.png
+effects/00276-1947611809.png
+effects/00277-1947611809.png
+effects/00278-1947611809.png
+effects/00279-1947611809.png
+effects/00280-2887412231.png
+effects/00282-2887412231.png
+effects/00283-2887412231.png
+effects/00285-2887412231.png
+effects/00287-2887412231.png
+effects/gradient.png
+effects/points.png
+effects/points2.png
+effects/splash_00.png
+effects/splash_01.png
+effects/splash_02.png
+effects/webcells.png
+interactives/graveyard_interactives.json
+interactives/morning_interactives.json
+items/food/ration.json
+items/food/ration.png
+items/food/wolf_meat.json
+items/food/wolf_meat.png
+items/recipe/00079-3547745985.png
+items/recipe/recipe.png
+items/resource/branches.json
+items/resource/branches.png
+locale/en.properties
+locale/ru.properties
+locale/scenarios_en.properties
+locale/scenarios_ru.properties
+map/map.json
+music/Abyssal Void.ogg
+music/Airborne Melody.ogg
+music/Aura of Decay.ogg
+music/Binary Prelude.ogg
+music/Cinders of Dawn.ogg
+music/Circuit Dreams II.ogg
+music/Crimson Echoes.ogg
+music/Crimson Horizon.ogg
+music/Empty Save Room.ogg
+music/Glass Symphony.ogg
+music/Hex Doom Cart.ogg
+music/Iron Resonance II.ogg
+music/Iron Resonance.ogg
+music/Luminous Twilight.ogg
+music/Melancholic Journey.ogg
+music/Nebula Pulse Echoes.ogg
+music/Quantum Archive.ogg
+music/Rusty Frequencies.ogg
+music/Skull Resonance.ogg
+music/Twilight Interlude.ogg
+music/Venom's Embrace.ogg
+music/playlists/battle.json
+music/playlists/default.json
+music/playlists/town_entry.json
+quests/quests.json
+scenarios/start.scenario
+scenarios/home/home_basement_default.scenario
+scenarios/home/home_bedroom_default.scenario
+scenarios/home/home_kitchen_default.scenario
+scenarios/home/home_livingroom_default.scenario
+scenarios/home/home_outside_default.scenario
+scenarios/home/home_vestibule_default.scenario
+scenarios/home/home_workroom_default.scenario
+scenarios/prolog/graveyard_arrival.scenario
+scenarios/prolog/graveyard_azif.scenario
+scenarios/prolog/graveyard_ensure_book.scenario
+scenarios/prolog/graveyard_ensure_crypt.scenario
+scenarios/prolog/graveyard_read.scenario
+scenarios/prolog/morning_book.scenario
+scenarios/prolog/morning_cloak.scenario
+scenarios/prolog/morning_items_ensure.scenario
+scenarios/prolog/morning_police.scenario
+scenarios/prolog/morning_restore_book.scenario
+scenarios/prolog/morning_restore_cloak.scenario
+scenarios/prolog/morning_wake.scenario
+scenarios/prolog/river_arrival.scenario
+scenarios/prolog/villa_arrival.scenario
+scenarios/town/town_entry_default.scenario
+scenarios/town/town_outskirts_default.scenario
+scenes/home_basement.json
+scenes/home_bedroom.json
+scenes/home_kitchen.json
+scenes/home_livingroom.json
+scenes/home_outside.json
+scenes/home_vestibule.json
+scenes/home_workroom.json
+scenes/prolog_alley.json
+scenes/prolog_graveyard.json
+scenes/prolog_river.json
+scenes/prolog_villa.json
+scenes/start_scene.json
+scenes/tow_outskirts.json
+scenes/town_entry.json
+shaders/2d_cubism_mask.gdshader
+shaders/2d_cubism_mask_add.gdshader
+shaders/2d_cubism_mask_add_inv.gdshader
+shaders/2d_cubism_mask_mix.gdshader
+shaders/2d_cubism_mask_mix_inv.gdshader
+shaders/2d_cubism_mask_mul.gdshader
+shaders/2d_cubism_mask_mul_inv.gdshader
+shaders/2d_cubism_norm_add.gdshader
+shaders/2d_cubism_norm_mix.gdshader
+shaders/2d_cubism_norm_mul.gdshader
+shaders/SHADER_CONTRACT.md
+sounds/record_scratch.ogg
+sounds/locations/home/outside/river.ogg
+sounds/locations/prolog/police.ogg
+sounds/locations/prolog/police_go_on.ogg
+sounds/ui/button.ogg
+sounds/ui/click.ogg
+sounds/ui/journal.ogg
+sounds/ui/new_character.ogg
+test_suites/site_shots/manifest.json
+test_suites/site_shots/src/SiteShotsDriver.cs
+test_suites/site_shots/src/SiteShotsTestInitializer.cs
+
+===== MOD mods/cthangover_murakami: Cthangover: Murakami =====
+manifest.json:
+{
+  "id": "cthangover_murakami",
+  "name": "Cthangover: Murakami",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Story line about Murakami: a wild wolf prowling the town, the meeting scenario chain (start, wolf battle, werewolf boss, escort home), the Murakami character with her avatar set and the meeting quest.",
+  "category": "story, characters",
+  "depends": [ "cthangover_game>=1", "ui_base>=1", "characters_base>=1", "quests_base>=1", "turn_battle_base>=1" ]
+}
+files (33):
+manifest.json
+mod.png
+avatars/murakami/fear_1.png
+avatars/murakami/fear_2.png
+avatars/murakami/normal_1.png
+avatars/murakami/normal_2.png
+backgrounds/town/meetingmurakami/00002-1920617752.png
+backgrounds/town/meetingmurakami/00002-1920617752_depth.png
+backgrounds/town/meetingmurakami/00014-1724512349.png
+backgrounds/town/meetingmurakami/00014-1724512349_depth.png
+backgrounds/town/meetingmurakami/00024-3950100873.png
+backgrounds/town/meetingmurakami/00024-3950100873_depth.png
+backgrounds/town/meetingmurakami/00031-3535505844.png
+backgrounds/town/meetingmurakami/00031-3535505844_depth.png
+backgrounds/town/meetingmurakami/00055-1920617752.png
+backgrounds/town/meetingmurakami/00055-1920617752_depth.png
+backgrounds/town/meetingmurakami/00078-2783395178.png
+backgrounds/town/meetingmurakami/00078-2783395178_depth.png
+backgrounds/town/meetingmurakami/00079-2783395178.png
+backgrounds/town/meetingmurakami/00079-2783395178_depth.png
+backgrounds/town/meetingmurakami/00136-3647329618.png
+backgrounds/town/meetingmurakami/00136-3647329618_depth.png
+characters/player/murakami.json
+characters/player/murakami.png
+locale/en.properties
+locale/ru.properties
+locale/scenarios_en.properties
+locale/scenarios_ru.properties
+quests/quests.json
+scenarios/murakami/meeting/murakami_meeting_after_battle.scenario
+scenarios/murakami/meeting/murakami_meeting_after_boss.scenario
+scenarios/murakami/meeting/murakami_meeting_end.scenario
+scenarios/murakami/meeting/murakami_meeting_start.scenario
+
+===== MOD mods/cthangover_party: Cthangover: Starter Party =====
+manifest.json:
+{
+  "id": "cthangover_party",
+  "name": "Cthangover: Starter Party",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Seeds the default starter party (Marao) and the slave_master skill after mod resources are ready, and restores it on NewGameStartedEvent. Split out of cthangover_game so the base content mod stays pure content (scenes/dialogs/quests/data) with no C# gameplay logic.",
+  "category": "engine, library",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": [
+    "cthangover_game>=1",
+    "skills_base>=1"
+  ],
+  "ui": []
+}
+files (5):
+manifest.json
+mod.png
+locale/en.properties
+locale/ru.properties
+src/StarterPartyInitializer.cs
+
+===== MOD mods/dialog_base: Dialog Engine =====
+manifest.json:
+{
+  "id": "dialog_base",
+  "name": "Dialog Engine",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Engine dialog subsystem: DialogBox/DialogCanvas/AnswerBox UI, the dialog queue runtime with the full DSL action set, the .scenario parser with command strategies, the executable event chains and the /root/DialogRunner for interactive dialogs. Replaces the former Core/UI/Dialog, Core/UI/Executable and Core/Scenarios implementations — SceneManager and SaveService keep driving chains and events through the core contracts (IDialogBox, IExecutableEvent, IExecutableEventChain, IScenarioEventFactory).",
+  "category": "engine, library",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "test_sources": [
+    "tests/*.cs"
+  ],
+  "depends": ["shell2d_base>=1", "interactive_base>=1", "effects_base>=1", "time_base>=1", "map_base>=1", "ui_base>=1"],
+  "ui": [],
+  "test_suites": [
+    {"id": "autoplay", "activate": ["--choices=", "--timeout="]},
+    {"id": "gdscript", "activate": ["--itest=gdscript"]}
+  ]
+}
+files (142):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+patches/scenes/ui/base_scene.tscn
+scenes/ui/answer_box.tscn
+scenes/ui/answer_item.tscn
+scenes/ui/dialog_box.tscn
+scenes/ui/dialog_canvas.tscn
+src/DialogModInitializer.cs
+src/DialogScriptRunner.cs
+src/ScenarioEventFactory.cs
+src/SubsystemRegistration.cs
+src/Actions/ScenarioActionContext.cs
+src/Factories/ScenarioCommandStrategyFactory.cs
+src/Scenarios/ICommandReferenceMetadata.cs
+src/Scenarios/IScenarioCommandSpec.cs
+src/Scenarios/IScenarioCommandStrategy.cs
+src/Scenarios/ScenarioCommandStrategyConsumer.cs
+src/Scenarios/ScenarioConverter.cs
+src/Scenarios/ScenarioLoader.cs
+src/Scenarios/ScenarioParser.cs
+src/Scenarios/Impls/ActionCommandStrategy.cs
+src/Scenarios/Impls/AnimationCommandStrategy.cs
+src/Scenarios/Impls/BackgroundColorCommandStrategy.cs
+src/Scenarios/Impls/BackgroundCommandStrategy.cs
+src/Scenarios/Impls/BackgroundShowHideCommandStrategy.cs
+src/Scenarios/Impls/DelayCommandStrategy.cs
+src/Scenarios/Impls/EffectCommandStrategy.cs
+src/Scenarios/Impls/EmptyCommandStrategy.cs
+src/Scenarios/Impls/EndCommandStrategy.cs
+src/Scenarios/Impls/FlagCommandStrategy.cs
+src/Scenarios/Impls/ForegroundCommandStrategy.cs
+src/Scenarios/Impls/GotoCommandStrategy.cs
+src/Scenarios/Impls/HideDialogCommandStrategy.cs
+src/Scenarios/Impls/InteractiveAddCommandStrategy.cs
+src/Scenarios/Impls/InteractiveClearCommandStrategy.cs
+src/Scenarios/Impls/InteractiveRemoveCommandStrategy.cs
+src/Scenarios/Impls/InteractiveSetCommandStrategy.cs
+src/Scenarios/Impls/LightSetCommandStrategy.cs
+src/Scenarios/Impls/LightUseTimeCommandStrategy.cs
+src/Scenarios/Impls/MusicCommandStrategy.cs
+src/Scenarios/Impls/MusicPauseCommandStrategy.cs
+src/Scenarios/Impls/MusicPlayCommandStrategy.cs
+src/Scenarios/Impls/NotifyCommandStrategy.cs
+src/Scenarios/Impls/PTextCommandStrategy.cs
+src/Scenarios/Impls/SetCommandStrategy.cs
+src/Scenarios/Impls/ShowDialogCommandStrategy.cs
+src/Scenarios/Impls/SoundCommandStrategy.cs
+src/Scenarios/Impls/SwitchSceneCommandStrategy.cs
+src/Scenarios/Impls/TextCommandStrategy.cs
+src/Scenarios/Impls/TitleCommandStrategy.cs
+src/UI/Dialog/AnswerBox.cs
+src/UI/Dialog/AnswerItem.cs
+src/UI/Dialog/DialogBox.cs
+src/UI/Dialog/DialogCanvas.cs
+src/UI/Dialog/DialogQueue.cs
+src/UI/Dialog/DialogRuntime.cs
+src/UI/Dialog/IDialogDebugger.cs
+src/UI/Dialog/Action/ActionCommand.cs
+src/UI/Dialog/Action/ActionType.cs
+src/UI/Dialog/Action/ConstructType.cs
+src/UI/Dialog/Action/DestructType.cs
+src/UI/Dialog/Action/IActionCommand.cs
+src/UI/Dialog/Action/IActionDestruct.cs
+src/UI/Dialog/Action/WaitType.cs
+src/UI/Dialog/Action/Impls/ActionAnimatedForeground.cs
+src/UI/Dialog/Action/Impls/ActionBackground.cs
+src/UI/Dialog/Action/Impls/ActionBackgroundColor.cs
+src/UI/Dialog/Action/Impls/ActionBackgroundShowHide.cs
+src/UI/Dialog/Action/Impls/ActionDelay.cs
+src/UI/Dialog/Action/Impls/ActionEffect.cs
+src/UI/Dialog/Action/Impls/ActionEmpty.cs
+src/UI/Dialog/Action/Impls/ActionEnd.cs
+src/UI/Dialog/Action/Impls/ActionForeground.cs
+src/UI/Dialog/Action/Impls/ActionGoTo.cs
+src/UI/Dialog/Action/Impls/ActionHideDialog.cs
+src/UI/Dialog/Action/Impls/ActionIf.cs
+src/UI/Dialog/Action/Impls/ActionInteractiveAdd.cs
+src/UI/Dialog/Action/Impls/ActionInteractiveClear.cs
+src/UI/Dialog/Action/Impls/ActionInteractiveRemove.cs
+src/UI/Dialog/Action/Impls/ActionInteractiveSet.cs
+src/UI/Dialog/Action/Impls/ActionLightSet.cs
+src/UI/Dialog/Action/Impls/ActionLightUseTime.cs
+src/UI/Dialog/Action/Impls/ActionMusic.cs
+src/UI/Dialog/Action/Impls/ActionMusicPause.cs
+src/UI/Dialog/Action/Impls/ActionMusicPlay.cs
+src/UI/Dialog/Action/Impls/ActionRun.cs
+src/UI/Dialog/Action/Impls/ActionScenario.cs
+src/UI/Dialog/Action/Impls/ActionSelect.cs
+src/UI/Dialog/Action/Impls/ActionSet.cs
+src/UI/Dialog/Action/Impls/ActionSetFlag.cs
+src/UI/Dialog/Action/Impls/ActionShowDialog.cs
+src/UI/Dialog/Action/Impls/ActionSound.cs
+src/UI/Dialog/Action/Impls/ActionSwitchScene.cs
+src/UI/Dialog/Action/Impls/ActionText.cs
+src/UI/Dialog/Action/Impls/ActionTimedUpdate.cs
+src/UI/Dialog/Action/Impls/ActionTitle.cs
+src/UI/Dialog/Action/Impls/BackgroundActionType.cs
+src/UI/Dialog/Action/Impls/SelectVariant.cs
+src/UI/Executable/ExecutableEvent.cs
+src/UI/Executable/ExecutableMainEventChain.cs
+src/UI/Executable/IdentifiableEventObjectBehaviour.cs
+src/UI/Executable/RunEventBehaviour.cs
+src/UI/Executable/ScenarioEvent.cs
+test_suites/autoplay/manifest.json
+test_suites/autoplay/src/DialogAutoDriverNode.cs
+test_suites/autoplay/src/TestRunnerInitializer.cs
+test_suites/gdscript/manifest.json
+test_suites/gdscript/locale/en.properties
+test_suites/gdscript/locale/ru.properties
+test_suites/gdscript/scenarios/gdscript_fallback_test.scenario
+test_suites/gdscript/scenarios/gdscript_flag_test.scenario
+test_suites/gdscript/scenarios/gdscript_rain_test.scenario
+test_suites/gdscript/scenarios/gdscript_test.scenario
+test_suites/gdscript/scripts/battle_executor_example.gd
+test_suites/gdscript/scripts/char_welcome_action.gd
+test_suites/gdscript/scripts/condition_args_example.gd
+test_suites/gdscript/scripts/condition_example.gd
+test_suites/gdscript/scripts/greet_action.gd
+test_suites/gdscript/scripts/inventory_action.gd
+test_suites/gdscript/scripts/item_action_example.gd
+test_suites/gdscript/scripts/light_reset_action.gd
+test_suites/gdscript/scripts/quest_log_action.gd
+test_suites/gdscript/scripts/quest_setup_action.gd
+test_suites/gdscript/scripts/test_initializer.gd
+test_suites/gdscript/src/GdscriptTest.cs
+tests/ActionAnimatedForegroundTests.cs
+tests/ActionBackgroundShowHideTests.cs
+tests/ActionEffectTests.cs
+tests/ActionTimedUpdateTests.cs
+tests/DialogBoxTests.cs
+tests/DialogEndRecorder.cs
+tests/DialogRuntimeTests.cs
+tests/DialogStage.cs
+tests/ExecutableEventTests.cs
+tests/ExecutableMainEventChainTests.cs
+tests/HoldDebugger.cs
+tests/OrderListener.cs
+tests/ProbeAction.cs
+tests/SceneEventControllerTests.cs
+tests/StoryFlagTests.cs
+
+===== MOD mods/editor_tools: Editor Tools =====
+manifest.json:
+{
+  "id": "editor_tools",
+  "name": "Editor Tools",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Developer toolbox of ToolBox windows: scenario graph editor, scene editor (create and change the places of a novel: backgrounds, ambient sound, default scenario, the scene's scenarios), map editor with zones, scene builder with inspector, interactive and light editors, and the mod catalog export window.",
+  "category": "tools, editor",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": ["dialog_base>=1", "interactive_base>=1", "time_base>=1", "map_base>=1", "ui_base>=1"],
+  "test_suites": [
+    {"id": "windows", "activate": ["--itest=tools_windows"]},
+    {"id": "ingame_play", "activate": ["--itest=ingame_play"]},
+    {"id": "novel_flow", "activate": ["--itest=novel_flow"]}
+  ]
+}
+files (87):
+manifest.json
+mod.jpg
+locale/catalog_export_en.properties
+locale/catalog_export_ru.properties
+locale/ui_en.properties
+locale/ui_ru.properties
+scenes/novel_editor_hub.tscn
+scenes/scenario_file_tree_panel.tscn
+scenes/scenario_info_panel.tscn
+scenes/scenario_thumbnail_panel.tscn
+src/CatalogExport/CatalogExportToolProvider.cs
+src/CatalogExport/CatalogExportWindow.cs
+src/Common/BackgroundCanvas.cs
+src/Common/CollapsibleSection.cs
+src/Common/DragHandle.cs
+src/Common/FilteredList.cs
+src/Common/ModFileSelector.cs
+src/Common/ToolUi.cs
+src/Hub/NovelEditorHub.cs
+src/Hub/ToolsInitializer.cs
+src/InteractiveEditor/InteractiveEditorCanvas.cs
+src/InteractiveEditor/InteractiveEditorController.cs
+src/InteractiveEditor/InteractiveEditorToolProvider.cs
+src/InteractiveEditor/InteractiveEditorWindow.cs
+src/LightEditor/LightEditorCanvas.cs
+src/LightEditor/LightEditorController.cs
+src/LightEditor/LightEditorToolProvider.cs
+src/LightEditor/LightEditorWindow.cs
+src/MapEditor/MapEditorCanvas.cs
+src/MapEditor/MapEditorController.cs
+src/MapEditor/MapEditorToolBoxButton.cs
+src/MapEditor/MapEditorToolProvider.cs
+src/MapEditor/MapEditorWindow.cs
+src/ScenarioEditor/ScenarioEditTabs.cs
+src/ScenarioEditor/ScenarioEditorToolProvider.cs
+src/ScenarioEditor/ScenarioEditorWindow.cs
+src/ScenarioEditor/ScenarioFileTreePanel.cs
+src/ScenarioEditor/ScenarioGraphLayout.cs
+src/ScenarioEditor/ScenarioGraphView.cs
+src/ScenarioEditor/ScenarioInfoPanel.cs
+src/ScenarioEditor/ScenarioThumbnailPanel.cs
+src/ScenarioEditor/TabData.cs
+src/SceneBuilder/InspectableProperty.cs
+src/SceneBuilder/InspectorBoolField.cs
+src/SceneBuilder/InspectorColorField.cs
+src/SceneBuilder/InspectorEnumField.cs
+src/SceneBuilder/InspectorNumericField.cs
+src/SceneBuilder/InspectorPanel.cs
+src/SceneBuilder/InspectorPropertyCatalog.cs
+src/SceneBuilder/InspectorPropertyKind.cs
+src/SceneBuilder/InspectorTextField.cs
+src/SceneBuilder/InspectorVector2Field.cs
+src/SceneBuilder/SceneBuilderController.cs
+src/SceneBuilder/SceneBuilderToolProvider.cs
+src/SceneBuilder/SceneBuilderWindow.cs
+src/SceneBuilder/SelectionOverlay.cs
+src/SceneBuilder/TscnFileProps.cs
+src/SceneBuilder/TscnLiteralReader.cs
+src/SceneBuilder/TscnNodeAddressing.cs
+src/SceneBuilder/TscnTextSurgery.cs
+src/SceneBuilder/TscnValueFormatter.cs
+src/SceneEditor/SceneBackgroundTile.cs
+src/SceneEditor/SceneEditorToolBoxButton.cs
+src/SceneEditor/SceneEditorToolProvider.cs
+src/SceneEditor/SceneEditorWindow.cs
+src/Services/MapFileService.cs
+src/Services/ModFileService.cs
+src/Services/ModResourceService.cs
+src/Services/ScenarioFileService.cs
+src/Services/ScenarioGraphData.cs
+src/Services/ScenarioSyntaxService.cs
+src/Services/SceneBackgroundService.cs
+src/Services/SceneFileEntry.cs
+src/Services/SceneFileService.cs
+test_suites/ingame_play/manifest.json
+test_suites/ingame_play/src/InGamePlayTestDriverNode.cs
+test_suites/ingame_play/src/InGamePlayTestInitializer.cs
+test_suites/novel_flow/manifest.json
+test_suites/novel_flow/src/NovelFlowTestDriver.cs
+test_suites/novel_flow/src/NovelFlowTestInitializer.cs
+test_suites/windows/manifest.json
+test_suites/windows/scenarios/playtest_return.scenario
+test_suites/windows/src/ScenarioPlayReturnCheck.cs
+test_suites/windows/src/ToolWindowsErrorLogger.cs
+test_suites/windows/src/ToolWindowsExercises.cs
+test_suites/windows/src/ToolWindowsTestDriverNode.cs
+test_suites/windows/src/ToolWindowsTestInitializer.cs
+
+===== MOD mods/effects_base: Effects Engine =====
+manifest.json:
+{
+  "id": "effects_base",
+  "name": "Effects Engine",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Engine effects subsystem: PackedScene visual effect factory (folder mods only) and the frame/animated effect controllers. Replaces the former Core/UI/Animation implementations and Core/Factories/Impls/EffectFactory.",
+  "category": "engine, library",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": [],
+  "ui": []
+}
+files (12):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+src/EffectFactory.cs
+src/EffectsModInitializer.cs
+src/SubsystemRegistration.cs
+src/Animation/AnimationController.cs
+src/Animation/EffectAnimNode.cs
+src/Animation/EffectAnimator.cs
+src/Animation/EffectController.cs
+src/Animation/EffectDataSet.cs
+
+===== MOD mods/ff_battle: FFBattle =====
+manifest.json:
+{
+  "id": "ff_battle",
+  "name": "FFBattle",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Final Fantasy style battle system on top of turn_battle_base: menu-driven commands (attack/defence/item/stun), enemy and party panels, per-action animations and executors, battle HUD and log.",
+  "category": "gameplay",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": [ "ui_base>=1", "turn_battle_base>=1" ]
+}
+files (37):
+manifest.json
+mod.jpg
+locale/ui_en.properties
+locale/ui_ru.properties
+scenes/ff_action_detail_panel.tscn
+scenes/ff_battle_banner.tscn
+scenes/ff_battle_hud.tscn
+scenes/ff_battle_log_panel.tscn
+scenes/ff_battle_target_hint.tscn
+scenes/ff_character_widget.tscn
+scenes/ff_menu_panel.tscn
+sounds/battle/ff_defence_empty.ogg
+sounds/battle/ff_physics_damage.ogg
+sounds/battle/ff_physics_defence.ogg
+sounds/battle/ff_show_actions.ogg
+sounds/battle/ff_stun_electro.ogg
+src/FFBattleCore.cs
+src/Actions/FFAbstractAnimation.cs
+src/Actions/FFActionProvider.cs
+src/Actions/FFAttackAnimation.cs
+src/Actions/FFDamageExecutor.cs
+src/Actions/FFDefenceExecutor.cs
+src/Actions/FFDefendAnimation.cs
+src/Actions/FFItemAnimation.cs
+src/Actions/FFItemExecutor.cs
+src/Actions/FFStunExecutor.cs
+src/UI/FFActionDetailPanel.cs
+src/UI/FFBattleBanner.cs
+src/UI/FFBattleController.cs
+src/UI/FFBattleHud.cs
+src/UI/FFBattleLogKind.cs
+src/UI/FFBattleLogPanel.cs
+src/UI/FFBattleTargetHint.cs
+src/UI/FFCharacterWidget.cs
+src/UI/FFEnemyPanel.cs
+src/UI/FFMenuPanel.cs
+src/UI/FFPlayerPanel.cs
+
+===== MOD mods/interactive_base: Interactive Base =====
+manifest.json:
+{
+  "id": "interactive_base",
+  "name": "Interactive Base",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Interactive objects subsystem: JSON-driven scene interactives (hover/click hit areas, highlight effects) with DSL/scenario click actions. Owns InteractiveManager, the interactive definition resolver/factory and the InteractiveEditor data plane.",
+  "category": "engine, library",
+  "depends": ["shell2d_base>=1", "ui_base>=1"],
+  "sources": [ "src/**/*.cs" ],
+  "ui": [],
+  "test_suites": [
+    {"id": "interactives", "activate": ["--itest=interactives"]}
+  ]
+}
+files (24):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+src/HitAreaType.cs
+src/InteractiveDefinition.cs
+src/InteractiveFactory.cs
+src/InteractiveManager.cs
+src/InteractiveModInitializer.cs
+src/InteractiveObject.cs
+src/InteractiveObjectBuilder.cs
+src/InteractiveResolver.cs
+src/SubsystemRegistration.cs
+src/Vector2JsonConverter.cs
+test_suites/interactives/manifest.json
+test_suites/interactives/interactives/kitchen_lamp.json
+test_suites/interactives/locale/en.properties
+test_suites/interactives/locale/ru.properties
+test_suites/interactives/locale/scenarios_en.properties
+test_suites/interactives/locale/scenarios_ru.properties
+test_suites/interactives/scenarios/kitchen_add_interactive.scenario
+test_suites/interactives/scenarios/kitchen_clicked.scenario
+test_suites/interactives/scenes/interactives_test.json
+test_suites/interactives/src/InteractivesTest.cs
+
+===== MOD mods/items_base: Items Base =====
+manifest.json:
+{
+  "id": "items_base",
+  "name": "Items Base",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Item definitions and factories, inventory and recipe state, inventory UI and their save state",
+  "category": "gameplay",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "test_sources": [
+    "tests/*.cs"
+  ],
+  "depends": ["shell2d_base>=1", "ui_base>=1"],
+  "test_suites": [
+    {"id": "inventory", "activate": ["--itest=inventory"]}
+  ],
+  "ui": [
+    {
+      "id": "inventory",
+      "kind": "panel",
+      "slot": "ModBeforeUIPanel",
+      "scene_path": "scenes/ui/inventory_panel.tscn",
+      "button": {
+        "icon": "bag",
+        "locale": "ui/inventory/title",
+        "index": 20
+      },
+      "priority": 10
+    }
+  ]
+}
+files (40):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+scenes/ui/inventory_item.tscn
+scenes/ui/inventory_panel.tscn
+sounds/items/target.ogg
+sounds/items/use.ogg
+src/HealItemAction.cs
+src/ITargetedItemAction.cs
+src/Ingredient.cs
+src/IngredientInfo.cs
+src/Inventory.cs
+src/Item.cs
+src/ItemActionConsumer.cs
+src/ItemActionFactory.cs
+src/ItemAddAction.cs
+src/ItemContainer.cs
+src/ItemFactory.cs
+src/ItemInfo.cs
+src/ItemsModInitializer.cs
+src/ItemsSaveable.cs
+src/Recipe.cs
+src/RecipeData.cs
+src/RecipeFactory.cs
+src/RecipeInfo.cs
+src/SubsystemRegistration.cs
+src/ui/CharacterTargetPanel.cs
+src/ui/InventoryBagBehaviour.cs
+src/ui/InventoryItemBehaviour.cs
+src/ui/InventoryItemUi.cs
+src/ui/InventoryPanelBehaviour.cs
+test_suites/inventory/manifest.json
+test_suites/inventory/src/InventoryTestDriverNode.cs
+test_suites/inventory/src/InventoryTestInitializer.cs
+tests/FakeActionContext.cs
+tests/HealItemActionTests.cs
+tests/InventoryTests.cs
+tests/ItemAddActionTests.cs
+tests/ItemsSaveableTests.cs
+
+===== MOD mods/live2d_base: Live2D Cubism =====
+manifest.json:
+{
+    "id": "live2d_base",
+    "name": "Live2D Cubism",
+    "version": "1.0.0",
+    "author": "ct",
+    "description": "Live2D Cubism C# runtime: model loading, rendering, physics, animation, effects",
+    "category": "library, visual",
+    "depends": ["ui_base>=1"],
+    "depends_native": ["native/*.dll", "native/*.so"],
+  "test_suites": [
+    {"id": "avatar", "activate": ["--itest=live2d_avatar"]}
+  ]
+}
+files (86):
+manifest.json
+mod.jpg
+dll/Live2D.deps.json
+dll/Live2D.dll
+dll/Live2D.pdb
+locale/en.properties
+locale/ru.properties
+native/Live2DCubismCore.dll
+native/Live2DCubismCore.lib
+native/libLive2DCubismCore.so
+source_code/Live2D.csproj
+source_code/build.bat
+source_code/Cubism/Core/CubismCoreBindings.cs
+source_code/Cubism/Framework/ACubismMotion.cs
+source_code/Cubism/Framework/CubismBreath.cs
+source_code/Cubism/Framework/CubismExpressionMotion.cs
+source_code/Cubism/Framework/CubismEyeBlink.cs
+source_code/Cubism/Framework/CubismMath.cs
+source_code/Cubism/Framework/CubismModelMatrix.cs
+source_code/Cubism/Framework/CubismModelNode.cs
+source_code/Cubism/Framework/CubismModelSettingJson.cs
+source_code/Cubism/Framework/CubismMotion.cs
+source_code/Cubism/Framework/CubismMotionInternal.cs
+source_code/Cubism/Framework/CubismMotionJson.cs
+source_code/Cubism/Framework/CubismMotionQueueEntry.cs
+source_code/Cubism/Framework/CubismNativeModel.cs
+source_code/Cubism/Framework/CubismParameter.cs
+source_code/Cubism/Framework/CubismPartOpacity.cs
+source_code/Cubism/Framework/CubismPhysics.cs
+source_code/Cubism/Framework/CubismPhysicsJson.cs
+source_code/Cubism/Framework/CubismPose.cs
+source_code/Cubism/Framework/CubismRenderer2D.cs
+source_code/Cubism/Framework/CubismTargetPoint.cs
+source_code/Cubism/Handlers/Live2DService.cs
+source_code/Properties/AssemblyInfo.cs
+source_code/bin/Debug/net8.0/Cthangover.dll
+source_code/bin/Debug/net8.0/Cthangover.pdb
+source_code/bin/Debug/net8.0/Live2D.deps.json
+source_code/bin/Debug/net8.0/Live2D.dll
+source_code/bin/Debug/net8.0/Live2D.pdb
+source_code/obj/Live2D.csproj.nuget.dgspec.json
+source_code/obj/Live2D.csproj.nuget.g.props
+source_code/obj/Live2D.csproj.nuget.g.targets
+source_code/obj/project.assets.json
+source_code/obj/project.nuget.cache
+source_code/obj/project.packagespec.json
+source_code/obj/rider.project.restore.info
+source_code/obj/Debug/net8.0/Live2D.AssemblyInfo.cs
+source_code/obj/Debug/net8.0/Live2D.AssemblyInfoInputs.cache
+source_code/obj/Debug/net8.0/Live2D.GeneratedMSBuildEditorConfig.editorconfig
+source_code/obj/Debug/net8.0/Live2D.assets.cache
+source_code/obj/Debug/net8.0/Live2D.csproj.AssemblyReference.cache
+source_code/obj/Debug/net8.0/Live2D.csproj.CoreCompileInputs.cache
+source_code/obj/Debug/net8.0/Live2D.csproj.FileListAbsolute.txt
+source_code/obj/Debug/net8.0/Live2D.csproj.Up2Date
+source_code/obj/Debug/net8.0/Live2D.dll
+source_code/obj/Debug/net8.0/Live2D.pdb
+source_code/obj/Debug/net8.0/ref/Live2D.dll
+source_code/obj/Debug/net8.0/refint/Live2D.dll
+source_code/obj/Release/net8.0/Live2D.assets.cache
+source_code/obj/Release/net8.0/Live2D.csproj.FileListAbsolute.txt
+src/AddLive2DModelAction.cs
+test_suites/avatar/manifest.json
+test_suites/avatar/mod.png
+test_suites/avatar/locale/en.properties
+test_suites/avatar/locale/ru.properties
+test_suites/avatar/models/ReadMe.txt
+test_suites/avatar/models/ren_t01.can3
+test_suites/avatar/models/ren_t01.cmo3
+test_suites/avatar/models/runtime/ren.cdi3.json
+test_suites/avatar/models/runtime/ren.moc3
+test_suites/avatar/models/runtime/ren.model3.json
+test_suites/avatar/models/runtime/ren.physics3.json
+test_suites/avatar/models/runtime/expressions/exp_01.exp3.json
+test_suites/avatar/models/runtime/expressions/exp_02.exp3.json
+test_suites/avatar/models/runtime/expressions/exp_03.exp3.json
+test_suites/avatar/models/runtime/expressions/exp_04.exp3.json
+test_suites/avatar/models/runtime/expressions/exp_05.exp3.json
+test_suites/avatar/models/runtime/motions/mtn_01.motion3.json
+test_suites/avatar/models/runtime/motions/mtn_02.motion3.json
+test_suites/avatar/models/runtime/motions/mtn_03.motion3.json
+test_suites/avatar/models/runtime/ren.4096/texture_00.png
+test_suites/avatar/scenes/live2d_avatar_test.tscn
+test_suites/avatar/scenes/live2d_overlay.tscn
+test_suites/avatar/src/Live2DAvatarTestDriver.cs
+test_suites/avatar/src/Live2DOverlay.cs
+
+===== MOD mods/locale_atlas: Locale Atlas =====
+manifest.json:
+{
+  "id": "locale_atlas",
+  "name": "Locale Atlas",
+  "version": "0.1.0",
+  "author": "ct",
+  "description": "Localization key map for developers and AI agents: every key declared in locale/*.properties or referenced by scenarios, C#, JSON, scenes, collections and manifests, per language. Reports keys that are missing in some languages, empty, undeclared or duplicated, collection texts without a translation, and the encoding of every locale file (UTF-8 validity, BOM, mojibake, control characters, line endings). Activated by the --locale-atlas user arg; writes report.md/report.json and prints [TEST_RESULT].",
+  "category": "tools, debug",
+  "sources": ["src/**/*.cs"],
+  "test_sources": ["tests/*.cs"],
+  "depends": []
+}
+files (11):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+src/LocaleAtlasBuilder.cs
+src/LocaleAtlasDriverNode.cs
+src/LocaleAtlasInitializer.cs
+src/LocaleAtlasModel.cs
+src/LocaleAtlasReportWriter.cs
+src/LocaleEncodingChecker.cs
+tests/LocaleAtlasTests.cs
+
+===== MOD mods/map_base: World Map Engine =====
+manifest.json:
+{
+  "id": "map_base",
+  "name": "World Map Engine",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Engine world map subsystem: the full-screen map overlay (MapWidget), polygon zones layer, markers, the zone list + runtime override singleton, the scenario-facing map service facade with the open/close/show/hide scenario actions, and the shared zone style and enterability rules. Replaces the former Core/UI/Tool Map* implementations and Core/Actions/MapZoneServiceImpl. The save-format DTO MapZoneStateData stays in the core because RuntimeSerializer owns the __core__ slot layout; the mod plugs into it through MapStateBridge.",
+  "category": "engine, library",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "test_sources": ["tests/*.cs"],
+  "depends": ["ui_base>=1"],
+  "ui": [
+    {
+      "id": "map",
+      "kind": "panel",
+      "slot": "ModBeforeUIPanel",
+      "scene_path": "scenes/ui/map_widget.tscn",
+      "button": {
+        "icon": "map",
+        "locale": "ui/map/title",
+        "index": 10
+      },
+      "priority": 10
+    }
+  ]
+}
+files (21):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+scenes/ui/map_marker.tscn
+scenes/ui/map_widget.tscn
+src/MapMarker.cs
+src/MapModInitializer.cs
+src/MapWidget.cs
+src/MapZone.cs
+src/MapZoneRules.cs
+src/MapZoneService.cs
+src/MapZoneStyle.cs
+src/MapZonesLayer.cs
+src/SubsystemRegistration.cs
+src/Actions/MapCloseZoneAction.cs
+src/Actions/MapHideZoneAction.cs
+src/Actions/MapOpenZoneAction.cs
+src/Actions/MapShowZoneAction.cs
+src/Actions/MapZoneServiceImpl.cs
+tests/MapZoneServiceTests.cs
+
+===== MOD mods/menu_base: Menu =====
+manifest.json:
+{
+  "id": "menu_base",
+  "name": "Menu",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Registry-driven main menu: built-in buttons, settings and save/load panels moved out of the core.",
+  "category": "ui",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": ["ui_base>=1"],
+  "test_suites": [
+    {"id": "menu_flow", "activate": ["--itest=menu_flow"]},
+    {"id": "save_dormancy", "activate": ["--itest=save_dormancy"]},
+    {"id": "new_game", "activate": ["--itest=new_game"]},
+    {"id": "hot_reload", "activate": ["--itest=hot_reload"]},
+    {"id": "collection_edit", "activate": ["--itest=collection_edit"]},
+    {"id": "display_settings", "activate": ["--itest=display_settings"]}
+  ]
+}
+files (40):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+music/Serpent's Lament.ogg
+music/playlists/mainmenu.json
+scenes/menu/game_picker.tscn
+scenes/menu/main_menu.tscn
+scenes/menu/save_load_menu.tscn
+scenes/menu/save_slot_item.tscn
+scenes/menu/settings_menu.tscn
+src/BaseMenuInitializer.cs
+src/GameFlow.cs
+src/GamePickerPanel.cs
+src/MainMenu.cs
+src/MenuWindowShell.cs
+src/SaveLoadMenu.cs
+src/SaveSettings.cs
+src/SaveSlotItem.cs
+src/SaveSlotList.cs
+src/SettingsMenu.cs
+test_suites/collection_edit/manifest.json
+test_suites/collection_edit/src/CollectionEditTestDriverNode.cs
+test_suites/collection_edit/src/CollectionEditTestInitializer.cs
+test_suites/display_settings/manifest.json
+test_suites/display_settings/src/DisplaySettingsTestDriverNode.cs
+test_suites/display_settings/src/DisplaySettingsTestInitializer.cs
+test_suites/hot_reload/manifest.json
+test_suites/hot_reload/src/HotReloadTestDriverNode.cs
+test_suites/hot_reload/src/HotReloadTestInitializer.cs
+test_suites/menu_flow/manifest.json
+test_suites/menu_flow/src/MenuFlowTestDriverNode.cs
+test_suites/menu_flow/src/MenuFlowTestInitializer.cs
+test_suites/new_game/manifest.json
+test_suites/new_game/src/NewGameTestDriverNode.cs
+test_suites/new_game/src/NewGameTestInitializer.cs
+test_suites/save_dormancy/manifest.json
+test_suites/save_dormancy/src/SaveDormancyProbe.cs
+test_suites/save_dormancy/src/SaveDormancyTestDriverNode.cs
+test_suites/save_dormancy/src/SaveDormancyTestInitializer.cs
+
+===== MOD mods/mod_manager: Mod Manager =====
+manifest.json:
+{
+  "id": "mod_manager",
+  "name": "Mod Manager",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Nexus-style mod manager: browse the catalog, filter by category and status, install, update and remove mods.",
+  "category": "tools, ui",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": ["ui_base>=1"],
+  "main_menu": [
+    {
+      "id": "mods_hub",
+      "scene_path": "scenes/mods_hub_screen.tscn",
+      "button": { "icon": "mod_manager", "locale": "mod_manager/menu_title", "index": 100 }
+    }
+  ]
+}
+files (46):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+scenes/mod_collections_screen.tscn
+scenes/mod_manager_screen.tscn
+scenes/mods_hub_screen.tscn
+scenes/components/mod_card.tscn
+scenes/components/mod_detail_view.tscn
+scenes/components/mod_filter_panel.tscn
+scenes/components/mod_grid_group.tscn
+scenes/components/mod_grid_view.tscn
+src/ModCollectionsScreen.cs
+src/ModHubScreen.cs
+src/ModManagerScreen.cs
+src/Model/ModActionKind.cs
+src/Model/ModActions.cs
+src/Model/ModCardData.cs
+src/Model/ModChoice.cs
+src/Model/ModFilterState.cs
+src/Model/ModItemStatus.cs
+src/Model/ModManagerModel.cs
+src/Model/ModQueries.cs
+src/Model/ModSortMode.cs
+src/UI/CollectionEdge.cs
+src/UI/CollectionEdgeLayer.cs
+src/UI/CollectionGroupCard.cs
+src/UI/CollectionModChip.cs
+src/UI/CollectionResizeHandle.cs
+src/UI/CollectionSchemeCanvas.cs
+src/UI/CollectionsGallery.cs
+src/UI/ModCard.cs
+src/UI/ModDetailView.cs
+src/UI/ModFilterPanel.cs
+src/UI/ModGridGroup.cs
+src/UI/ModGridView.cs
+src/UI/ModManagerTheme.cs
+src/Util/CollectionDeletion.cs
+src/Util/CollectionStateNames.cs
+src/Util/ModActionNames.cs
+src/Util/ModCatalogSource.cs
+src/Util/ModCategoryNames.cs
+src/Util/ModCollectionLinks.cs
+src/Util/ModPreviewLoader.cs
+src/Util/ModStatusNames.cs
+ui/icons/mod_manager.png
+
+===== MOD mods/my_novel_game: My Novel =====
+manifest.json:
+{
+  "id": "my_novel_game",
+  "name": "My Novel",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "The novel template's own content: a town where you can go into a bar or back home, and a way back from both. Only scenes, scenarios and text; backgrounds and sound come from town_pack. Rename it after your game (&lt;game>_game) and grow your story from here.",
+  "category": "story",
+  "depends": ["shell2d_base>=1", "dialog_base>=1", "audio_base>=1", "town_pack>=1"]
+}
+files (12):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+locale/scenarios_en.properties
+locale/scenarios_ru.properties
+scenarios/my_novel_bar.scenario
+scenarios/my_novel_home.scenario
+scenarios/my_novel_town.scenario
+scenes/my_novel_bar.json
+scenes/my_novel_home.json
+scenes/my_novel_town.json
+
+===== MOD mods/quests_base: Quests Engine =====
+manifest.json:
+{
+  "id": "quests_base",
+  "name": "Quests Engine",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Engine quests subsystem: the quest factory and runtime state (QuestFactory, QuestBase/QuestData), the IQuestService implementation, quest scenario actions, quest scene conditions with the QuestParser leaf parser and the quest journal UI. Replaces the former Core/Quests state, Core/Actions quest services and actions, Core/Scenes quest conditions and Core/UI/Quests - QuestsModInitializer publishes the kernel contract (IQuestService via QuestServiceRegistry), registers the quest leaf parser and the new-game resettable; QuestsSaveable persists quest state through the generic mod save slot.",
+  "category": "engine, library",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "test_sources": ["tests/*.cs"],
+  "depends": ["characters_base>=1", "ui_base>=1"],
+  "ui": [
+    {
+      "id": "journal",
+      "kind": "panel",
+      "slot": "ModBeforeUIPanel",
+      "scene_path": "scenes/ui/quest_journal.tscn",
+      "button": { "icon": "journal", "locale": "ui/journal/title", "index": 60 },
+      "priority": 10
+    }
+  ]
+}
+files (26):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+scenes/ui/quest_journal.tscn
+src/QuestsModInitializer.cs
+src/QuestsSaveable.cs
+src/SubsystemRegistration.cs
+src/Actions/QuestServiceImpl.cs
+src/Actions/Atomic/QuestAddTagAction.cs
+src/Actions/Atomic/QuestRemoveTagAction.cs
+src/Actions/Atomic/QuestSendNotificationAction.cs
+src/Actions/Atomic/QuestSetDataStatusAction.cs
+src/Actions/Atomic/QuestSetStatusAction.cs
+src/Quests/IQuestExtensions.cs
+src/Quests/QuestBase.cs
+src/Quests/QuestData.cs
+src/Quests/QuestDefinition.cs
+src/Quests/QuestFactory.cs
+src/Quests/QuestTagLocale.cs
+src/Scenes/QuestBoolPropCondition.cs
+src/Scenes/QuestMethodCondition.cs
+src/Scenes/QuestPropCondition.cs
+src/Scenes/Parsing/Impls/QuestParser.cs
+src/UI/Quests/QuestJournalBehaviour.cs
+tests/QuestsSaveableTests.cs
+
+===== MOD mods/recruiting: Recruiting =====
+manifest.json:
+{
+  "id": "recruiting",
+  "name": "Recruiting",
+  "version": "1.1.0",
+  "author": "ct",
+  "description": "Recruitment of defeated characters: the roster panel, join conditions (e.g. enslaving a defeated enemy), per-recruit behaviours such as nutrition, the party bridge, tick updates and save state.",
+  "category": "gameplay",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": ["shell2d_base>=1", "characters_base>=1", "ui_base>=1"],
+  "ui": [
+    {
+      "id": "recruits",
+      "kind": "panel",
+      "slot": "ModBeforeUIPanel",
+      "scene_path": "scenes/recruit_panel.tscn",
+      "button": { "icon": "recruits", "locale": "ui/recruit/title", "index": 35 },
+      "priority": 10
+    }
+  ]
+}
+files (23):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+scenes/recruit_panel.tscn
+src/DefeatedCharactersRecruiter.cs
+src/EnslaveCondition.cs
+src/IRecruitBehaviour.cs
+src/IRecruitCondition.cs
+src/NutritionBehaviour.cs
+src/Recruit.cs
+src/RecruitBehaviourConsumer.cs
+src/RecruitBehaviourRegistry.cs
+src/RecruitConditionConsumer.cs
+src/RecruitJoinedEvent.cs
+src/RecruitLeftEvent.cs
+src/RecruitPartyBridge.cs
+src/RecruitTickController.cs
+src/RecruitingData.cs
+src/RecruitingInitializer.cs
+src/RecruitingSaveable.cs
+src/UI/RecruitPanelBehaviour.cs
+ui/icons/recruits.png
+
+===== MOD mods/resource_atlas: Resource Atlas =====
+manifest.json:
+{
+  "id": "resource_atlas",
+  "name": "Resource Atlas",
+  "version": "0.1.0",
+  "author": "ct",
+  "description": "Cross-mod resource map for developers and AI agents: which mod requests resources (sounds, textures, scenes, entities, actions, locale keys, res:// files) provided by another mod, which mod overrides or patches another mod's resources, and whether each link is backed by manifest depends. Activated by the --resource-atlas user arg; writes report.md/report.json and prints [TEST_RESULT].",
+  "category": "tools, debug",
+  "sources": ["src/**/*.cs"],
+  "depends": ["validator>=0.1"]
+}
+files (10):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+src/AtlasModel.cs
+src/ResourceAtlasBuilder.cs
+src/ResourceAtlasDriverNode.cs
+src/ResourceAtlasInitializer.cs
+src/ResourceAtlasReportWriter.cs
+src/ResourceAtlasResult.cs
+
+===== MOD mods/rpg: RPG World =====
+manifest.json:
+{
+  "id": "rpg",
+  "name": "RPG World",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Top-down tile world in the spirit of RPG Maker on top of the 2D engine mods: maps of square tiles in three layers (back, main, front) with a collision layer, walking on the grid with WASD or the arrows, events that talk, teleport or start battles with the action key E/F or on touch, random encounters. A map is a logical scene, so entry scenarios, ambience, saving and the dialog box work on maps unchanged; battles run on the turn-based platform with the game's battle core and return to the same cell. Scenario actions: rpg.battle, rpg.teleport.",
+  "category": "gameplay",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "test_sources": [
+    "tests/*.cs"
+  ],
+  "depends": ["shell2d_base>=1", "ui_base>=1", "dialog_base>=1", "turn_battle_base>=2"],
+  "test_suites": [
+    {"id": "walk", "activate": ["--itest=rpg_walk"]}
+  ]
+}
+files (46):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+patches/scenes/ui/base_scene.tscn
+scenes/ui/rpg_world_host.tscn
+src/RpgBattleService.cs
+src/RpgModInitializer.cs
+src/Actions/RpgBattleAction.cs
+src/Actions/RpgTeleportAction.cs
+src/Data/RpgCollision.cs
+src/Data/RpgDirection.cs
+src/Data/RpgDirections.cs
+src/Data/RpgEncounterRoller.cs
+src/Data/RpgEncounterTable.cs
+src/Data/RpgEventTrigger.cs
+src/Data/RpgLayer.cs
+src/Data/RpgMap.cs
+src/Data/RpgMapEvent.cs
+src/Data/RpgMapFactory.cs
+src/Data/RpgMapGrid.cs
+src/Data/RpgMapLayers.cs
+src/Data/RpgPassability.cs
+src/Data/RpgTeleport.cs
+src/Data/RpgTileInfo.cs
+src/Data/RpgTileset.cs
+src/Data/RpgTilesetFactory.cs
+src/State/RpgSaveable.cs
+src/State/RpgState.cs
+src/State/RpgStateData.cs
+src/State/RpgStateReset.cs
+src/World/RpgActor.cs
+src/World/RpgEventRunner.cs
+src/World/RpgInput.cs
+src/World/RpgPlayerLook.cs
+src/World/RpgScenarioSource.cs
+src/World/RpgTextures.cs
+src/World/RpgTileSetBuilder.cs
+src/World/RpgWorldHost.cs
+src/World/RpgWorldView.cs
+test_suites/walk/manifest.json
+test_suites/walk/src/RpgWalkTestDriver.cs
+test_suites/walk/src/RpgWalkTestInitializer.cs
+tests/RpgMapGridTests.cs
+tests/RpgRulesTests.cs
+tests/RpgStateTests.cs
+
+===== MOD mods/rpg_demo_game: RPG Demo =====
+manifest.json:
+{
+  "id": "rpg_demo_game",
+  "name": "RPG Demo",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Content of the RPG demo (collection rpg_demo): a village, the elder's house and a forest with a wolf at the cave, made of rpg_map files over the village_pack tileset. Shows teleports, talking NPCs, events that change with story flags, chests, things to gather in the forest (brushwood, stones, mushrooms that heal), a merchant who sells elixirs and buys the junk, a map monster with a win flag and random encounters in the forest. Only data and scenarios, no C#.",
+  "category": "story",
+  "depends": ["rpg>=1", "village_pack>=1", "characters_base>=1", "dialog_base>=1", "items_base>=1", "trading>=1"]
+}
+files (36):
+manifest.json
+mod.jpg
+characters/rpg_demo_characters.json
+items/rpg_demo/branch_bundle.png
+items/rpg_demo/forest_mushroom.png
+items/rpg_demo/healing_elixir.png
+items/rpg_demo/items.json
+items/rpg_demo/stone_pile.png
+locale/en.properties
+locale/ru.properties
+locale/scenarios_en.properties
+locale/scenarios_ru.properties
+maps/rpg_elder_house.json
+maps/rpg_forest.json
+maps/rpg_village.json
+scenarios/rpg_demo/rpg_elder_house_enter.scenario
+scenarios/rpg_demo/rpg_forest_enter.scenario
+scenarios/rpg_demo/rpg_village_intro.scenario
+scenarios/rpg_demo/events/chest_empty.scenario
+scenarios/rpg_demo/events/elder_quest.scenario
+scenarios/rpg_demo/events/elder_thanks.scenario
+scenarios/rpg_demo/events/forest_chest.scenario
+scenarios/rpg_demo/events/house_chest.scenario
+scenarios/rpg_demo/events/locked_door.scenario
+scenarios/rpg_demo/events/merchant.scenario
+scenarios/rpg_demo/events/pick_branches.scenario
+scenarios/rpg_demo/events/pick_mushroom.scenario
+scenarios/rpg_demo/events/pick_stones.scenario
+scenarios/rpg_demo/events/slime.scenario
+scenarios/rpg_demo/events/village_sign.scenario
+scenarios/rpg_demo/events/villager.scenario
+scenarios/rpg_demo/events/wolf_boss.scenario
+scenes/rpg_elder_house.json
+scenes/rpg_forest.json
+scenes/rpg_village.json
+shops/village_merchant.json
+
+===== MOD mods/rpg_editor: RPG Map Editor =====
+manifest.json:
+{
+  "id": "rpg_editor",
+  "name": "RPG Map Editor",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Editor of the rpg mod's tile maps (maps/*.json): paints the back, main and front tile layers and the collision layer with a pencil, an eraser and a flood fill from the tileset palette, places and edits map events (look, trigger, scenario, inline commands, teleport, condition), sets the map size, spawn and random encounters. Undo/redo, live update of the running world after saving, play from the spawn. Opens from the main menu tools, the novel editor hub and the in-game toolbar.",
+  "category": "tools, editor",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "test_sources": [
+    "tests/*.cs"
+  ],
+  "depends": [
+    "rpg>=1",
+    "editor_tools>=1",
+    "ui_base>=1"
+  ],
+  "test_suites": [
+    {
+      "id": "edit",
+      "activate": [
+        "--itest=rpg_editor_edit"
+      ]
+    }
+  ]
+}
+files (20):
+manifest.json
+mod.jpg
+locale/ui_en.properties
+locale/ui_ru.properties
+src/RpgEditLayer.cs
+src/RpgEditTool.cs
+src/RpgEditorFields.cs
+src/RpgEventPropertiesPanel.cs
+src/RpgMapDocument.cs
+src/RpgMapEditorCanvas.cs
+src/RpgMapEditorToolBoxButton.cs
+src/RpgMapEditorToolProvider.cs
+src/RpgMapEditorWindow.cs
+src/RpgMapPropertiesPanel.cs
+src/RpgMapSnapshot.cs
+src/RpgTilePalette.cs
+test_suites/edit/manifest.json
+test_suites/edit/src/RpgEditorTestDriver.cs
+test_suites/edit/src/RpgEditorTestInitializer.cs
+tests/RpgMapDocumentTests.cs
+
+===== MOD mods/scenario_studio: Scenario Studio =====
+manifest.json:
+{
+  "id": "scenario_studio",
+  "name": "Scenario Studio",
+  "version": "0.1.0",
+  "author": "ct",
+  "description": "In-game scenario debugger and live editor: a non-modal dock over the running game with pause, step, breakpoints and restarts (with state rollback), the current scenario line, scene candidates with the reason they did or did not start, editable game state, an event log and the scene map. Edits go into folder mods or into a per-game studio layer over read-only mods, which can be exported as a mod; backgrounds dropped into a mod or the layer during the game are picked up with the \"Resources\" button of the transport bar. Author mode shows the script, novice mode the story moment.",
+  "category": "tools, editor",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": ["ui_base>=1", "dialog_base>=1"],
+  "ui": [
+    {
+      "id": "studio",
+      "kind": "panel",
+      "slot": "ModBeforeUIPanel",
+      "scene_path": "scenes/studio_panel.tscn",
+      "button": { "icon": "studio", "locale": "studio/title", "index": 90 },
+      "priority": 30
+    }
+  ],
+  "test_suites": [
+    {"id": "live", "activate": ["--itest=studio_live"]}
+  ]
+}
+files (61):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+scenes/studio_panel.tscn
+src/StudioAutoOpenNode.cs
+src/StudioLaunchInitializer.cs
+src/StudioPanel.cs
+src/Model/StudioAssetReload.cs
+src/Model/StudioBranch.cs
+src/Model/StudioCandidate.cs
+src/Model/StudioCandidateStatus.cs
+src/Model/StudioCodeLine.cs
+src/Model/StudioLineKind.cs
+src/Model/StudioLogCategory.cs
+src/Model/StudioLogEntry.cs
+src/Model/StudioModScope.cs
+src/Model/StudioMode.cs
+src/Model/StudioMoment.cs
+src/Model/StudioNodeState.cs
+src/Model/StudioOutcomeKind.cs
+src/Model/StudioRestartMode.cs
+src/Model/StudioRunState.cs
+src/Model/StudioSceneNode.cs
+src/Model/StudioScopeKind.cs
+src/Model/StudioSession.cs
+src/Model/StudioStateEditor.cs
+src/Model/StudioStateEntry.cs
+src/Model/StudioTab.cs
+src/Model/StudioText.cs
+src/Pages/StudioLogPage.cs
+src/Pages/StudioMapPage.cs
+src/Pages/StudioNovicePage.cs
+src/Pages/StudioNowPage.cs
+src/Pages/StudioScenePage.cs
+src/Pages/StudioStatePage.cs
+src/Runtime/StudioBackgrounds.cs
+src/Runtime/StudioDebugger.cs
+src/Runtime/StudioJournal.cs
+src/Runtime/StudioLayer.cs
+src/Runtime/StudioLineReader.cs
+src/Runtime/StudioLive.cs
+src/Runtime/StudioScriptEdits.cs
+src/Runtime/StudioSessionBuilder.cs
+src/Runtime/StudioSnapshot.cs
+src/Runtime/StudioWorkingCopy.cs
+src/Views/StudioActionButton.cs
+src/Views/StudioBranchView.cs
+src/Views/StudioCodeLineView.cs
+src/Views/StudioDockDrag.cs
+src/Views/StudioDockEdge.cs
+src/Views/StudioPrompt.cs
+src/Views/StudioPromptRelay.cs
+src/Views/StudioSayView.cs
+src/Views/StudioStateRow.cs
+src/Views/StudioStyles.cs
+src/Views/StudioSyntax.cs
+test_suites/live/manifest.json
+test_suites/live/src/StudioLiveDriverNode.cs
+test_suites/live/src/StudioLiveTestInitializer.cs
+ui/icons/studio.png
+
+===== MOD mods/shell2d_base: 2D Shell =====
+manifest.json:
+{
+  "id": "shell2d_base",
+  "name": "2D Shell",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "2D presentation platform: base shell scene with the view box, toolbar, panel slots and notifications. Parent for all 2D mods; content mods fill the shell through scene patches.",
+  "category": "engine, library",
+  "depends": ["time_base>=1", "ui_base>=1"],
+  "ui": []
+}
+files (8):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+scenes/ui/base_scene.tscn
+scenes/ui/lights.tscn
+scenes/ui/top_view.tscn
+scenes/ui/view_box.tscn
+
+===== MOD mods/skills_base: Skills Engine =====
+manifest.json:
+{
+  "id": "skills_base",
+  "name": "Skills Engine",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Engine skills subsystem: card-based skill definitions, the grant service (skill + granted action pairing), the skills panel UI and the collection effect plate. Replaces the former Core/Skills implementations and Core/Factories/Impls/SkillFactory.",
+  "category": "engine, library",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": ["ui_base>=1"],
+  "ui": [
+    {
+      "id": "skills",
+      "kind": "panel",
+      "slot": "ModBeforeUIPanel",
+      "scene_path": "scenes/ui/skills_panel/skills_panel.tscn",
+      "button": {
+        "icon": "skills",
+        "locale": "ui/skills/title",
+        "index": 40
+      },
+      "priority": 10
+    }
+  ]
+}
+files (20):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+scenes/ui/skills_panel/skill_card.tscn
+scenes/ui/skills_panel/skills_panel.tscn
+src/RareType.cs
+src/SkillCardBehaviour.cs
+src/SkillEffectAggregator.cs
+src/SkillEffectInfo.cs
+src/SkillFactory.cs
+src/SkillInfo.cs
+src/SkillName.cs
+src/SkillPalette.cs
+src/SkillService.cs
+src/SkillType.cs
+src/SkillWidget.cs
+src/SkillsModInitializer.cs
+src/SubsystemRegistration.cs
+src/SkillsPanel/SkillsPanelBehaviour.cs
+
+===== MOD mods/test_defaults_and_patches: Test Defaults and Patches =====
+manifest.json:
+{
+  "id": "test_defaults_and_patches",
+  "name": "Test Defaults and Patches",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Test fixture of the property patches system: a targeted patch (Marao, food/ration) and wildcard patches of every character and item. Marked as a fixture, so --all-mods and games never load it; the property_patches itest loads it explicitly (--with-mods=test_defaults_and_patches --itest=property_patches) and checks the merged entities.",
+  "category": "other",
+  "depends": [
+    "cthangover_game>=1",
+    "cthangover_murakami>=1",
+    "cooking>=1",
+    "characters_base>=1",
+    "items_base>=1"
+  ],
+  "fixture": true,
+  "sources": [
+    "src/*.cs"
+  ]
+}
+files (7):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+patches/character.json
+patches/item.json
+src/PropertyPatchesTest.cs
+
+===== MOD mods/time_base: Time Engine =====
+manifest.json:
+{
+  "id": "time_base",
+  "name": "Time Engine",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Engine time subsystem: the in-game clock tick controller bridging SceneEventController timer pulses to RuntimeData.Time, the clock HUD widget, the 2D lighting stack (UiLightController, LampBehaviour, LightDef) installed into the kernel through LightingBridge, and the lighting.clear_map scenario action. Replaces the former Core/Settings/TimeTickController, Core/UI/Lights, Core/UI/Tool/TimeController and Core/Actions/LightingServiceImpl.",
+  "category": "engine, library",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "depends": ["ui_base>=1"],
+  "ui": []
+}
+files (14):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+src/LightingHooks.cs
+src/SubsystemRegistration.cs
+src/TimeController.cs
+src/TimeModInitializer.cs
+src/TimeTickController.cs
+src/Actions/LightingClearMapAction.cs
+src/Actions/LightingServiceImpl.cs
+src/Lights/LampBehaviour.cs
+src/Lights/LightDef.cs
+src/Lights/UiLightController.cs
+
+===== MOD mods/town_pack: Town Pack =====
+manifest.json:
+{
+  "id": "town_pack",
+  "name": "Town Pack",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Reusable town content for any game: the town entrance (with a depth map), a home vestibule, a bar and the bar ambience. Backgrounds: town/town_entry, home/vestibule, bar/bar; sound: bar/bar_ambient.",
+  "category": "visual, audio",
+  "depends": []
+}
+files (11):
+manifest.json
+mod.jpg
+backgrounds/bar/bar.png
+backgrounds/bar/bar_depth.png
+backgrounds/home/vestibule.png
+backgrounds/home/vestibule_depth.png
+backgrounds/town/town_entry.png
+backgrounds/town/town_entry_depth.png
+locale/en.properties
+locale/ru.properties
+sounds/bar/bar_ambient.ogg
+
+===== MOD mods/trading: Trading =====
+manifest.json:
+{
+  "id": "trading",
+  "name": "Trading",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Shops: merchants defined as data (\"Kind\": \"shop\": what they sell, what they buy back and at which price) and a trade window of two inventories side by side, the merchant's goods and the player's bag, with a deal card between them. Money is an ordinary inventory item, the gold coin money/coin by default. Scenario action: trade.open shop=&lt;id>.",
+  "category": "gameplay",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "test_sources": [
+    "tests/*.cs"
+  ],
+  "depends": ["ui_base>=1", "items_base>=1"],
+  "test_suites": [
+    {"id": "trade", "activate": ["--itest=trade"]}
+  ],
+  "ui": [
+    {
+      "id": "trade",
+      "kind": "overlay",
+      "slot": "ModLastPanel",
+      "scene_path": "scenes/trade_panel.tscn",
+      "once": true,
+      "show_on_start": false,
+      "priority": 10
+    }
+  ]
+}
+files (18):
+manifest.json
+mod.jpg
+items/money/coin.json
+items/money/gold_coin.png
+locale/en.properties
+locale/ru.properties
+scenes/trade_panel.tscn
+src/ShopFactory.cs
+src/ShopInfo.cs
+src/ShopOffer.cs
+src/TradeLedger.cs
+src/TradeOpenAction.cs
+src/TradePanel.cs
+test_suites/trade/manifest.json
+test_suites/trade/src/TradeTestDriver.cs
+test_suites/trade/src/TradeTestInitializer.cs
+tests/ShopInfoTests.cs
+tests/TradeLedgerTests.cs
+
+===== MOD mods/turn_battle_base: Turn-based battle engine =====
+manifest.json:
+{
+  "id": "turn_battle_base",
+  "name": "Turn-based battle engine",
+  "version": "2.0.0",
+  "author": "ct",
+  "description": "Turn-based battle platform: battle ruleset contracts, core registry, action executors, status effects, battle scene, victory/defeat screens, EXP and loot reports",
+  "category": "engine, gameplay",
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "test_sources": ["tests/*.cs"],
+  "depends": [ "characters_base>=1", "ui_base>=1", "items_base>=1", "quests_base>=1", "time_base>=1" ]
+}
+files (69):
+manifest.json
+mod.jpg
+characters/effects/stun.png
+locale/en.properties
+locale/ru.properties
+scenes/battle/battle.tscn
+scenes/battle/deadground.tscn
+scenes/battle/exp_report_card.tscn
+scenes/battle/loot_report_item.tscn
+scenes/battle/winground.tscn
+sounds/battle/deadground.ogg
+sounds/battle/winground.ogg
+src/BattleCoreConsumer.cs
+src/BattleCoreRegistry.cs
+src/BattleData.cs
+src/BattleEndedEvent.cs
+src/BattleGDScriptBridge.cs
+src/BattleInitAction.cs
+src/BattleRequest.cs
+src/BattleSceneContext.cs
+src/BattleService.cs
+src/BattleSetCoreAction.cs
+src/BattleSpeedControl.cs
+src/BattleStartedEvent.cs
+src/ChangedAttributes.cs
+src/CharacterDiedEvent.cs
+src/CharacterSet.cs
+src/DeadgroundBehaviour.cs
+src/ExpReportCard.cs
+src/GDWingroundListener.cs
+src/IBattleAutoPlayable.cs
+src/IBattleSpeedControl.cs
+src/IWingroundListener.cs
+src/LootReportItem.cs
+src/ShowDamageBehaviour.cs
+src/StatusActionsConsumer.cs
+src/StatusEffectActionFactory.cs
+src/StatusEffectInfoFactory.cs
+src/TurnBattleGDScriptHook.cs
+src/TurnBattleSceneInitializer.cs
+src/WingroundBehaviour.cs
+src/WingroundContext.cs
+src/WingroundListenerConsumer.cs
+src/WingroundListenerRegistry.cs
+src/Actions/ActionExecutorHub.cs
+src/Actions/BattleActionMachine.cs
+src/Actions/GDBattleActionExecutor.cs
+src/Actions/IActionExecutor.cs
+src/Actions/IActionExecutorProvider.cs
+src/Actions/IBattleAction.cs
+src/Actions/StopMachineDelegate.cs
+src/Adapters/AnimationRegistry.cs
+src/Adapters/BattleContextImpl.cs
+src/Adapters/IBattleAnimation.cs
+src/Adapters/IBattleAnimationPlayer.cs
+src/Adapters/IBattleContext.cs
+src/Adapters/IBattleCore.cs
+src/Adapters/IBattleSide.cs
+src/Base/ActionBase.cs
+src/StatusEffect/IStatusActions.cs
+src/StatusEffect/IStatusEffect.cs
+src/StatusEffect/StatusEffectInfo.cs
+src/StatusEffect/StatusEffectItem.cs
+src/StatusEffect/StatusEffectQueue.cs
+src/StatusEffect/StatusEffectService.cs
+src/StatusEffect/StatusEffectType.cs
+src/StatusEffect/Impls/StunStatusEffect.cs
+status_effects/status_effects.json
+tests/StatusEffectQueueTests.cs
+
+===== MOD mods/ui_base: UI =====
+manifest.json:
+{
+  "id": "ui_base",
+  "name": "UI",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Engine UI subsystem: widget toolkit (Widget/ModWidget/lists), ViewBox background viewport, ToolBox toolbar, GameMenu/SaveIcon, notification panels, UiKit design system, DeviceInput. Kernel keeps only contracts (IWidget, IDialogBox, IToolbarHost, ISaveIconHost, IBackgroundView, IUiLazyConstruct, MenuRegistry, ToolFactory, NotificationBuffer, SceneEventController, CthangoverTheme/UiTokens boot styling) and drives this mod through those seams.",
+  "category": "ui",
+  "depends": [],
+  "sources": [
+    "src/**/*.cs"
+  ],
+  "ui": [
+    {
+      "id": "game_menu",
+      "kind": "panel",
+      "slot": "ModBeforeUIPanel",
+      "scene_path": "scenes/menu/game_menu.tscn",
+      "button": {
+        "icon": "settings",
+        "locale": "menu/settings",
+        "index": 50
+      },
+      "priority": 10
+    }
+  ]
+}
+files (79):
+manifest.json
+mod.jpg
+locale/ui_en.properties
+locale/ui_ru.properties
+scenes/menu/game_menu.tscn
+scenes/ui/message.tscn
+shaders/avatar.gdshader
+shaders/default.gdshader
+shaders/effect_anim.gdshader
+shaders/interactive_highlight.gdshader
+shaders/noise_simplex.gdshaderinclude
+shaders/pixel_art.gdshader
+shaders/pixel_art_post_process.gdshader
+shaders/scene_transition.gdshader
+shaders/timed_sprite.gdshader
+sounds/ui/close_click.ogg
+sounds/ui/skip.ogg
+src/Base/InputHandlerNode.cs
+src/Base/ModControl.cs
+src/Base/ModNode.cs
+src/Base/Lists/Border.cs
+src/Base/Lists/ICellListWidget.cs
+src/Base/Lists/IListItem.cs
+src/Base/Lists/IListWidget.cs
+src/Base/Lists/ListItem.cs
+src/Base/Lists/ListWidget.cs
+src/Base/Lists/ModWidget.cs
+src/Base/Lists/TransitionWidget.cs
+src/Base/Lists/Widget.cs
+src/Base/Lists/Impls/ColumnCellListWidget.cs
+src/Base/Lists/Impls/VerticalListWidget.cs
+src/Event/DeviceInput.cs
+src/Event/TouchPhase.cs
+src/Menu/EmptyBlackBehaviour.cs
+src/Menu/GameMenu.cs
+src/Menu/MenuBuilder.cs
+src/Menu/SaveIcon.cs
+src/Messages/MessagesHelper.cs
+src/Messages/NotificationPanel.cs
+src/Messages/UiMessage.cs
+src/Theming/UiKit.cs
+src/Tool/ButtonModIconLoader.cs
+src/Tool/TextureRectModIconLoader.cs
+src/Tool/ToolBox.cs
+src/Tool/ToolMenuButton.cs
+src/Tool/ToolStatusKind.cs
+src/Tool/ToolTheme.cs
+src/Tool/ToolWindow.cs
+src/View/AlignType.cs
+src/View/ViewBox.cs
+src/View/ViewBoxNavigator.cs
+src/View/ViewportCapture.cs
+src/View/ZoomViewBoxController.cs
+ui/InventoryCells.png
+ui/gui.png
+ui/icon.png
+ui/panels_background.png
+ui/plate_day.png
+ui/plate_night.png
+ui/tg.png
+ui/base/black.png
+ui/base/dark.png
+ui/base/empty.png
+ui/base/white.png
+ui/battle/deadground.png
+ui/battle/winground.png
+ui/icons/bag.png
+ui/icons/cards.png
+ui/icons/coin.png
+ui/icons/health.png
+ui/icons/journal.png
+ui/icons/lamp.png
+ui/icons/map.png
+ui/icons/save.png
+ui/icons/settings.png
+ui/icons/skills.png
+ui/icons/tools.png
+ui/skills/skill_frame.png
+ui/skills/skill_frame_full.png
+
+===== MOD mods/validator: Validator =====
+manifest.json:
+{
+  "id": "validator",
+  "name": "Validator",
+  "version": "0.1.0",
+  "author": "ct",
+  "description": "Static validation of mods without running the game: manifest schema, entity strategies (characters, items, quests, skills, recipes, actions), cross references, depends, scenario commands and scene patches, with an optional text report.",
+  "category": "debug",
+  "sources": ["src/**/*.cs"],
+  "depends": ["dialog_base>=1", "interactive_base>=1"]
+}
+files (47):
+manifest.json
+mod.jpg
+locale/en.properties
+locale/ru.properties
+src/ActionArgumentReferences.cs
+src/ActionEntityStrategy.cs
+src/CSharpPropertyStrategy.cs
+src/CharacterEntityStrategy.cs
+src/CodePropertyUsage.cs
+src/DependsStrategy.cs
+src/EntityFactCollector.cs
+src/EntityKindStrategy.cs
+src/EntityKindStrategyConsumer.cs
+src/EntityKindStrategyRegistry.cs
+src/IEntityKindStrategy.cs
+src/IValidationStrategy.cs
+src/ItemEntityStrategy.cs
+src/JsonEntityStrategy.cs
+src/JsonReadHelper.cs
+src/ManifestSchemaStrategy.cs
+src/ModFileReader.cs
+src/QuestEntityStrategy.cs
+src/RecipeEntityStrategy.cs
+src/ReferenceStrategy.cs
+src/ReportWriter.cs
+src/ScenarioCommandValidationStrategy.cs
+src/ScenePatchStrategy.cs
+src/SkillEntityStrategy.cs
+src/StatusEffectEntityStrategy.cs
+src/UnusedDeclarationStrategy.cs
+src/ValidationContext.cs
+src/ValidationDeclaration.cs
+src/ValidationFeature.cs
+src/ValidationGraph.cs
+src/ValidationIssue.cs
+src/ValidationKind.cs
+src/ValidationModStatus.cs
+src/ValidationPhase.cs
+src/ValidationReference.cs
+src/ValidationReport.cs
+src/ValidationSeverity.cs
+src/ValidationStrategyConsumer.cs
+src/ValidationStrategyRegistry.cs
+src/ValidationSummary.cs
+src/ValidatorInitializer.cs
+src/ValidatorService.cs
+src/ValidatorSettings.cs
+
+===== MOD mods/village_pack: Village Pack =====
+manifest.json:
+{
+  "id": "village_pack",
+  "name": "Village Pack",
+  "version": "1.0.0",
+  "author": "ct",
+  "description": "Reusable pixel-art content for RPG maps: the 'village' tileset (grass, paths, water, trees with crowns for the front layer, houses, fences, chests, a forest floor and a cave mouth, things lying on the ground to pick up — brushwood, stones, a mushroom — with solid flags), charsets of a hero, an elder, a villager, a merchant, a slime and a wolf, battle portraits of the hero, the slime and the wolf, and two battle backgrounds (meadow, forest) with depth maps. Art only: no maps, no stories.",
+  "category": "visual, characters",
+  "depends": ["rpg>=1"]
+}
+files (19):
+manifest.json
+mod.jpg
+backgrounds/village/forest.png
+backgrounds/village/forest_depth.png
+backgrounds/village/meadow.png
+backgrounds/village/meadow_depth.png
+characters/village/hero.png
+characters/village/slime.png
+characters/village/wolf.png
+charsets/village/elder.png
+charsets/village/hero.png
+charsets/village/merchant.png
+charsets/village/slime.png
+charsets/village/villager.png
+charsets/village/wolf.png
+locale/en.properties
+locale/ru.properties
+tilesets/village/village.json
+tilesets/village/village.png
+
+===== SCENARIOS =====
+
+===== SCENARIO mods/cooking/scenarios/home/home_kitchen_cooking.scenario =====
+scene: home_kitchen
+priority: 5
+---
+light_set [{"x":0.43052286,"y":0.5760054,"radius":500,"influence":1,"color":"#ffff00"},{"x":0.103702,"y":0.26946074,"radius":500,"influence":1,"color":"#ffff00"}]
+select "Комната оборудованная под кухню" key=rooms/kitchen/prompt
+option "Выйти" key=rooms/kitchen/opt_exit -> :exit
+option "Готовить" key=rooms/kitchen/opt_cook -> :cook
+
+:exit
+switch_scene home_vestibule
+end
+
+:cook
+action toggle_cooking_workbench
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/home/home_basement_default.scenario =====
+scene: home_basement
+priority: 10
+---
+light_set [{"x":0.38576052,"y":0.31548673,"radius":700,"influence":0.5,"color":"#ffff00"},{"x":0.16893204,"y":0.20154873,"radius":700,"influence":0.5,"color":"#ffff00"},{"x":0.5864078,"y":0.3254425,"radius":700,"influence":0.5,"color":"#ffff00"},{"x":0.8116505,"y":0.27123895,"radius":700,"influence":0.5,"color":"#ffff00"}]
+select "Подвал" key=rooms/basement/prompt
+option "Выйти" key=rooms/basement/opt_exit -> :exit
+
+:exit
+switch_scene home_vestibule
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/home/home_bedroom_default.scenario =====
+scene: home_bedroom
+save_allowed: true
+priority: 10
+---
+select "Твоя спальня, тут можно поспать и набраться сил" key=rooms/bedroom/prompt
+option "Выйти" key=rooms/bedroom/opt_exit -> :exit
+
+:exit
+switch_scene home_vestibule
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/home/home_kitchen_default.scenario =====
+scene: home_kitchen
+priority: 10
+---
+light_set [{"x":0.6731463,"y":0.4611617,"radius":500,"influence":1,"color":"#ffff00"},{"x":0.13467516,"y":0.3151215,"radius":500,"influence":1,"color":"#ffff00"}]
+select "Комната оборудованная под кухню" key=rooms/kitchen/prompt
+option "Выйти" key=rooms/kitchen/opt_exit -> :exit
+
+:exit
+switch_scene home_vestibule
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/home/home_livingroom_default.scenario =====
+scene: home_livingroom
+priority: 10
+---
+light_set [{"x":0.32427186,"y":0.5831858,"radius":300,"influence":1,"color":"#ffff00"},{"x":0.11262136,"y":0.44159293,"radius":300,"influence":0.6,"color":"#ffff00"}]
+select "Гостиная" key=rooms/livingroom/prompt
+option "Выйти" key=rooms/livingroom/opt_exit -> :exit
+
+:exit
+switch_scene home_vestibule
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/home/home_outside_default.scenario =====
+scene: home_outside
+priority: 10
+---
+light_set [{"x":0.805989,"y":0.28035545,"radius":100,"influence":1,"color":"#ffff00"},{"x":0.6052956,"y":0.40425685,"radius":100,"influence":1,"color":"#ffff00"},{"x":0.85641646,"y":0.49430165,"radius":100,"influence":1,"color":"#ffff00"},{"x":0.7054866,"y":0.4456003,"radius":150,"influence":1,"color":"#ffff00"},{"x":0.6645251,"y":0.26138362,"radius":100,"influence":1,"color":"#ffff00"}]
+select ""
+option "Зайти в дом" key=home_outside/opt_enter -> :enter
+option "В город" key=home_outside/opt_town -> :town
+option "В лес" key=home_outside/opt_forest -> :forest
+
+:enter
+switch_scene home_vestibule
+end
+
+:town
+switch_scene town_entry
+end
+
+:forest
+switch_scene forest
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/home/home_vestibule_default.scenario =====
+scene: home_vestibule
+priority: 40
+---
+light_set [{"x":0.31837204,"y":0.58041835,"radius":300,"influence":1,"color":"#ffff00"},{"x":0.11557116,"y":0.44574395,"radius":300,"influence":0.6,"color":"#ffff00"}]
+select ""
+option "В рабочую комнату" key=vestibule/diner/opt_workroom -> :workroom
+option "В обеденную комнату" key=vestibule/diner/opt_dinerroom -> :kitchen
+option "В спальню" key=vestibule/diner/opt_bedroom -> :bedroom
+option "В подвал" key=vestibule/diner/opt_cellar -> :cellar
+option "На улицу" key=vestibule/diner/opt_outside -> :outside
+
+:workroom
+switch_scene home_workroom
+end
+
+:kitchen
+switch_scene home_kitchen
+end
+
+:bedroom
+switch_scene home_bedroom
+end
+
+:cellar
+switch_scene home_basement
+end
+
+:outside
+switch_scene home_outside
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/home/home_workroom_default.scenario =====
+scene: home_workroom
+priority: 10
+---
+light_set [{"x":0.45825243,"y":0.5865044,"radius":300,"influence":1,"color":"#ffff00"},{"x":0.53163075,"y":0.5458637,"radius":300,"influence":1,"color":"#ffff00"},{"x":0.77411,"y":0.45929205,"radius":300,"influence":1,"color":"#ffff00"},{"x":0.8699029,"y":0.4869469,"radius":300,"influence":1,"color":"#ffff00"}]
+select "Рабочий кабинет, тут тебя никто не будет отвлекать от исследований" key=rooms/workroom/prompt
+option "Выйти" key=rooms/workroom/opt_exit -> :exit
+
+:exit
+switch_scene home_vestibule
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/prolog/graveyard_arrival.scenario =====
+scene: prolog_graveyard
+priority: 10
+is_one_run: true
+---
+background prolog/00025-165590409
+title "Глава 3. Кладбище святого Угробья"
+
+text "Могильные плиты тянулись вдаль, серые и мрачные. Старые дубы качали голыми ветвями. Где-то каркала ворона."
+text "Свистки стихли — полицейские потеряли его из виду." first=marao/think
+text "Марао перевёл дух и прислонился к высокому склепу с выцветшей надписью: «Семья фон Штольц»." first=marao/think
+text "И тут его скрутило. Живот скрутило так, что он согнулся пополам." first=marao/sad
+text "— Ну вот. Организм. Раньше я мог пол-литра пива и огурцы, а теперь от одной воды уже..." first=marao/sad
+text "Он покосился на книгу, которая всё ещё была у него под мышкой." first=marao/think
+text "— Хм. А чего бы и нет? Всё равно время есть." first=marao/smile
+
+action quest.set_data_status quest_id=AwakeningQuest level=2
+notify "За склепом можно уединиться."
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/prolog/graveyard_azif.scenario =====
+# Клик по книге — Аль-Азиф просыпается (канон: глава 4).
+# Файл без шапки: InteractiveManager отрезает метаданные, играет только тело.
+title "Глава 4. Аль Азиф просыпается"
+text "Марао плюнул и присел, сложив книгу стопкой страниц. Поднёс к пятой точке." first=marao/think
+ptext "Книга заорала."
+ptext "— НЕ СМЕЙ!"
+text "Голос был похож на скрип несмазанных ворот, смешанный с плачем сотни младенцев. Буквы на раскрытой странице корчились, складываясь в ужасные морды, которые разевали рты." first=marao/think
+text "— Ты умеешь говорить?" first=marao/think
+ptext "— Я — АЛЬ АЗИФ, КНИГА МЁРТВЫХ ИМЁН! Я СВОДИЛ С УМА ЦИВИЛИЗАЦИИ! Я — ГЛАС БЕЗДНЫ!"
+text "— Понятно. — Марао кивнул и снова придвинул книгу к себе." first=marao/smile
+ptext "— Я УНИЧТОЖУ ТВОЙ РОД ДО СЕДЬМОГО КОЛЕНА!"
+text "Страницы засветились багровым, по кладбищу побежали тени, могильные плиты затряслись."
+text "— Да тихо ты. Голова от тебя болит. Я тут только что обосрался от страха, когда за мной полиция бежала, а ты ревёшь на всё кладбище..." first=marao/sad
+ptext "Книга попыталась вторгнуться в его разум. Поток видений: бескрайние океаны тьмы, гигантские щупальца, разрывающие реальность, звёзды, гаснущие одна за другой."
+text "Марао просто икнул. В его голове стоял запах дешёвого портвейна, играла шарманка и мелькала мысль о том, что надо бы кефирчику холодного." first=marao/think
+ptext "— ПОЧЕМУ ТЫ НЕ БЕЖИШЬ В УЖАСЕ?!"
+text "— А чё бежать? Ты бумажка. Говорящая, но бумажка. И вообще: если я тебя в штаны не засуну, то как мне вытираться?" first=marao/think
+ptext "— ТЫ НЕ ПОНИМАЕШЬ! ТЫ ОТКРЫЛ ПОРТАЛЫ! ВЕЗДЕ! В ГОРОДАХ, В ПОЛЯХ, В ДОМАХ! ОНИ ПРИДУТ!"
+text "— Какие ещё порталы? А, это я стихи читал. Ну, казахские. Красиво же." first=marao/smile
+ptext "— ЭТО БЫЛИ ЗАКЛИНАНИЯ ВЫЗОВА!"
+text "— А они платить будут? За аренду материка? Или мне потом штрафы за самострой придут?" first=marao/think
+ptext "Книга захлебнулась собственным сиянием. Она попыталась захлопнуться и выскользнуть, но Марао держал её крепко."
+text "— Слушай, книга. Орать можешь сколько влезет. Но мне нужно прийти в себя, одеться и пожрать. Давай договоримся: ты не орёшь — я не пытаюсь тобой подтереться. Идёт?" first=marao/think
+ptext "Книга онемела."
+ptext "— ТЫ... ТЫ СМЕЕШЬСЯ НАД ДРЕВНИМ УЖАСОМ?.."
+text "— Да не смеюсь я. Хочешь, я тебя вон тем листом лопуха протру? Будешь чистенькая. Хочешь?" first=marao/smile
+ptext "Книга издала звук, похожий на всхлип."
+ptext "Вдалеке снова засвистели полицейские свистки."
+sound locations/prolog/police
+text "Марао встал, накинул красную тряпку и сунул книгу под мышку." first=marao/smile
+text "— Валим. Давай, книжка, показывай, где тут трактир. А то у меня всего две мысли: «нахера я такой голый» и «где бы опохмелиться»." first=marao/smile
+
+action quest.add_tag quest_id=AwakeningQuest tag=azif_awake
+action quest.set_data_status quest_id=AwakeningQuest level=4
+interactive_remove book_wipe
+switch_scene prolog_river
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/prolog/graveyard_ensure_book.scenario =====
+scene: prolog_graveyard
+priority: 15
+condition: AwakeningQuest.hasTag("graveyard_read") &amp;&amp; AwakeningQuest.notHasTag("azif_awake")
+---
+# Прочитано, но Аль-Азиф ещё не проснулся: держим хотспот книги на сцене.
+interactive_add book_wipe
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/prolog/graveyard_ensure_crypt.scenario =====
+scene: prolog_graveyard
+priority: 15
+condition: AwakeningQuest.notHasTag("graveyard_read")
+---
+# Книга ещё не прочитана вслух: держим хотспот «за склепом» на сцене.
+# Идемпотентно при каждом входе (Add по тому же id возвращает существующий объект).
+interactive_add crypt_spot
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/prolog/graveyard_read.scenario =====
+# Клик «за склепом» — нужда и первое чтение (канон: глава 3).
+# Файл без шапки: InteractiveManager отрезает метаданные, играет только тело.
+text "Марао отошёл за склеп и присел на корточки. Кладбище было тихим, спокойным. Только ветер гонял сухие листья по плитам." first=marao/think
+text "— А чего бы и нет? Всё равно время есть."
+text "Он открыл книгу на первой попавшейся странице." first=marao/think
+text "Буквы напоминали кириллицу, но с множеством крючков, хвостов и точек, которые, казалось, шевелились. Некоторые строки мерцали. Марао прищурился и потёр глаза." first=marao/think
+text "— Казахский. Точно казахский. У нас на стройке был казах Ахмет — он ругался так же. Все слова знакомые, а смысла ноль." first=marao/smile
+text "Он начал читать вслух, с интонацией базарного зазывалы, выговаривая страшные имена как «Джамбулат-ага» и «Алма-ата»." first=marao/smile
+
+background_color red
+ptext "Где-то далеко, в Океане Кошмаров, Ктулху вздрогнул во сне."
+ptext "Священный ритм «Ph'nglui mglw'nafh...» кто-то читал со словами «...и сметаны по два фунта, да?»"
+ptext "Порталы стали открываться по всему материку — с противным чавкающим звуком, похожим на открывание банки с тушёнкой."
+background prolog/00025-165590409
+
+text "Марао закончил читать, закрыл книгу и снова скривился." first=marao/think
+text "— И как теперь вытираться?"
+text "Лопухов не было. Только крапива да старый газетный клочок. И книга." first=marao/think
+text "Он потянул страницу за уголок — ноль реакции. Дёрнул сильнее: бумага была твёрдой, как металл, но гибкой. Он рвал и так, и сяк, даже ногтями пытался. Бесполезно." first=marao/sad
+text "— Что за брак! Я за такие деньги..." first=marao/sad
+
+action quest.add_tag quest_id=AwakeningQuest tag=graveyard_read
+action quest.set_data_status quest_id=AwakeningQuest level=3
+interactive_remove crypt_spot
+interactive_add book_wipe
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/prolog/morning_book.scenario =====
+# Клик по книге — Аль-Азиф в спячке и молчит (канон: главы 1-3).
+# Файл без шапки: InteractiveManager отрезает метаданные, играет только тело.
+text "Рядом, в грязи, лежала толстая книга в сером кожаном переплёте, с металлическими уголками, покрытыми зеленоватой патиной." first=marao/think
+text "На обложке был странный барельеф: многорукая фигура с головой осьминога сжимала перевёрнутые звёзды." first=marao/think
+text "— Какая-то мутная хрень. Откуда она у меня?" first=marao/sad
+text "В голове мелькнул смутный образ: он в какой-то лавке протягивает монеты и берёт книгу. Но когда? Где? Почему? Больше ничего." first=marao/think
+text "Марао пожал плечами и сунул книгу под мышку." first=marao/smile
+text "— Ладно, бумага не жрёт. Пойдём, найдём, где опохмелиться." first=marao/smile
+action quest.add_tag quest_id=AwakeningQuest tag=book_taken
+interactive_remove book_ground
+switch_scene prolog_alley
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/prolog/morning_cloak.scenario =====
+# Клик по красной тряпке — Марао прикрывается (канон: глава 1).
+# Файл без шапки: InteractiveManager отрезает метаданные, играет только тело.
+text "Он сделал шаг, другой, придерживаясь за стену, и наступил на что-то мягкое. Красная тряпка." first=marao/think
+text "Выцветшая, с бахромой по краям. Когда-то это было что-то вроде плаща или шали. На ткани угадывался вышитый крест." first=marao/think
+text "Марао развернул её, оценил размер и намотал на плечи, как римскую тогу. Края едва доходили до колен." first=marao/smile
+text "— Лучше, чем ничего. Срам прикрыт, хоть сзади и развевается, как знамя нищего легиона." first=marao/smile
+action quest.add_tag quest_id=AwakeningQuest tag=cloak_taken
+interactive_remove cloak_ground
+switch_scene prolog_alley
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/prolog/morning_items_ensure.scenario =====
+scene: prolog_alley
+priority: 15
+condition: AwakeningQuest.notHasTag("cloak_taken") &amp;&amp; AwakeningQuest.notHasTag("book_taken")
+---
+# Ни один предмет ещё не взят: держим оба интерактива на сцене.
+# Не is_one_run — идемпотентно пересоздаёт объекты при каждом входе (Add по тому же id возвращает существующий).
+interactive_add cloak_ground
+interactive_add book_ground
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/prolog/morning_police.scenario =====
+scene: prolog_alley
+priority: 20
+is_one_run: true
+condition: AwakeningQuest.hasTag("cloak_taken") &amp;&amp; AwakeningQuest.hasTag("book_taken")
+---
+sound locations/prolog/police
+delay 0.7 hidden=true
+title "Глава 2. Погоня"
+action quest.set_data_status quest_id=AwakeningQuest level=1
+
+ptext "Из подворотни вышли трое полицейских в синих мундирах, с медными пуговицами, начищенными до блеска."
+ptext "— ЭЙ, ТЫ! СТОЯТЬ!"
+ptext "— Голый мужик в красной тряпке по городу бегает! Извращенец!"
+text "— Какой извращенец? Я же одет... почти..." first=marao/think
+ptext "Толстый полицейский с красным лицом поднёс свисток к губам и дул в него так, что закладывало уши. Молодой, с усиками, уже бежал вперёд, расстёгивая кобуру."
+ptext "— ДЕРЖИ ЕГО!"
+text "Спорить с полицией Марао был не готов. Спорить с полицией Марао не умел вообще. Он развернулся и побежал." first=marao/sad
+text "Босые ноги, топот сапог за спиной, крики «Держи его!» — Марао летел по улочке, перепрыгнул через бочку с водой, шлёпнулся на колени, вскочил и побежал дальше." first=marao/sad
+text "Он свернул влево, потом вправо и нырнул в ближайшую арку. Выбежав с другой стороны, он оказался у высоких кованых ворот." first=marao/think
+text "За воротами было кладбище. Марао нырнул внутрь." first=marao/think
+
+switch_scene prolog_graveyard
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/prolog/morning_restore_book.scenario =====
+scene: prolog_alley
+priority: 15
+condition: AwakeningQuest.hasTag("cloak_taken") &amp;&amp; AwakeningQuest.notHasTag("book_taken")
+---
+# Тряпка взята, книга ещё нет: возвращаем книгу после перезагрузки сцены.
+interactive_add book_ground
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/prolog/morning_restore_cloak.scenario =====
+scene: prolog_alley
+priority: 15
+condition: AwakeningQuest.hasTag("book_taken") &amp;&amp; AwakeningQuest.notHasTag("cloak_taken")
+---
+# Книга взята, тряпка ещё нет: возвращаем тряпку после перезагрузки сцены.
+interactive_add cloak_ground
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/prolog/morning_wake.scenario =====
+scene: prolog_alley
+priority: 10
+is_one_run: true
+---
+background prolog/start_lane
+title "Глава 1. Пробуждение"
+
+text "Марао открыл глаза и сразу пожалел об этом." first=marao/sad
+text "Голова раскалывалась так, будто внутри неё поселился кузнец с молотом. Во рту было сухо и горько, как после трёх дней пьянки без закуски." first=marao/sad
+text "Он лежал в грязном переулке между двух облезлых стен. Вокруг валялись тряпки, осколки бутылок и куски газет, которые ветер гонял по лужам." first=marao/think
+text "Память отказывалась работать. Последнее, что он помнил: звон стаканов. Потом темнота. И всё." first=marao/think
+text "Холодный воздух пробрал до костей. Марао посмотрел вниз, на себя, и снова выругался — уже громче." first=marao/think
+text "— Да что ж такое! Где мои штаны?!" first=marao/sad
+text "Он был абсолютно голый. Босые ступни на холодном камне. Тело болело — как будто его били чем-то тяжёлым. Возможно ногами. Возможно и по лицу." first=marao/sad
+
+action quest.set_status quest_id=AwakeningQuest status=Progress
+action quest.send_notification quest_id=AwakeningQuest
+notify "Осмотрись. В переулке что-то лежит."
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/prolog/river_arrival.scenario =====
+scene: prolog_river
+priority: 10
+is_one_run: true
+---
+background prolog/river
+title "Глава 5. Дорога к вилле «Забвение»"
+action quest.set_data_status quest_id=AwakeningQuest level=5
+
+text "Марао выбрался с кладбища через дыру в заборе — подальше от ворот, где могли ждать свистки." first=marao/think
+sound locations/prolog/police_go_on
+text "Свистки ещё слышались за холмами. Далеко. Но он всё равно пригнулся и пошёл вдоль реки, прячась за кустами ивы." first=marao/think
+text "Кусты хлестали по голым ногам. Трава резала ступни. Красная тряпка то и дело сползала, и Марао поправлял её, не сбавляя шага." first=marao/think
+
+ptext "Книга молчала. Но вздрагивала каждые пару шагов — как будто переваривала обиду."
+
+text "Река блеснула между деревьями. Марао остановился и принюхался к себе." first=marao/think
+text "— Так. Помыться бы. А то от меня пахнет, как от склепа." first=marao/think
+text "Он скинул тряпку на куст, огляделся и вошёл в воду по колено." first=marao/think
+text "Вода обожгла. Марао зашипел, но не вышел — только быстрее зашлёпал по бокам и под мышками." first=marao/sad
+
+ptext "На берегу книга засветилась багровым."
+ptext "— ОСКВЕРНЕНИЕ! ТЫ ГОЛЫЙ! ПОД НЕБОМ! ОНО ВСЁ ВИДИТ!"
+text "— Небо большое. Пусть терпит." first=marao/think
+ptext "— Я ЧУВСТВУЮ, ЧЕМ ТЫ СОБИРАЕШЬСЯ ВЫТИРАТЬСЯ. НЕ СМЕЙ ДАЖЕ ДУМАТЬ!"
+text "— А чем мне вытираться? Ты мне, что ли, полотенце?" first=marao/sad
+
+text "Марао выбрался на берег и взял книгу. Страницы были гладкие, плотные, приятные на ощупь. Как хорошая бумага." first=marao/think
+text "— Слушай. Вот тут у тебя пустые листы. Их много. А я весь мокрый." first=marao/smile
+
+ptext "Книга задрожала. Потом заорала так, что с ближней ивы сорвалась ворона."
+ptext "— НЕ СМЕЙ! Я — АЛЬ АЗИФ! Я СВЯТ! Я..."
+text "— Ты мокрая. И орёшь. Значит, уговор в силе: я не вытираюсь — ты не орёшь. Мы же на кладбище договорились." first=marao/think
+ptext "Книга замолчала."
+ptext "Демонстративно. До самой темноты."
+
+text "Марао натянул тряпку на плечи и пошёл дальше вдоль берега." first=marao/think
+text "Километра через два лес начал редеть." first=marao/think
+
+switch_scene prolog_villa
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/prolog/villa_arrival.scenario =====
+scene: prolog_villa
+priority: 10
+is_one_run: true
+---
+background prolog/villa
+
+text "За поворотом реки показался дом." first=marao/think
+text "Двухэтажный, деревянный, с резными наличниками. Штукатурка облезла, ставни висели криво — как зубы в пьяной драке." first=marao/think
+text "Вокруг — сад в человеческий рост, ржавый колодец и тишина." first=marao/think
+text "Над дверью — табличка: «Вилла “Забвение”»." first=marao/think
+text "— Забвение. Красиво. — Марао хмыкнул. — Раньше тут, наверное, держали нервных. Ну, я как раз нервный. Без штанов." first=marao/smile
+
+text "Он постучал. Тишина." first=marao/think
+text "Постучал сильнее. Эхо прошлось по коридору и вернулось. Одинокое." first=marao/think
+text "— Хозяева! Пустите путника переночевать! Я не маньяк, у меня даже оружия нет. Кроме книги!" first=marao/smile
+ptext "Книга под мышкой возмущённо зашуршала. Но промолчала."
+
+text "Марао дёрнул ручку. Дверь поддалась с противным скрипом, и в лицо ему пахнуло сыростью, плесенью и пылью." first=marao/think
+text "— Ну хоть не падалью. — Он шагнул внутрь. — Уже дом." first=marao/smile
+
+action quest.add_tag quest_id=AwakeningQuest tag=villa_reached
+action quest.set_status quest_id=AwakeningQuest status=End
+action quest.set_status quest_id=OldHouseQuest status=Progress
+action quest.send_notification quest_id=OldHouseQuest
+notify "Вилла «Забвение» стала твоим домом. Наверное."
+switch_scene home_vestibule
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/start.scenario =====
+scene: start_scene
+priority: 0
+is_one_run: true
+---
+# The starter kit of a new game (it used to be hard-coded in items_base's inventory).
+action item.add id=food/wolf_meat count=10
+action item.add id=resource/branches count=10
+switch_scene prolog_alley
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/town/town_entry_default.scenario =====
+scene: town_entry
+priority: 40
+---
+select ""
+option "Вернуться к дому" key=town_entry/opt_home -> :home
+option "На площадь" key=town_entry/opt_square -> :square
+
+:home
+switch_scene home_outside
+end
+
+:square
+switch_scene town_outskirts
+end
+
+===== SCENARIO mods/cthangover_game/scenarios/town/town_outskirts_default.scenario =====
+scene: town_outskirts
+priority: 10
+---
+select ""
+option "Вернуться к дому" key=town_outskirts/opt_home -> :home
+option "В лес" key=town_outskirts/opt_forest -> :forest
+
+:home
+switch_scene home_outside
+end
+
+:forest
+switch_scene forest
+end
+
+===== SCENARIO mods/cthangover_murakami/scenarios/murakami/meeting/murakami_meeting_after_battle.scenario =====
+scene: town_entry
+priority: 20
+condition: MeetingMurakamiQuest.hasTag("wolf_battle") &amp;&amp; MeetingMurakamiQuest.notHasTag("boss_battle")
+---
+background "town/meetingmurakami/00002-1920617752"
+text "[Волк определённо целился в этот дом — следы вели прямо к порогу]" key=meeting_murakami/after_wolf/tracks
+
+select "[Марао решил осмотреть жилище]" key=meeting_murakami/after_wolf/inspect
+option "Подойти к двери" key=meeting_murakami/after_wolf/opt_approach -> :approach
+
+:approach
+background "town/meetingmurakami/00014-1724512349"
+text "- Милая леди!" key=meeting_murakami/after_wolf/greeting first=marao/think
+text "- Что вы тут делаете в одиночестве?" key=meeting_murakami/after_wolf/alone first=marao/think
+text "." key=meeting_murakami/after_wolf/dot1
+text ".." key=meeting_murakami/after_wolf/dot2
+text "..." key=meeting_murakami/after_wolf/dot3
+text "- Помогите..." key=meeting_murakami/after_wolf/help second=murakami/fear_1
+text "- Оно там... внутри..." key=meeting_murakami/after_wolf/inside second=murakami/fear_2
+
+select "[Девушка дрожит от страха]" key=meeting_murakami/after_wolf/fear
+option "Войти" key=meeting_murakami/after_wolf/opt_enter -> :enter
+
+:enter
+light_set [{"x":0.8433963,"y":0.037922725,"radius":600,"influence":1,"color":"#ffff00"},{"x":0.29016176,"y":0.16111115,"radius":600,"influence":1,"color":"#ffff00"}]
+background "town/meetingmurakami/00079-2783395178"
+text "[Марао, не колеблясь, перешагнул порог]" key=meeting_murakami/after_wolf/enter
+text "- Так-так..." key=meeting_murakami/after_wolf/look_around first=marao/think
+
+background "town/meetingmurakami/00078-2783395178"
+light_set [{"x":0.8433963,"y":0.037922725,"radius":600,"influence":1,"color":"#ffff00"},{"x":0.29016176,"y":0.16111115,"radius":600,"influence":1,"color":"#ffff00"}]
+text "- ААА?!" key=meeting_murakami/after_wolf/scream second=murakami/fear_1
+text "- Почему вы го..." key=meeting_murakami/after_wolf/why second=murakami/fear_1
+text "- Милая леди, это долгая история. Потерпите, мне нужно здесь кое-что проверить." key=meeting_murakami/after_wolf/explain first=marao/what
+
+background "town/meetingmurakami/00136-3647329618"
+light_set
+text "- М-да..." key=meeting_murakami/after_wolf/hmm first=marao/think
+text "- Атмосфера тут, конечно, хреновая... — [он принюхался] — &lt;s>жоп...&lt;/s>, кхм, нутром чую, чё-то не то..." key=meeting_murakami/after_wolf/atmosphere first=marao/think
+
+action party.add id=Murakami
+action character.send_notification type=Murakami
+
+text "- Они в той комнате..." key=meeting_murakami/after_wolf/they_inside second=murakami/fear_1
+
+select ""
+option "Зайти в комнату" key=meeting_murakami/after_wolf/opt_enter_room -> :enter_room
+
+:enter_room
+background "town/meetingmurakami/00031-3535505844"
+text "[Марао замер, застигнутый врасплох кровавым блеском вервольфьих глаз.]" key=meeting_murakami/after_wolf/werewolf_gaze
+text "[Сама неизбежность нависла над ним в этот миг.]" key=meeting_murakami/after_wolf/inevitable
+text "- Твою ж мать... — только и выдохнул он." key=meeting_murakami/after_wolf/oh_shit first=marao/what
+
+action battle.init scene=town_entry enemies=wolf_2,werewolf_girl_1 quest_id=MeetingMurakamiQuest new_tag=boss_battle
+
+switch_scene Battle
+end
+
+===== SCENARIO mods/cthangover_murakami/scenarios/murakami/meeting/murakami_meeting_after_boss.scenario =====
+scene: town_entry
+priority: 30
+condition: MeetingMurakamiQuest.hasTag("boss_battle") &amp;&amp; MeetingMurakamiQuest.notHasTag("go_home")
+---
+background "town/meetingmurakami/00024-3950100873"
+text "- Уф-ф... — Марао вытер клинок. — Ну и тварь..." key=meeting_murakami/after_boss/whew first=marao/what
+
+text "." key=meeting_murakami/after_boss/dot1 second=murakami/fear_2
+text ".." key=meeting_murakami/after_boss/dot2 second=murakami/fear_2
+text "..." key=meeting_murakami/after_boss/dot3 second=murakami/fear_2
+text "- Вы... вы убили этого монстра?" key=meeting_murakami/after_boss/you_killed second=murakami/fear_1
+
+text "- Ага. Больше не побеспокоит." key=meeting_murakami/after_boss/yep first=marao/think
+text "[Марао помолчал, разглядывая девчонку.]" key=meeting_murakami/after_boss/silence
+text "- Ладно. — [вздохнул он.] — Идём со мной. Отведу в безопасное место." key=meeting_murakami/after_boss/come_with_me first=marao/relax
+
+background "town/meetingmurakami/00024-3950100873"
+text "[Они вышли на улицу. Город встретил их тишиной и запахом гари.]" key=meeting_murakami/after_boss/outside
+
+action quest.add_tag quest_id=MeetingMurakamiQuest tag=go_home
+action quest.set_data_status quest_id=MeetingMurakamiQuest level=2
+
+end
+
+===== SCENARIO mods/cthangover_murakami/scenarios/murakami/meeting/murakami_meeting_end.scenario =====
+scene: home_vestibule
+priority: 10
+condition: MeetingMurakamiQuest.IsActive &amp;&amp; MeetingMurakamiQuest.hasTag("go_home")
+---
+text "- Пришли." key=meeting_murakami/end/arrived first=marao/smile
+text "[Марао толкнул дверь плечом, пропуская её вперёд. Петли жалобно скрипнули — дверь давно не открывали.]" key=meeting_murakami/end/door_open
+text "- Это... — [оглядел порог.] — Ну, можно и так сказать. Располагайся." key=meeting_murakami/end/make_yourself first=marao/think
+text "[Она переступила порог. Ботинки осторожно коснулись пола — будто не веря, что здесь правда можно ходить.]" key=meeting_murakami/end/step_in
+text "[Воздух тяжёлый, пахнет пылью и чем-то старым. Сквозь щели в стенах пробиваются узкие полосы света, выхватывая из темноты одинокие пылинки.]" key=meeting_murakami/end/dust
+text "[Тишина. Где-то сверху скрипнула доска — старый дом потихоньку просыпается, принимая нового жильца.]" key=meeting_murakami/end/silence
+text "- Уютно... — [тихо, почти себе под нос.]" key=meeting_murakami/end/cozy second=murakami/normal_2
+text "[Марао покосился на тощую сумку с припасами, которая висела на стене. Похоже, рвать жопу ради еды теперь придётся ещё больше.]" key=meeting_murakami/end/supplies
+text "- Ну что, — [буркнул он, пряча взгляд.] — Это теперь и твоя хата." key=meeting_murakami/end/your_home first=marao/think
+
+action quest.set_status quest_id=MeetingMurakamiQuest status=End level=3
+
+end
+
+===== SCENARIO mods/cthangover_murakami/scenarios/murakami/meeting/murakami_meeting_start.scenario =====
+scene: town_entry
+priority: 10
+condition: MeetingMurakamiQuest.notHasTag("wolf_battle")
+---
+select "[Из темноты донеслось глухое рычание]" key=meeting_murakami/growl
+option "Вернуться к дому" key=meeting_murakami/opt_home -> :home
+option "Проверить переулок" key=meeting_murakami/opt_alley -> :alley
+
+:home
+switch_scene home_outside
+end
+
+:alley
+action quest.set_status quest_id=MeetingMurakamiQuest status=Progress
+background "town/meetingmurakami/00055-1920617752"
+text "[Голодный волк, забредший в город в поисках поживы, оскалил пасть, преграждая путь]" key=meeting_murakami/wolf_appear
+text "- Ох, ёбушки..." key=meeting_murakami/marao_scared first=marao/what
+text "[Сомнений не осталось: схватка неизбежна]" key=meeting_murakami/battle_inevitable
+
+action battle.init scene=town_entry enemies=wolf_1,wolf_2 quest_id=MeetingMurakamiQuest new_tag=wolf_battle
+
+switch_scene Battle
+end
+
+===== SCENARIO mods/dialog_base/test_suites/gdscript/scenarios/gdscript_fallback_test.scenario =====
+scene: home_kitchen
+priority: 8
+condition: true
+is_one_run: true
+---
+action gds.greet name=Always
+text "Fallback scene always runs."
+end
+
+===== SCENARIO mods/dialog_base/test_suites/gdscript/scenarios/gdscript_flag_test.scenario =====
+scene: home_kitchen
+priority: 7
+condition: gds.flag_equals("victory")
+is_one_run: true
+---
+set custom_flag victory
+action gds.inventory_demo item_id=health_potion
+text "GDScript condition with args and inventory action executed."
+end
+
+===== SCENARIO mods/dialog_base/test_suites/gdscript/scenarios/gdscript_rain_test.scenario =====
+scene: home_kitchen
+priority: 6
+condition: gds.is_rain
+is_one_run: true
+---
+set weather rain
+action gds.greet name=RainVisitor
+text "It's raining! GDScript condition gds.is_rain passed."
+end
+
+===== SCENARIO mods/dialog_base/test_suites/gdscript/scenarios/gdscript_test.scenario =====
+scene: home_kitchen
+priority: 5
+condition: true
+is_one_run: true
+---
+set my_name Marao
+action gds.greet name=my_name
+action gds.quest_log quest_id=test_quest message=Scenario started from GDScript
+text "GDScript test actions executed. Check logs."
+end
+
+===== SCENARIO mods/editor_tools/test_suites/windows/scenarios/playtest_return.scenario =====
+scene: home_basement
+priority: 0
+---
+delay 60 hidden=true
+end
+
+===== SCENARIO mods/interactive_base/test_suites/interactives/scenarios/kitchen_add_interactive.scenario =====
+scene: interactives_test
+priority: 10
+is_one_run: true
+---
+interactive_add kitchen_lamp
+end
+
+===== SCENARIO mods/interactive_base/test_suites/interactives/scenarios/kitchen_clicked.scenario =====
+set lamp_clicked yes
+text "Вы кликнули по лампе! Интерактивный объект работает." key=test_interactive/click
+end
+
+===== SCENARIO mods/my_novel_game/scenarios/my_novel_bar.scenario =====
+scene: my_novel_bar
+priority: 10
+---
+text "The bar is warm and noisy, but there is nothing to do here tonight." key=my_novel/bar/intro
+select "What next?" key=my_novel/bar/prompt
+option "Back to the town" key=my_novel/bar/opt_town -> :town
+
+:town
+switch_scene my_novel_town
+end
+
+===== SCENARIO mods/my_novel_game/scenarios/my_novel_home.scenario =====
+scene: my_novel_home
+priority: 10
+---
+text "It is quiet at home. Nothing here yet — the perfect place for a new story." key=my_novel/home/intro
+select "What next?" key=my_novel/home/prompt
+option "Back to the town" key=my_novel/home/opt_town -> :town
+
+:town
+switch_scene my_novel_town
+end
+
+===== SCENARIO mods/my_novel_game/scenarios/my_novel_town.scenario =====
+scene: my_novel_town
+priority: 10
+---
+# The town is the hub: every visit shows the same choice.
+text "Evening town. The street lamps are already lit and a cool draught runs along the cobbles." key=my_novel/town/intro
+select "Where to go?" key=my_novel/town/prompt
+option "Go into the bar" key=my_novel/town/opt_bar -> :bar
+option "Go back home" key=my_novel/town/opt_home -> :home
+
+:bar
+switch_scene my_novel_bar
+end
+
+:home
+switch_scene my_novel_home
+end
+
+===== SCENARIO mods/rpg_demo_game/scenarios/rpg_demo/events/chest_empty.scenario =====
+ptext "Пусто. Ты уже всё забрал." key=rpg_demo/chest/empty
+end
+
+===== SCENARIO mods/rpg_demo_game/scenarios/rpg_demo/events/elder_quest.scenario =====
+text "— Явился. Слушай: у пещеры в лесу поселился волк. Режет коз, воет по ночам, на меня смотрит косо." key=rpg_demo/elder/quest_1
+text "— Иди на восток, мимо пруда, по тропе. Прогони его — и я, так и быть, перестану тебя будить." key=rpg_demo/elder/quest_2
+flag rpg_quest_taken 1
+end
+
+===== SCENARIO mods/rpg_demo_game/scenarios/rpg_demo/events/elder_thanks.scenario =====
+text "— Волка нет? Ну надо же. Я в тебя не верил, а ты взял и всё испортил." key=rpg_demo/elder/thanks_1
+text "— Ступай. Теперь можешь спать до полудня. Не дольше." key=rpg_demo/elder/thanks_2
+end
+
+===== SCENARIO mods/rpg_demo_game/scenarios/rpg_demo/events/forest_chest.scenario =====
+ptext "Сундук в лесу. Внутри — сухие грибы и чья-то потерянная надежда. Грибы ты берёшь." key=rpg_demo/chest/forest
+action item.add id=rpg_demo/mushroom count=3
+flag rpg_forest_chest 1
+end
+
+===== SCENARIO mods/rpg_demo_game/scenarios/rpg_demo/events/house_chest.scenario =====
+ptext "В сундуке — старые носки и записка: «Не трогай». Поздно. Под носками — три монеты." key=rpg_demo/chest/house
+action item.add id=money/coin count=3
+flag rpg_house_chest 1
+end
+
+===== SCENARIO mods/rpg_demo_game/scenarios/rpg_demo/events/locked_door.scenario =====
+ptext "Заперто. За дверью кто-то очень старательно делает вид, что его нет." key=rpg_demo/door/locked
+end
+
+===== SCENARIO mods/rpg_demo_game/scenarios/rpg_demo/events/merchant.scenario =====
+text "— О, покупатель! Эликсиры — свежие, почти без осадка. А хлам из леса — неси, всё возьму. Ну, почти всё." key=rpg_demo/merchant/line1
+action trade.open shop=rpg_demo/village_merchant
+end
+
+===== SCENARIO mods/rpg_demo_game/scenarios/rpg_demo/events/pick_branches.scenario =====
+ptext "Охапка сухого хвороста. Торговцу в деревне сгодится — он всё берёт." key=rpg_demo/pickup/branches
+action item.add id=rpg_demo/branches count=2
+
+===== SCENARIO mods/rpg_demo_game/scenarios/rpg_demo/events/pick_mushroom.scenario =====
+ptext "Крепкий лесной гриб. Съешь — и полегчает." key=rpg_demo/pickup/mushroom
+action item.add id=rpg_demo/mushroom
+
+===== SCENARIO mods/rpg_demo_game/scenarios/rpg_demo/events/pick_stones.scenario =====
+ptext "Пара гладких камней. Бесполезных, а значит — на продажу." key=rpg_demo/pickup/stones
+action item.add id=rpg_demo/stones count=2
+
+===== SCENARIO mods/rpg_demo_game/scenarios/rpg_demo/events/slime.scenario =====
+ptext "Слизень перегородил тропу и булькает с вызовом." key=rpg_demo/slime/line1
+action rpg.battle enemies=rpg_slime win_flag=rpg_path_slime
+end
+
+===== SCENARIO mods/rpg_demo_game/scenarios/rpg_demo/events/village_sign.scenario =====
+ptext "«На восток — Серый лес. На запад — тоже лес, но мы туда не ходим»." key=rpg_demo/sign/village
+end
+
+===== SCENARIO mods/rpg_demo_game/scenarios/rpg_demo/events/villager.scenario =====
+text "— Говорят, в лесу слизни. Мелкие, а обидно, когда в сапог заползают." key=rpg_demo/villager/line1
+end
+
+===== SCENARIO mods/rpg_demo_game/scenarios/rpg_demo/events/wolf_boss.scenario =====
+ptext "У пещеры сидит волк. Он оглядывает тебя, как старостину козу." key=rpg_demo/wolf/line1
+text "— Р-р-р." key=rpg_demo/wolf/line2
+action rpg.battle enemies=rpg_wolf,rpg_slime win_flag=rpg_wolf_dead
+end
+
+===== SCENARIO mods/rpg_demo_game/scenarios/rpg_demo/rpg_elder_house_enter.scenario =====
+scene: rpg_elder_house
+priority: 10
+is_one_run: true
+save_allowed: true
+---
+ptext "В доме пахнет травами, воском и немного — старостой." key=rpg_demo/house/enter
+end
+
+===== SCENARIO mods/rpg_demo_game/scenarios/rpg_demo/rpg_forest_enter.scenario =====
+scene: rpg_forest
+priority: 10
+is_one_run: true
+save_allowed: true
+---
+ptext "Серый лес. Здесь тихо так, как бывает тихо только там, где кого-то едят." key=rpg_demo/forest/enter
+end
+
+===== SCENARIO mods/rpg_demo_game/scenarios/rpg_demo/rpg_village_intro.scenario =====
+scene: rpg_village
+priority: 10
+is_one_run: true
+save_allowed: true
+---
+# A new game: the hero joins the party here, the elder's quest starts in his house.
+action party.add id=rpg_hero
+title "Деревня у Серого леса" key=rpg_demo/intro/title
+ptext "Утро. Петухи охрипли ещё до рассвета, а староста уже трижды присылал за тобой мальчишку." key=rpg_demo/intro/line1
+ptext "Ходить — WASD или стрелки. Говорить, открывать, читать — E или F." key=rpg_demo/intro/controls
+end
+</pre>
+</body>
+</html>

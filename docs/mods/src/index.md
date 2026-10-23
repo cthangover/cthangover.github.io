@@ -19,10 +19,7 @@ Step 4 happens in `ModAssemblyLoader.RegisterAssembly` (`Core/Mods/ModAssemblyLo
 | `ScenarioCommandStrategyFactory` | `IScenarioCommandStrategy` implementations, indexed by `Command` name |
 | `SceneEventRegistry` (`Core/Scenes/`) | Classes decorated with `[SceneEvent]` deriving from `ExecutableEvent` |
 | `ItemActionFactory` | `IItemAction` implementations — item on-use behaviours, indexed by ID |
-| `BattleCoreRegistry` | `IBattleCore` implementations — custom battle systems |
-| `RecruitBehaviourRegistry` | `IRecruitBehaviour` behaviours and `IRecruitCondition` recruitment gates |
-| `WingroundListenerRegistry` | `IWingroundListener` implementations receiving winground lifecycle hooks |
-| `ToolFactory` | `IToolProvider` implementations — tools in the main-menu tools dropdown |
+| `ToolFactory` | `IToolProvider` implementations — tools that add launcher buttons to the main menu's tool block |
 | `ToolBoxButtonFactory` | `IToolBoxButton` implementations — toolbox UI buttons |
 | `ModInitializerRegistry` | `IModInitializer` mod entry points |
 | `ModSaveableRegistry` | `IModSaveable` implementations participating in save/load |
@@ -34,7 +31,9 @@ Step 4 happens in `ModAssemblyLoader.RegisterAssembly` (`Core/Mods/ModAssemblyLo
 | `ExtResourceBuilderRegistry` | External-resource builders for `.tscn` construction |
 | `ModManager.RegisterResolversFromAssembly` | `IModAssetResolver` implementations |
 
-Adding a new reflection-based plugin system to the kernel requires exactly one line in this method. Note that `ScriptTypeRegistry` (below) is populated separately — by `ModCompiler` right after each assembly compiles.
+Adding a new reflection-based plugin system to the kernel requires exactly one line in this method. Note that `ScriptTypeRegistry` (below) is populated separately — by `ModRegistry.FinalizeGodotInit`, which calls `ScriptTypeRegistry.RegisterAssembly` right after registering each compiled assembly through `ModAssemblyLoader`.
+
+Subsystems that now live in mods register their own implementations through an `IModInitializer` instead of this fan-out: battle cores and winground listeners (`turn_battle_base`) and recruit behaviours/conditions (`recruiting`). `ModEventBus` typed events with `[EventKey]` can also be declared in any mod — the GDScript bridge reads the attribute at publish time.
 
 ## ScriptTypeRegistry — resolving `.tscn` script paths
 
@@ -178,7 +177,7 @@ namespace Cthangover.MyMod
 | `Cthangover.Core.Utils.GameLogger` | Structured logging: `GameLogger.Log(module, msg, level)` |
 | `Cthangover.Core.Battle.IBattleCore` | Implement to create a battle system |
 | `Cthangover.Core.Actions.IScenarioAction` | Implement to add `action` commands to the DSL: `string Name { get; }` + `void Run(IActionContext context)` |
-| `manifest.json` → `subscriptions` | Hook into scenes — no interface to implement: a C# fragment from `subscriptions/{code}.cs` is injected into a wrapper template's `{{USER_CODE}}` marker (inside generated `public static class SceneBuilderScript { public static void Run(Node root) {...} }`) and invoked via reflection by `SceneSubscriptionRegistry` |
+| `manifest.json` → `ui[]` | Declare panels and overlays in the shell — no interface to implement: the kernel instantiates your `.tscn`, anchors it to a named slot, and (for panels) wires a toolbar toggle button. See [UI Wrappers](wrappers/) |
 | `Cthangover.Core.Mods.IModSettings` | Implement to expose settings in the in-game menu |
 | `Cthangover.Core.Characters.Character` | Character data model — use `Copy()` for battles |
 | `Cthangover.Core.Characters.CharacterAttributes` | Stats container: `Health`, `Point`, `Defence`, `Attack` |

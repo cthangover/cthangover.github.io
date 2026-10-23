@@ -15,7 +15,7 @@ locally-installed mods.
   },
   "mods": [                                                // List of mod entries in this catalog
     {
-      "id": "live2d",                                      // Canonical mod identifier (matches manifest.json id)
+      "id": "live2d_base",                                 // Canonical mod identifier (matches manifest.json id)
       "name": "Live2D Cubism",                             // Fallback display name (used when no locale matches)
       "author": "ct",                                      // Author credit string
       "version": "1.0.0",                                  // Latest release version (semver)
@@ -32,16 +32,16 @@ locally-installed mods.
           "description": "Live2D Cubism C# рантайм: загрузка моделей, отрисовка, физика, анимации, эффекты"
         }
       ],
-      "category": "library",                               // Category slug: story, characters, gameplay, visual, audio, ui, locale, library, overhaul, other
+      "category": "library",                               // Category slug or comma-separated combination (e.g. "library, gameplay"): story, characters, gameplay, visual, audio, ui, locale, library, engine, overhaul, tools, editor, debug, other
       "tags": ["live2d", "ui", "graphics", "2d"],          // Search/filter tags
-      "icon_url": "https://github.com/cthangover/mods-live2d/blob/master/mod.png?raw=true", // Full URL to preview icon (PNG or JPEG)
-      "depends": ["core>=1"],                              // Versioned dependency strings
+      "icon_url": "https://git.cthangover.ru/cthangover/mod_live2d/raw/branch/master/mod.png", // Full URL to preview icon (PNG or JPEG)
+      "depends": ["cthangover_game>=1"],                              // Versioned dependency strings
       "conflicts_with": [],                                // Mutually exclusive mod IDs
       "downloads": [                                       // Version-specific download entries with mirrors
         {
           "version": "1.0.0",                              // Semver version of this download entry
           "urls": [                                        // Mirror URLs tried in order
-            "https://github.com/cthangover/mods-live2d/releases/download/mod/live2d-v1.0.0.zip"
+            "https://git.cthangover.ru/cthangover/mod_live2d/releases/download/mod/live2d-v1.0.0.zip"
           ],
           "size_bytes": 1831899,                           // File size of the zip for progress display
           "archive_sha256": "075a3f582919b26b39afc1fd66d1e4a91cab0e521d6ca36f746c248e1ee82c9a", // SHA256 of the .zip file (integrity check after download)
@@ -75,10 +75,10 @@ locally-installed mods.
 | `version` | string | Semver version of the latest release (e.g. "1.0.0") |
 | `description` | string | Fallback short description (used when no `locale` entry matches the player's language) |
 | `locale` | object[] | Localized name/description entries for different languages (see below) |
-| `category` | string | Category slug: `story`, `characters`, `gameplay`, `visual`, `audio`, `ui`, `locale`, `library`, `overhaul`, `other` |
+| `category` | string | Category slug or comma-separated combination of slugs (e.g. `"library, gameplay"`): `story`, `characters`, `gameplay`, `visual`, `audio`, `ui`, `locale`, `library`, `engine`, `overhaul`, `tools`, `editor`, `debug`, `other` |
 | `tags` | string[] | Search/filter tags |
 | `icon_url` | string | Full URL to preview icon (PNG or JPEG) |
-| `depends` | string[] | Versioned dependency strings (e.g. `"core>=1"`) |
+| `depends` | string[] | Versioned dependency strings (e.g. `"cthangover_game>=1"`) |
 | `conflicts_with` | string[] | Mutually exclusive mod IDs |
 | `downloads` | object[] | Version-specific download entries with mirrors |
 | `downloads[].version` | string | Semver version of this download entry |
@@ -90,6 +90,8 @@ locally-installed mods.
 | `status` | string | `stable`, `beta`, `deprecated`, or `archived` |
 | `min_game_version` | string | Minimum compatible game version (semver) |
 | `max_game_version` | string | Maximum game version, or null |
+| `source_urls` | string[] | *Written by the game, not by catalog authors*: filled in during merge with every catalog URL that published the entry, and persisted in `user://catalog_cache.json` |
+| `variant_conflict` | bool | *Written by the game*: set when two catalogs publish the same id/version/title with different content hashes — the entries are kept separate instead of merged so the UI can warn about a likely modified build |
 
 ### `locale[]` sub-fields
 
@@ -158,6 +160,10 @@ download URL, category, tags, and changelog, then generates:
 
 - A `.zip` archive of the mod (if it was a folder)
 - A `.json` catalog entry file alongside the archive
+
+Categories are pre-checked from the mod's `manifest.json` `category`
+field (falling back to `other` when absent); several categories can be
+toggled at once.
 
 Both files go into the mods root directory. The JSON snippet can be
 copied to clipboard and pasted into the catalog JSON you host online.

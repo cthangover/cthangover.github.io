@@ -19,7 +19,7 @@ shaders/
 
 ## Real example shaders
 
-From `mods/interface/shaders/`:
+From `mods/ui_base/shaders/`:
 
 | Shader | Purpose |
 |---|---|
@@ -74,11 +74,11 @@ uniform — adjusting it from the Godot inspector updates the effect live.
 
 ## Shipped core shaders
 
-Besides the interface shaders listed above, the `core` mod ships its own shader
-family in `mods/core/shaders/`: a set of `2d_cubism_*.gdshader` files
-(`mask`, `mask_mul`, `mask_add`, `mask_mix` — each also in an `_inv` inverted
-variant — plus `norm_mul` / `norm_add` / `norm_mix`) used for Cubism-style
-sprite masking and normal blending. The folder also contains
+Besides the interface shaders listed above, the `cthangover_game` mod ships its own shader
+family in `mods/cthangover_game/shaders/`: a set of `2d_cubism_*.gdshader` files
+(`mask`, plus the blend modes `mask_mul` / `mask_add` / `mask_mix`, each blend mode
+also in an `_inv` inverted variant, and `norm_mul` / `norm_add` / `norm_mix`)
+used for Cubism-style sprite masking and normal blending. The folder also contains
 `SHADER_CONTRACT.md`, which documents the conventions these shaders follow.
 
 ## Minimal custom shader example

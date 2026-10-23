@@ -44,6 +44,7 @@ settings/volume = Volume
 | `items/` | Item names and descriptions |
 | `rooms/` | Room/scene interaction prompts |
 | `quest/` | Quest names and status descriptions |
+| `quest/.../tag/` | Quest tag stamps in the journal (`{quest Name}/tag/{tag}`) |
 | `ui/` | Interface labels (menus, battle UI, cooking) |
 | `settings/` | Settings screen labels |
 | `prolog/` | Prologue narrative text |
@@ -52,7 +53,7 @@ settings/volume = Volume
 
 ## Real examples
 
-From `mods/core/locale/en.properties`:
+From `mods/cthangover_game/locale/en.properties`:
 
 ```properties
 # Character names
@@ -103,6 +104,24 @@ These are referenced in `.scenario` files via the `key=` parameter:
 ```scenario
 text "- Dear lady!" key=meeting_murakami/after_wolf/greeting first=marao/think
 ```
+
+## Checking keys and encodings
+
+The developer mod `locale_atlas` maps every key of every installed mod per
+language and lists only the keys that need attention: missing in some
+language, empty, referenced but never declared (scenario `key=`, C#
+`Translate`/`Tr`, JSON text fields, `"@key"` in collections, `.tscn` texts),
+declared twice in one mod, plus collection texts without a `locale` entry.
+It also checks the raw bytes of each locale file: valid UTF-8 (no UTF-16,
+cp1251 bytes or U+FFFD), no control characters, no mojibake, BOM and line
+endings.
+
+```bash
+godot --path . -- --locale-atlas --locale-out=res://tests/artifacts/locale_atlas
+```
+
+The report (`report.md`, `report.json`) names the file and line to add for
+every gap. A `select ""` with no prompt is written without `key=`.
 
 ## Supported languages
 
