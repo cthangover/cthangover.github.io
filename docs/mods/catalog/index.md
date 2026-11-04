@@ -64,6 +64,8 @@ locally-installed mods.
 | `catalog.version` | int | Schema version of this catalog file |
 | `catalog.updated_at` | string | ISO-8601 timestamp of last server update |
 | `mods` | array | List of mod entries |
+| `collections` | array | Games and toolsets in the same envelope; see [Collections](../collections/) |
+| `catalog.links_expire_at` | string | Optional private keyserver link-expiry metadata; archive access is granted by the issued URLs |
 
 ### Per-mod entry
 
@@ -90,7 +92,7 @@ locally-installed mods.
 | `status` | string | `stable`, `beta`, `deprecated`, or `archived` |
 | `min_game_version` | string | Minimum compatible game version (semver) |
 | `max_game_version` | string | Maximum game version, or null |
-| `source_urls` | string[] | *Written by the game, not by catalog authors*: filled in during merge with every catalog URL that published the entry, and persisted in `user://catalog_cache.json` |
+| `source_urls` | string[] | Written during merge with source provenance; public sources can be cached on disk, private sources stay in memory |
 | `variant_conflict` | bool | *Written by the game*: set when two catalogs publish the same id/version/title with different content hashes — the entries are kept separate instead of merged so the UI can warn about a likely modified build |
 
 ### `locale[]` sub-fields
@@ -146,11 +148,23 @@ the entry with the highest `version` wins for metadata (name, description,
 category, etc.), while `downloads` arrays from all sources are merged:
 same-version entries have their `urls` lists combined (deduplicated).
 
-The game caches fetched catalogs to `user://catalog_cache.json`.
-Open the Network tab in the mods menu (Mods > Network) and press
-**Refresh** to clear the cache and re-fetch.
+The game caches public catalog entries and collections to `user://catalog_cache.json`. In **Mods & Collections**, **Refresh catalog** re-fetches enabled sources. Private responses and temporary download URLs stay in memory; they are excluded before public-source cache merging.
 
-Architecture note: the catalog system provides the *data source* for an HTTP catalog scanner. For details on how a custom scanner turns catalog JSON into `DiscoveredModEntry` items that the kernel can load, see [Resources — Scanners](../resources/scanners/).
+Architecture note: the catalog system provides the *data source* for an HTTP catalog scanner. For details on how a custom scanner turns catalog JSON into `DiscoveredModEntry` items that the kernel can load, see [Resources — Scanners](../../resources/scanners/).
+
+## Player-managed catalog servers
+
+**Catalogs (N)** in the Mods & Collections header opens the source list. Add/edit the name, server address, enabled switch and optional access key; save applies the list and refreshes immediately. A bare origin such as `127.0.0.1:18080` becomes `http://127.0.0.1:18080/v1/catalog`; non-loopback bare hosts default to HTTPS. Full catalog paths are kept. URLs cannot include user credentials, a query or a fragment.
+
+Before the first edit, the list is seeded from `catalog_urls` and `catalog_token_files` in `config/mod_config.json`. Afterwards `user://catalog_servers.json` is authoritative, even if empty. Its entries have `id` (32 hexadecimal GUID characters), `name`, `url`, `enabled`, `token_file`. Disabled sources remain saved but are not fetched. Source filters in the mods gallery combine with search, category and status filters; **Local only** selects entries without a catalog source.
+
+Private sources use a separate bearer file, not a token embedded in a URL or public manifest. Keys must be exactly 1024 Base64URL characters after trimming. The endpoint must be HTTPS or literal loopback HTTP. Requests send `Authorization: Bearer …` to the exact catalog URL with redirects disabled. The archive downloader does not copy that header to download URLs.
+
+The manager stores new keys as plain-text files in `user://catalog_keys/`; the source list contains paths only. A blank key on an unchanged URL keeps the old key. Changing the URL requires explicit key entry; **Remove saved key** makes it public. Removing/replacing a source deletes only key files owned by this store, leaving externally supplied token files intact. Writes publish the key before the source list atomically.
+
+Before installation, when private sources are configured, the downloader refreshes the catalog and selects the current source/version entry. A successful empty response replaces old permissions. Private entries are never persisted to the catalog cache; a total failed refresh with private sources configured clears the in-memory access snapshot. Partial success publishes the successful sources and reports errors for the others.
+
+Implementation: `Core/Mods/CatalogServerStore.cs`, `Core/Mods/CatalogRequest.cs`, `Core/Mods/CatalogService.cs`, `Core/Mods/ModDownloader.cs` and `mods/mod_manager/src/`.
 
 ## Exporting a mod to the catalog
 
@@ -173,9 +187,37 @@ Ignore patterns for the SHA256 computation can be customized in
 excludes all dot-prefixed entries; the shipped `config/mod_config.json`
 adds `"bin"` and `"obj"`.
 
+## Publishing all mods and the game: `sync_mods`
+
+`sync_mods.bat` / `sync_mods.sh` (`sync_mods.py`) in the repository root is the one script for a release. It
+builds every mod (below), reads both hosts (git.cthangover.ru and github.com, owner and token from the `origin`
+and `github` remotes), prints every difference — missing `mod_<id>` repositories, unpushed commits, missing or
+differing release archives, release texts, catalog entries, the game's packages — asks once and then fixes
+them: creates repositories (GitHub allows about 8 at a time, so it creates them in batches and waits half an
+hour between them), pushes fast-forward only, keeps one release per version (an existing one gets its archive
+and text replaced, copies are removed, a later version on a host is never overwritten), and pushes the
+catalog to both `cthangover/catalog` repositories. The game's packages from `build_release` go to the release
+`v<config/version>` of `cthangover/cthangover`. Running it again is safe; the rules are in the script's header.
+
+### Building only
+
+`build_mod_releases.py` (used by `sync_mods`, also runnable alone) does the same as **Export to Catalog** for every folder mod at once and writes to `releases/`:
+
+- `mod_<id>-v<version>.zip` — the mod's content files at the archive root, hidden entries (`.git/`, …) left out;
+  entries are sorted and dated 1980-01-01, so an unchanged mod rebuilds with the same `archive_sha256`;
+- `mod_<id>-v<version>.json` — its catalog entry;
+- `catalog.json` — the whole catalog; every download lists both mirrors (the Gitea release, then the GitHub
+  release; the game tries them in order), so the same file goes into both catalog repositories. The icon is
+  the Gitea raw `mod.jpg`.
+
+Entries come from `manifest.json` (name, author, version, description, category, depends, conflicts_with) and
+the mod's `mod_<id>_name` / `mod_<id>_desc` keys in every language; tags are the id's words plus the categories;
+`install_sha256` uses `catalog_ignore_patterns` from `config/mod_config.json`. Options: `--only=a,b`,
+`--skip=a,b`, `--hosts=gitea,github` (mirrors and their order), `--out=<dir>`.
+
 ## Mod status display
 
-In the Network tab, each remote mod shows one of four statuses:
+The unified Mods view combines installed and remote state, including disabled and older-version choices. The remote comparison uses:
 
 | Status | Meaning |
 |---|---|

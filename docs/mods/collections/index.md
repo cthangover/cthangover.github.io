@@ -487,14 +487,18 @@ picker.
 - `collections/cthangover/` — the main game, a visual novel: story, the 2D
   engine, characters, quests, items, battles with an optional second battle
   core, Live2D and tools, each as its own mechanic.
-- `collections/rpg_demo/` — an RPG Maker style game on the same engine mods:
-  its content (`rpg_demo_game`), pixel art (`village_pack`), the tile world
-  (`rpg`), the FF battle core with the card core as an option, and the map
-  editor (`rpg_editor`) as an optional tool.
-- `collections/novel_editor/` — a "game" whose entry scene
-  is the editor hub instead of a story scene.
+- `collections/rpg_plus/` — an RPG Maker style game on the same engine mods:
+  its story and world (`rpg_plus_game`: prologue, village, forest, shrine, desert),
+  reusable art (`village_pack`),
+  classic rules as data (`classic_rpg_pack`), the stats mods (`stats_base`,
+  `stat_checks`, `equipment`, `battle_formulas`), the FF battle core with the
+  card core as an option, and as optional tools the map editor (`rpg_editor`)
+  and the Data Editor with the item and character editors (`schema_tools`,
+  `items_editor`, `characters_editor`).
 - `collections/dev_tools/` — the developer toolset to add to any game: the
-  editors (`editor_tools`), the in-game scenario studio (`scenario_studio`,
+  individually selectable editors (shared components in `tools_base`; legacy package `editor_tools`), the in-game scenario studio (`scenario_studio`,
   opened by the **Studio** button on the game's toolbar), validators and the
   mod manager. Add it to a game in the collection editor and enter the game
   again — the mod set switches without a restart.
+
+- `collections/junior_reaper_paper_grief/` — a separate Russian-first investigation: Bureau offices, isometric city gates/market/mill yard, mouse-driven mill and home interiors, clue inventory, quest stages and ambient NPC conversations. It uses map-owned events and `npc_barks_base`, and includes the authoring editors and studio. Entry scene: `jrp_arrival`; projection: `isometric`. Full story translations are not implemented yet.

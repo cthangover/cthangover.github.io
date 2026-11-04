@@ -7,7 +7,7 @@
 <body>
 <pre>
 cthangover - documentation
-Plain-text dump for AI agents: 60 markdown documents.
+Plain-text dump for AI agents: 74 markdown documents.
 
 ===== DOCUMENTATION =====
 
@@ -28,12 +28,13 @@ scenario DSL (`dialog_base`), characters, items, quests, skills, the world map, 
 platform with its cores (`card_battle`, `ff_battle`), the tile world (`rpg`), the UI toolkit and the main menu.
 
 A **game** is a collection: the game's own content mod plus the mechanics it chooses. The project
-ships three of them, all running on the same engine mods and switching inside one process:
+ships four of them, all running on the same engine mods and switching inside one process:
 
 | Game | Content | Built from |
 |---|---|---|
 | `cthangover` | `cthangover_game`, `cthangover_murakami` | a visual novel with characters, quests, items, cooking and turn-based battles |
-| `rpg_demo` | `rpg_demo_game`, `village_pack` | an RPG Maker style game: tile maps walked with WASD, events on E/F, battles, the map editor |
+| `rpg_plus` | `rpg_plus_game`, `village_pack`, `classic_rpg_pack` | an RPG Maker style game: a novel prologue picks the class, tile maps walked with WASD, events on E/F, stats, checks and gear, formula skills, the map editor and the Data Editor |
+| `junior_reaper_paper_grief` | `junior_reaper_paper_grief` | an isometric investigation with mouse-driven interiors, map-owned events and concurrent NPC speech |
 | `novel_template` | `my_novel_game`, `town_pack` | the smallest playable novel, a starting point for a new story |
 
 | Layer | Location | Responsibility |
@@ -50,7 +51,7 @@ Configs — manifest.json.
 
 | Topic | Description |
 |---|---|
-| Avatars | Character portrait images |
+| Avatars | Dialog portraits and logical avatars with PNG layers |
 | Backgrounds | Scene background images and depth maps |
 | Characters | Character JSON definitions and attributes |
 | Interactive Objects | Clickable scene objects with hit areas and actions |
@@ -68,7 +69,7 @@ Configs — manifest.json.
 | Game Config | Default game settings |
 | Mod Config | Mod system cache and file discovery |
 | Catalog &amp; Network | Online mod catalog schema, merging, and export |
-| Collections | Curated mod sets implementing a mechanic, shown as a dependency graph |
+| Collections | Games and reusable toolsets, their mechanics and dependency graph |
 
 ## Scenarios &amp; DSL
 
@@ -78,13 +79,21 @@ Configs — manifest.json.
 | Runtime TSCN Scenes | Loading Godot `.tscn` scene files at runtime from mods |
 | Scenarios | `.scenario` format and metadata |
 | Scenario Actions | `action` command reference |
-| DSL Commands | Full command reference (30 commands) |
-| Conditions | Quest condition expression language |
+| DSL Commands | Built-in and mod-provided command reference |
+| Conditions | Shared condition language: flags, quests and optional mechanics |
+| Expressions | Numeric assignments, random functions and strict dialog variables |
+| Background scenarios | Concurrent NPC speech, spatial conditions, cue reactions, patches and debugging |
 
 ## Gameplay systems
 
 | Topic | Description |
 |---|---|
+| RPG world | Maps, objects, placements, projections, party followers and optional battles |
+| Map events | Invisible interaction rectangles, inline scripts and scoped flags |
+| Stats and equipment | Classes, checks, gear, formulas and the character sheet |
+| Crafting | Data-driven stations, recipes and material exchange |
+| Trading | Shops, currencies, buying and selling |
+| Effects | Scene effects, atmosphere emitters and painted map masks |
 | Battle | Battle system architecture and custom battle mods |
 | Quests | Quest definitions and progression |
 | Status Effects | Buff, debuff, and stun effect definitions |
@@ -105,6 +114,9 @@ Configs — manifest.json.
 
 | Topic | Description |
 |---|---|
+| Launching and testing | Game selection, developer flags, mod tests and diagnostic atlases |
+| Integrations and reload | Conditional glue mods, assembly consumers and hot reload |
+| Bundled modules | Installed subsystems, mechanics, tools, content and their references |
 | Source Code (C#) | C# in mods — Roslyn compilation, interfaces |
 | GDScript in Mods | Scenario actions, conditions, battle, items, lifecycle |
 | Developer Tools | Custom editor windows and toolbar integration |
@@ -125,6 +137,8 @@ Configs — manifest.json.
 
 ===== DOC docs/mods/avatars/index.md: Avatars =====
 Character portrait images displayed during dialogue scenes, positioned via `first=` (left, player) and `second=` (right, NPC) parameters.
+
+For renderer-independent preset groups and optional transparent PNG composition, see Logical avatars and PNG layers. That API is separate from `first=`/`second=` portraits.
 
 ## Directory structure
 
@@ -165,7 +179,7 @@ text "- What are you doing here alone?" key=murakami/alone first=marao/think
 
 1. Create `avatars/{character_name}/` in your mod
 2. Add `.png` files for each expression you need
-3. The character's JSON definition sets `"Image"` to the base path:
+3. A character's JSON `"Image"` is its character-panel artwork, separate from the dialog portrait lookup:
 
 ```jsonc
 {
@@ -198,9 +212,81 @@ Note that the on-disk set and the compile-time catalog may differ slightly: `Ava
 ## Format requirements
 
 - **Format:** PNG with transparency
-- **Resolution:** 512×512 recommended, but any square power-of-two works
+- **Resolution:** Choose dimensions suitable for the dialog layout; rectangular portraits are supported and no power-of-two or square restriction is imposed
 - **Naming:** lowercase, underscores for multi-word expressions (`fear_1`, `very_happy`)
 - The extension is omitted in scenario files — the engine resolves `{character}/{expression}` to `avatars/{character}/{expression}.png`
+
+===== DOC docs/mods/avatars/layers.md: Logical avatars and PNG layers =====
+`avatar_base` provides renderer-independent avatar entities, preset groups and independent instance state. `avatar_layers` implements the `layers` renderer with transparent PNGs. These are optional C# APIs: existing `first=`/`second=` dialog portraits continue to use image paths. There is no automatic dialog integration, scenario command, avatar editor or automatic save registration.
+
+## Definition and images
+
+Depend on `avatar_layers>=1`. Put images in `avatar_layers/&lt;prefix>/` and an ordinary `Kind: avatar` entity in your mod, for example `avatars/hero.json`:
+
+```json
+{
+  "Kind": "avatar",
+  "Items": [{
+    "Id": "my_game/hero", "Renderer": "layers",
+    "BaseValues": {
+      "canvas": {"Width": 512, "Height": 1024},
+      "layers/body": {"Image": "hero/body.png", "Order": 0}
+    },
+    "Groups": {
+      "eyes": {
+        "Default": "open", "Priority": 100,
+        "Presets": {
+          "open": {"Values": {"layers/eyes": {"Image": "hero/eyes_open.png", "Order": 10}}},
+          "closed": {"Values": {"layers/eyes": {"Image": "hero/eyes_closed.png", "Order": 10}}}
+        }
+      }
+    }
+  }]
+}
+```
+
+Image paths include `.png` and are relative to `avatar_layers/`, resolved through mod providers, including ZIPs. They do not go through the dialog portrait resolver. Use a content-specific prefix.
+
+## Preset composition
+
+One preset is selected per group. Start from `BaseValues`, then apply selected groups by ascending `Priority`, then ordinal group name. Later values replace the whole binding value; they do not deep-merge its object. Group and preset names are case-sensitive and author-defined. An empty preset contributes nothing; `auto` is not a reserved animation mode.
+
+`ApplyPresets` validates every supplied pair before changing any selection. Unknown names throw; unmentioned groups keep their choices. Each instance snapshots its definition and has its own selections. `Resolve()` returns a complete target: bindings omitted from the next target must disappear rather than retain old values.
+
+## Layer fields
+
+| Binding or field | Meaning |
+|---|---|
+| `canvas` | Positive finite `Width` and `Height`; defaults 512×1024 |
+| `layers/&lt;id>` string | PNG path filling the canvas, order 0 |
+| `layers/&lt;id>` object | Settings below |
+| `layers/&lt;id>` null | No layer; avatar binding null is a literal target, distinct from entity patch null |
+| `Image` | Required for a visible layer |
+| `Order` | Ascending drawing order; ties use ordinal binding ID |
+| `X`, `Y`, `Width`, `Height` | Canvas pixels; zero dimensions use the corresponding canvas dimension |
+| `Visible`, `Opacity` | Default true and 1; alpha range 0–1 |
+| `FlipH`, `FlipV` | Mirror the image in its rectangle |
+
+Unknown bindings/properties and invalid bounds are rejected. Positive transition durations are accepted but PNG changes snap immediately. Blinking, skeletal deformation, clipping masks and per-layer animation are not implemented.
+
+## Hosting and saving
+
+```csharp
+IAvatar avatar = AvatarCatalog.Create("my_game/hero");
+IAvatarRenderer renderer = AvatarRenderers.Create(avatar);
+host.AddChild(renderer.View);
+avatar.ApplyPresets(new Dictionary&lt;string, string> { ["eyes"] = "closed" });
+renderer.Apply(avatar.Resolve(), transitionSeconds: 0.15);
+AvatarState state = avatar.CaptureState();
+// Before freeing the host or unloading the renderer mod:
+renderer.Dispose();
+```
+
+Use `Cthangover.Mods.Avatars` for the base APIs. The owning subsystem stores `AvatarState` in its own save blob and restores it with `AvatarCatalog.Create(state.AvatarId, state)`. Missing groups use defaults; mismatched avatar IDs and unknown selections are rejected. Migrate removed presets explicitly.
+
+Run visual operations on the Godot main thread. The renderer owns its nodes and loaded textures and must be disposed before its host. Failed visual validation leaves the previous rendered target intact; the owner must still handle any logical selection change it already made. Factories implementing `IAvatarRendererFactory` are discovered through the mod type-consumer pipeline and removed on unload.
+
+Implementation and full contracts: `mods/avatar_base/src/`, `mods/avatar_layers/src/`; the `avatar_layers__contracts` suite verifies rendered colours and resource ownership.
 
 ===== DOC docs/mods/backgrounds/index.md: Backgrounds =====
 Scene background images with optional depth maps for parallax effects and dynamic lighting.
@@ -583,6 +669,8 @@ locally-installed mods.
 | `catalog.version` | int | Schema version of this catalog file |
 | `catalog.updated_at` | string | ISO-8601 timestamp of last server update |
 | `mods` | array | List of mod entries |
+| `collections` | array | Games and toolsets in the same envelope; see Collections |
+| `catalog.links_expire_at` | string | Optional private keyserver link-expiry metadata; archive access is granted by the issued URLs |
 
 ### Per-mod entry
 
@@ -609,7 +697,7 @@ locally-installed mods.
 | `status` | string | `stable`, `beta`, `deprecated`, or `archived` |
 | `min_game_version` | string | Minimum compatible game version (semver) |
 | `max_game_version` | string | Maximum game version, or null |
-| `source_urls` | string[] | *Written by the game, not by catalog authors*: filled in during merge with every catalog URL that published the entry, and persisted in `user://catalog_cache.json` |
+| `source_urls` | string[] | Written during merge with source provenance; public sources can be cached on disk, private sources stay in memory |
 | `variant_conflict` | bool | *Written by the game*: set when two catalogs publish the same id/version/title with different content hashes — the entries are kept separate instead of merged so the UI can warn about a likely modified build |
 
 ### `locale[]` sub-fields
@@ -665,11 +753,23 @@ the entry with the highest `version` wins for metadata (name, description,
 category, etc.), while `downloads` arrays from all sources are merged:
 same-version entries have their `urls` lists combined (deduplicated).
 
-The game caches fetched catalogs to `user://catalog_cache.json`.
-Open the Network tab in the mods menu (Mods > Network) and press
-**Refresh** to clear the cache and re-fetch.
+The game caches public catalog entries and collections to `user://catalog_cache.json`. In **Mods &amp; Collections**, **Refresh catalog** re-fetches enabled sources. Private responses and temporary download URLs stay in memory; they are excluded before public-source cache merging.
 
 Architecture note: the catalog system provides the *data source* for an HTTP catalog scanner. For details on how a custom scanner turns catalog JSON into `DiscoveredModEntry` items that the kernel can load, see Resources — Scanners.
+
+## Player-managed catalog servers
+
+**Catalogs (N)** in the Mods &amp; Collections header opens the source list. Add/edit the name, server address, enabled switch and optional access key; save applies the list and refreshes immediately. A bare origin such as `127.0.0.1:18080` becomes `http://127.0.0.1:18080/v1/catalog`; non-loopback bare hosts default to HTTPS. Full catalog paths are kept. URLs cannot include user credentials, a query or a fragment.
+
+Before the first edit, the list is seeded from `catalog_urls` and `catalog_token_files` in `config/mod_config.json`. Afterwards `user://catalog_servers.json` is authoritative, even if empty. Its entries have `id` (32 hexadecimal GUID characters), `name`, `url`, `enabled`, `token_file`. Disabled sources remain saved but are not fetched. Source filters in the mods gallery combine with search, category and status filters; **Local only** selects entries without a catalog source.
+
+Private sources use a separate bearer file, not a token embedded in a URL or public manifest. Keys must be exactly 1024 Base64URL characters after trimming. The endpoint must be HTTPS or literal loopback HTTP. Requests send `Authorization: Bearer …` to the exact catalog URL with redirects disabled. The archive downloader does not copy that header to download URLs.
+
+The manager stores new keys as plain-text files in `user://catalog_keys/`; the source list contains paths only. A blank key on an unchanged URL keeps the old key. Changing the URL requires explicit key entry; **Remove saved key** makes it public. Removing/replacing a source deletes only key files owned by this store, leaving externally supplied token files intact. Writes publish the key before the source list atomically.
+
+Before installation, when private sources are configured, the downloader refreshes the catalog and selects the current source/version entry. A successful empty response replaces old permissions. Private entries are never persisted to the catalog cache; a total failed refresh with private sources configured clears the in-memory access snapshot. Partial success publishes the successful sources and reports errors for the others.
+
+Implementation: `Core/Mods/CatalogServerStore.cs`, `Core/Mods/CatalogRequest.cs`, `Core/Mods/CatalogService.cs`, `Core/Mods/ModDownloader.cs` and `mods/mod_manager/src/`.
 
 ## Exporting a mod to the catalog
 
@@ -692,9 +792,37 @@ Ignore patterns for the SHA256 computation can be customized in
 excludes all dot-prefixed entries; the shipped `config/mod_config.json`
 adds `"bin"` and `"obj"`.
 
+## Publishing all mods and the game: `sync_mods`
+
+`sync_mods.bat` / `sync_mods.sh` (`sync_mods.py`) in the repository root is the one script for a release. It
+builds every mod (below), reads both hosts (git.cthangover.ru and github.com, owner and token from the `origin`
+and `github` remotes), prints every difference — missing `mod_&lt;id>` repositories, unpushed commits, missing or
+differing release archives, release texts, catalog entries, the game's packages — asks once and then fixes
+them: creates repositories (GitHub allows about 8 at a time, so it creates them in batches and waits half an
+hour between them), pushes fast-forward only, keeps one release per version (an existing one gets its archive
+and text replaced, copies are removed, a later version on a host is never overwritten), and pushes the
+catalog to both `cthangover/catalog` repositories. The game's packages from `build_release` go to the release
+`v&lt;config/version>` of `cthangover/cthangover`. Running it again is safe; the rules are in the script's header.
+
+### Building only
+
+`build_mod_releases.py` (used by `sync_mods`, also runnable alone) does the same as **Export to Catalog** for every folder mod at once and writes to `releases/`:
+
+- `mod_&lt;id>-v&lt;version>.zip` — the mod's content files at the archive root, hidden entries (`.git/`, …) left out;
+  entries are sorted and dated 1980-01-01, so an unchanged mod rebuilds with the same `archive_sha256`;
+- `mod_&lt;id>-v&lt;version>.json` — its catalog entry;
+- `catalog.json` — the whole catalog; every download lists both mirrors (the Gitea release, then the GitHub
+  release; the game tries them in order), so the same file goes into both catalog repositories. The icon is
+  the Gitea raw `mod.jpg`.
+
+Entries come from `manifest.json` (name, author, version, description, category, depends, conflicts_with) and
+the mod's `mod_&lt;id>_name` / `mod_&lt;id>_desc` keys in every language; tags are the id's words plus the categories;
+`install_sha256` uses `catalog_ignore_patterns` from `config/mod_config.json`. Options: `--only=a,b`,
+`--skip=a,b`, `--hosts=gitea,github` (mirrors and their order), `--out=&lt;dir>`.
+
 ## Mod status display
 
-In the Network tab, each remote mod shows one of four statuses:
+The unified Mods view combines installed and remote state, including disabled and older-version choices. The remote comparison uses:
 
 | Status | Meaning |
 |---|---|
@@ -826,6 +954,14 @@ Be honest with yourself about what this gives you:
   are inert data unless your own mod code consumes them. They are *not* typed
   attributes and take no part in battle math, hunger, or recruiting unless you
   implement that logic yourself (e.g. in a scenario action or behaviour class).
+
+### `Charset` (RPG maps)
+
+A character has no map look of its own. The RPG map editor puts a character on a map with the
+charset (a 3×4 frame sheet in `charsets/`) named by the optional `"Charset"` key, e.g.
+`"Charset": "village/slime"`; without it, a charset with the portrait's path
+(`characters/village/slime` → `village/slime`) is used when one exists. The **Characters** editor
+(`characters_editor`, see Developer Tools) has a field for it.
 
 ## Real examples
 
@@ -1555,17 +1691,21 @@ picker.
 - `collections/cthangover/` — the main game, a visual novel: story, the 2D
   engine, characters, quests, items, battles with an optional second battle
   core, Live2D and tools, each as its own mechanic.
-- `collections/rpg_demo/` — an RPG Maker style game on the same engine mods:
-  its content (`rpg_demo_game`), pixel art (`village_pack`), the tile world
-  (`rpg`), the FF battle core with the card core as an option, and the map
-  editor (`rpg_editor`) as an optional tool.
-- `collections/novel_editor/` — a "game" whose entry scene
-  is the editor hub instead of a story scene.
+- `collections/rpg_plus/` — an RPG Maker style game on the same engine mods:
+  its story and world (`rpg_plus_game`: prologue, village, forest, shrine, desert),
+  reusable art (`village_pack`),
+  classic rules as data (`classic_rpg_pack`), the stats mods (`stats_base`,
+  `stat_checks`, `equipment`, `battle_formulas`), the FF battle core with the
+  card core as an option, and as optional tools the map editor (`rpg_editor`)
+  and the Data Editor with the item and character editors (`schema_tools`,
+  `items_editor`, `characters_editor`).
 - `collections/dev_tools/` — the developer toolset to add to any game: the
-  editors (`editor_tools`), the in-game scenario studio (`scenario_studio`,
+  individually selectable editors (shared components in `tools_base`; legacy package `editor_tools`), the in-game scenario studio (`scenario_studio`,
   opened by the **Studio** button on the game's toolbar), validators and the
   mod manager. Add it to a game in the collection editor and enter the game
   again — the mod set switches without a restart.
+
+- `collections/junior_reaper_paper_grief/` — a separate Russian-first investigation: Bureau offices, isometric city gates/market/mill yard, mouse-driven mill and home interiors, clue inventory, quest stages and ambient NPC conversations. It uses map-owned events and `npc_barks_base`, and includes the authoring editors and studio. Entry scene: `jrp_arrival`; projection: `isometric`. Full story translations are not implemented yet.
 
 ===== DOC docs/mods/configs/game_config.md: Game Config — game_config.json =====
 Default game configuration loaded from `config/game_config.json` at startup. Defines audio, display, language, and logging settings.
@@ -1596,10 +1736,10 @@ config/
   "display": {
     "window_mode": 3,             // 0=Windowed, 1=Min, 2=Max, 3=Fullscreen, 4=Exclusive
     "resolution_width": 1920,     // Width in pixels
-    "resolution_height": 1080,    // Height in pixels
+    "resolution_height": 1024,    // Height in pixels
     "current_screen": 0,          // Monitor index (0-based)
     "vsync_enabled": false,       // Vertical sync
-    "scale": 1                    // UI window scale factor
+    "max_fps": 0                  // Frame cap; 0 is unlimited
   },
   // Logging configuration
   "logging": {
@@ -1627,11 +1767,13 @@ config/
 | Field | Type | Values | Description |
 |---|---|---|---|
 | `window_mode` | int | 0=Windowed, 1=Min, 2=Max, 3=Fullscreen, 4=Exclusive | Window display mode (Godot `DisplayServer.WindowMode`) |
-| `resolution_width` | int | pixels | Target screen width |
-| `resolution_height` | int | pixels | Target screen height |
+| `resolution_width` | int | pixels | Window width; fullscreen uses the monitor resolution |
+| `resolution_height` | int | pixels | Window height; fullscreen uses the monitor resolution |
 | `current_screen` | int | 0-indexed | Monitor/display index |
 | `vsync_enabled` | bool | true/false | Vertical sync |
-| `scale` | int | multiplier | UI/window scaling factor |
+| `max_fps` | int | 0 or frame cap | 0 means unlimited |
+
+The shipped config uses a 1920×1024 window size; `DisplaySection` code defaults are 1920×1080. The base viewport is 1920×1024 with `canvas_items` stretch. The Display tab exposes window mode, monitor, window size, V-Sync and frame cap; `scale` is not a current field. Windowed sizes are centred on the selected monitor.
 
 ## `language` section
 
@@ -1716,7 +1858,7 @@ Every mod needs a manifest and optionally a properties file. These define the mo
 {
   // Canonical mod identifier (falls back to folder name if omitted)
   "id": "my_mod",
-  // Human-readable name shown in the mod menu (required)
+  // Human-readable name shown in the mod menu
   "name": "MyMod",
   // Semver version — used for saves and deduplication
   "version": "1.0.0",
@@ -1752,11 +1894,15 @@ Every mod needs a manifest and optionally a properties file. These define the mo
 | Field | Required | Description |
 |---|---|---|
 | `id` | No | Canonical mod identifier (falls back to folder/zip name) |
-| `name` | Yes | Human-readable mod name |
+| `name` | No | Human-readable mod name (a display value, not the dependency ID) |
 | `version` | No | Semver version string (e.g. "1.0.0"). Used by the save system and for deduplication |
 | `author` | No | Author identifier |
 | `description` | No | Short description |
 | `sources` | No | Glob patterns for C# files to compile via Roslyn |
+| `test_sources` | No | C# test globs compiled separately in explicit mod-test mode, never into production assemblies |
+| `test_suites` | No | Opt-in virtual test mods; each entry has `id`, optional `path` and `activate` prefixes |
+| `integrations` | No | Conditional glue: `id`, partner IDs in `with`, optional `path`; see Integrations |
+| `fixture` | No | Test-only mod excluded from normal game/all-mod selection; explicitly mount with `--with-mods=` |
 | `gd_sources` | No | Glob patterns for `.gd` GDScript files to compile via Godot's engine |
 | `depends` | No | List of mod IDs that must be loaded before this mod (versioned strings allowed — see Load Order) |
 | `category` | No | Catalog category slug or comma-separated combination (e.g. `"library, gameplay"`). See the catalog page for the full list |
@@ -1782,7 +1928,7 @@ GDScript files are compiled by Godot's GDScript engine (no Roslyn needed). A sin
 "depends": ["cthangover_game"]
 ```
 
-The kernel resolves dependencies in topological order. Circular dependencies cause a load error. `cthangover_game` is always loaded first.
+The kernel resolves the selected game or frontend mod set in topological order. `cthangover_game` is ordinary game content and is loaded only when selected or required; it has no privileged first position. C# compilation sees the transitive closure of the mod's declared dependencies. Circular dependencies are invalid.
 
 ### Scene lifecycle hooks
 
@@ -1823,7 +1969,7 @@ From `mods/cooking/manifest.json`:
 ```jsonc
 {
   "id": "cooking",
-  // cthangover_game, interface, items_base and time_base load before this mod
+  // The named dependencies load before this mod
   "depends": [ "cthangover_game>=1", "ui_base>=1", "items_base>=1", "time_base>=1" ]
 }
 ```
@@ -1856,7 +2002,7 @@ only when named in `--with-mods=`.
 }
 ```
 
-Save as `mods/my_first_mod/manifest.json`. The mod is now loaded by the kernel. Even without `sources` or `ui`, the mod's scenarios, items, and other data files are discovered automatically from their conventional locations.
+Save as `mods/my_first_mod/manifest.json`. The mod is now discoverable. Add it to the game's collection, or launch with `--with-mods=my_first_mod`; normal startup loads the frontend rather than every installed mod. Even without `sources` or `ui`, the mod's scenarios, items, and other data files are discovered automatically from their conventional locations.
 
 ===== DOC docs/mods/configs/mod_config.md: Mod Config — mod_config.json =====
 Mod system configuration loaded from `config/mod_config.json`. Controls file discovery, caching, and assembly compilation.
@@ -1878,6 +2024,11 @@ config/
   "catalog_ignore_patterns": [".*","bin","obj"],
   // Catalog JSON URLs (multiple are merged)
   "catalog_urls": [],
+  // Optional private catalog URL -> bearer token file, never the token itself
+  "catalog_token_files": {},
+  // Explicit development-time mod unit tests
+  "run_mod_tests": false,
+  "mod_test_exclude": [],
   // File extensions treated as textures
   "texture_extensions": [".png", ".jpg", ".jpeg"],
   // Audio file extensions (OGG and WAV)
@@ -1917,8 +2068,11 @@ config/
 | `use_assembly_cache` | bool | Cache compiled mod assemblies to disk (`true` by default in code). Set to `false` to delete cached DLLs and recompile on every launch — useful during mod development |
 | `catalog_ignore_patterns` | string[] | File/directory patterns excluded when computing `install_sha256` for catalog export. Default: `[".*"]` excludes all dot-prefixed entries (`.godot/`, `.import/`, `.gitignore`, etc.) |
 | `catalog_urls` | string[] | URLs of catalog JSON files to fetch for the online mod browser. Multiple URLs are merged — metadata from highest version wins, `downloads` arrays are combined |
+| `catalog_token_files` | object | Exact catalog URL to token-file path; private sources are fetched without redirects |
+| `run_mod_tests` | bool | Run mod unit tests (default false); `--run-tests` also enables explicit test mode |
+| `mod_test_exclude` | string[] | Mod IDs excluded from that test run |
 | `texture_extensions` | string[] | File extensions treated as textures |
-| `audio_extensions` | string[] | File extensions treated as audio streams |
+| `audio_extensions` | string[] | DTO field; runtime `ModConfig.Load` currently keeps the code-default `.ogg`/`.wav` list instead of copying this parsed field |
 | `shader_extensions` | string[] | File extensions treated as shader files |
 | `texture_groups` | string[] | Mod subdirectories scanned for textures. A file in `mods/{mod}/ui/image.png` is found because `"ui"` is listed here |
 | `cache` | object | Cache configuration (see below) |
@@ -1963,12 +2117,54 @@ Each factory type has a maximum cache capacity. When exceeded, the least recentl
 | `characters` | 128 | Character definitions |
 | `recipes` | 128 | Recipe definitions |
 
+The first user edit of the catalog source list creates `user://catalog_servers.json`. That list then supplies enabled catalog URLs and token paths, including an intentionally empty list; shipped `catalog_urls` is the seed before the first edit. See Catalog configuration.
+
 ## How textures are discovered
 
 1. `ModManager` scans each mod's directory
 2. For each `texture_groups` entry (e.g. `"avatars"`), it looks in `mods/{mod}/avatars/`
 3. Files matching `texture_extensions` (`.png`, `.jpg`, `.jpeg`) are registered in `ModRegistry`
 4. Factories (`AvatarFactory`, `BackgroundFactory`, etc.) resolve paths through the registry with caching
+
+===== DOC docs/mods/crafting/index.md: Crafting stations =====
+`crafting` adds workbenches that exchange materials for products. It uses the `recipe` kind supplied by `items_base` and adds `craft_station`. A station offers its listed recipes without requiring the player to unlock them first. Cooking is a separate mechanic with its own UI and recipe availability.
+
+```json
+{
+  "Kind": "craft_station",
+  "Items": [{
+    "Id": "my_game/workbench", "Name": "my_game/workbench/name",
+    "Recipes": ["my_game/salve"]
+  }]
+}
+```
+
+Put this in `stations/`, and define the recipe in `recipes/`:
+
+```json
+{
+  "Kind": "recipe",
+  "Items": [{
+    "Id": "my_game/salve", "Name": "my_game/salve/name",
+    "Description": "my_game/salve/description", "Time": 5,
+    "Input": [{"Id": "rpg_plus/mushroom", "Count": 2}],
+    "Output": [{"Id": "rpg_plus/salve", "Count": 1}]
+  }]
+}
+```
+
+This example depends on `crafting` and the `rpg_plus_game` content defining the input/output items. Names and descriptions are locale keys. `Time` advances the game clock in minutes.
+
+```scenario
+action craft.open station=my_game/workbench
+end
+```
+
+The window shows recipes, owned/required materials and products. Craft is available when the complete recipe is valid and ingredients are sufficient. The service validates all items and positive counts before removing anything. Materials are consumed only on Craft. The world cannot be walked while the window is open; Esc closes it.
+
+Products are ordinary inventory entries saved by `items_base`; the station does not own another inventory or save slot. The Data Editor edits stations and recipes from the schemas provided by `crafting`.
+
+Implementation: `mods/crafting/src/`, `mods/crafting/schemas/crafting.json`. The `woodland` game suite covers the collection-to-crafting loop.
 
 ===== DOC docs/mods/editor_tools/index.md: Developer Tools =====
 The developer tools system allows mods to create custom editor windows and register them in the in-game toolbar. Tools are discovered automatically via reflection, so any mod with C# code can contribute new tool windows without modifying the kernel.
@@ -1983,12 +2179,11 @@ flowchart TD
     end
 
     subgraph Kernel
-        MMA[MainMenu] -->|GetAll + AddMenuButton| TF
         TB[ToolBox] -->|GetVisible| TBF
     end
 
     subgraph Runtime
-        MMB[Main-menu tool buttons] -->|"Pressed: ShowWindow(CreateWindow())"| TW[ToolWindow popup]
+        TW[ToolWindow popup]
         TB -->|AddToolButtons| BTN[Dynamic toolbar buttons]
         BTN -->|"Pressed: Get + ShowWindow(CreateWindow())"| TW
     end
@@ -2007,8 +2202,7 @@ Tools bootstrapping happens at startup:
 1. `ToolFactory.Instance` scans all loaded assemblies for `IToolProvider` implementations via `Reflections.FindAndCreate`.
 2. `ToolBoxButtonFactory.Instance` scans for `IToolBoxButton` implementations.
 3. When a mod assembly loads (`ModAssemblyLoader`), both factories call `RegisterAssembly(assembly)` to discover mod-provided tools.
-4. `MainMenu` asks every registered tool to append its launcher button to the tool block below **Exit** via `IToolProvider.AddMenuButton`.
-5. `ToolBox` dynamically creates HUD toolbar buttons from `ToolBoxButtonFactory.GetVisible()`.
+4. `ToolBox` dynamically creates HUD toolbar buttons from `ToolBoxButtonFactory.GetVisible()`.
 
 ## Core interfaces
 
@@ -2021,11 +2215,10 @@ The entry point for a custom tool. Every tool window must have a provider that i
 | `Id` | `string` | Unique identifier used as the registry key (e.g. `"scenario_editor"`) |
 | `LocaleKey` | `string` | Translation key for the tool's display name, resolved via `TranslationServer.Translate` |
 | `CreateWindow()` | `Window` | Creates a new `Window` instance for this tool. The caller is responsible for adding it to the scene tree and displaying it |
-| `AddMenuButton(Container)` | `void` | Appends the tool's launcher button to the main menu's tool block. Use `ToolMenuButton.Attach(container, this)` for the standard button (localized caption, opens the window on press, retranslated on language change) |
 
 ### `IToolBoxButton`
 
-Optional companion interface. Implement it alongside `IToolProvider` to add a persistent button on the in-game HUD toolbar that opens your tool.
+The in-game launcher interface. Implement it alongside `IToolProvider` to add a persistent button on the in-game HUD toolbar that opens your tool.
 
 | Member | Type | Description |
 |---|---|---|
@@ -2034,11 +2227,7 @@ Optional companion interface. Implement it alongside `IToolProvider` to add a pe
 | `LocaleKey` | `string` | Translation key for the button's tooltip or accessible label |
 | `IsVisible()` | `bool` | Return `false` to hide the button dynamically (e.g. dev-only buttons in release builds) |
 
-`IconPath` and `LocaleKey` **are** consumed by `ToolBox.AddToolButtons`: the locale key is
-translated into the button's tooltip/label, and the icon is loaded via `ResourceLoader`
-when the path exists (a button without a usable icon falls back to its text label).
-`ToolId` wires the press to `ToolFactory.Get(toolId)` and opens the tool through
-`ToolWindow.ShowWindow(tool.CreateWindow())`.
+`ToolBox` groups visible tools under one toolbar popup, labelled with each entry's translated `LocaleKey`. `ToolId` opens the provider through `ToolWindow.ShowWindow(tool.CreateWindow())`. `IconPath` is retained in the contract; the grouped popup currently uses text entries.
 
 ## `ToolWindow` base class
 
@@ -2072,7 +2261,7 @@ Singleton registry (`ToolFactory.Instance`) for `IToolProvider` implementations.
 | `Register(IToolProvider)` | Adds a tool; duplicates by `Id` are silently ignored (first-wins) |
 | `RegisterAssembly(Assembly)` | Scans an assembly for `IToolProvider` implementations and registers them — the primary hook for mods |
 | `Get(string id)` | Looks up a tool by `Id`, returns `null` if not found |
-| `GetAll()` | Returns all registered tools as a read-only list — used by `MainMenu` to ask each tool for its menu button |
+| `GetAll()` | Returns all registered tools as a read-only list — used for tool discovery and automation |
 
 Logging uses the `"TOOLS"` category.
 
@@ -2088,7 +2277,7 @@ Singleton registry (`ToolBoxButtonFactory.Instance`) for `IToolBoxButton` implem
 
 ## HUD integration — `ToolBox`
 
-The `ToolBox` control (`Core/UI/Tool/ToolBox.cs`) is the main toolbar/HUD container. It is
+The `ToolBox` control (`mods/ui_base/src/Tool/ToolBox.cs`) is the main toolbar/HUD container. It is
 manifest-driven and knows no concrete panels itself: `UiBuilder` hands it one
 `UiEntry` per mod-declared toolbar panel (from `UiRegistry.PanelEntries`, pre-sorted by
 button index, mod load order, then id), and `ApplyPanelButtons(entries)` builds a styled
@@ -2104,7 +2293,15 @@ from `IconPath` when the resource exists — and opens its tool via
 
 ## Built-in tools
 
-The `editor_tools` mod provides six development tools:
+The `editor_tools` compatibility package installs seven independent tool mods. Select individual tools through `dev_tools`, or depend on `tools_base` for shared forms and file services. Scenario parsing is isolated in `scenario_tools_base`. No tool adds a title-screen button.
+
+| Mod | Role |
+|---|---|
+| `tools_base` | Shared UI, entity/schema forms, locale editing, neutral scene/file services; no windows |
+| `scenario_tools_base` | Scenario files, syntax and graph models; no windows |
+| `scene_editor` | Logical scenes, backgrounds, ambient sound and scenario bindings |
+
+The window tools are:
 
 | Tool ID | Description | Locale Key |
 |---|---|---|
@@ -2123,34 +2320,68 @@ throwing the player to the main menu.
 
 Each tool has a provider class (`ScenarioEditorToolProvider`, `SceneBuilderToolProvider`, `LightEditorToolProvider`, `InteractiveEditorToolProvider`, `MapEditorToolProvider`, `CatalogExportToolProvider`) implementing `IToolProvider`, and a dedicated window class extending `ToolWindow`.
 
-Three tools also provide `IToolBoxButton` implementations for quick access from the HUD toolbar:
-- `LightEditorToolBoxButton` — always visible
-- `InteractiveEditorToolBoxButton` — always visible
-- `MapEditorToolBoxButton` — always visible (map authoring is part of the normal dev workflow)
+Every window tool provides an `IToolBoxButton` for the in-game toolbar. Studio instead declares its panel button in `manifest.ui`.
+
+## Data editors: items and characters
+
+Two tool mods build on the `tools_base` window `EntityEditorWindow`, each depending only on
+the data it edits, so a game takes the ones it needs:
+
+| Mod | Tool ID | Edits | Locale Key |
+|---|---|---|---|
+| `items_editor` | `items_editor` | items (`"Kind": "item"`): name and description, price, icon, types, use action | `tools/items_editor/title` |
+| `characters_editor` | `characters_editor` | characters (`"Kind": "character"`): name, portrait, RPG charset, stats, battle actions | `tools/characters_editor/title` |
+
+Both open from the in-game toolbar, and are part of the `cthangover`
+developer tools and the optional `data_editor` mechanic of `rpg_plus`. Fields other mods' schemas add to
+the kind appear in a "Fields of other mods" section (schemas).
+
+- **Pick a mod** (any writable one) — its entities of the kind are listed with a search and their
+  pictures, wherever their files are in the mod.
+- **The form** shows the name in every language the mod has (`locale/*.properties`; a new entity's
+  key is made from its id), pictures are picked from a grid of the mod folders, types and actions
+  are check boxes. **New** (Ctrl+N), **Copy** (Ctrl+D), **Delete**, Ctrl+Z / Ctrl+Y.
+- **Other fields** shows every property the form does not know (another mod's `heal` or `verb`, a
+  character's `Loot`) as JSON; it is edited there and written back as it is, so the editor never
+  drops data.
+- **Save** (Ctrl+S) writes only the files that changed — new entities go to
+  `items/&lt;mod>.json` / `characters/&lt;mod>.json` — and the running game re-reads its data and texts
+  at once.
+
+## RPG and schema authoring
+
+- **RPG Map Editor** (`rpg_editor`) paints ground/structure, collision and atmosphere masks; places characters and props; creates map-owned Event rectangles; edits spawn, interactions and teleport links; supports rectangle selection, copy/paste, undo and Play from here. Map event size is `Width`/`Height`; a legacy invisible placement uses `Footprint.Size`.
+- **RPG objects** (`rpg_object_editor`) edits the four forms, PNG imports, parts, footprints, anchors, states, variants, lights and routes. Its visual parts workspace moves/resizes art and sorting points, with behind/in-front checks using a reference character. Apply transfers the draft to the object; Save writes the mod.
+- **Data Editor and command palette** (`schema_tools`) use all loaded schemas, including typed lists, numeric choices, quest stages and equipment-type pickers. **Rename…** previews local reference changes and foreign usages; Undo rename restores the local transaction.
+- **Translations** (`locale_editor`) lists missing translations from the locale atlas and writes each text into the owning mod's flat locale files.
+- **Effects Editor** (`effects_editor`) previews atmosphere parameters; its map button opens the map editor's Effects mask tool.
+- **Scenario Studio** (`scenario_studio`) supports modal pause/step/breakpoints, rollback, live edits and export of the game's studio layer. The **Background** tab separately controls concurrent NPC runs. `self.` flags in the State page can be edited in the running game.
+
+Items and Characters editors can include dependency entries and save minimal patches in the selected writable mod. Field reset inherits the owner's value again. Characters can create a companion join interaction; a selected shared scenario plays before the appended join commands. Items can open the RPG map editor's pickup placement through the optional capability interface. Editors add needed resource-owner dependencies on Save; transitive dependencies already supplied by the chosen base are not duplicated.
+
+See RPG, map events, schemas and background scenarios for the formats and limitations. Bundled mod guides in Mods &amp; Collections show the actual authoring windows.
 
 ## Pages
 
 - Creating a Custom Tool — step-by-step guide with code examples and locale keys
 
 ===== DOC docs/mods/editor_tools/tutorial.md: Creating a Custom Tool =====
-Implement a tool in your mod with three classes:
+Depend on `tools_base>=1` and `ui_base>=1`, and include the new `.cs` files in `manifest.sources`. Implement a tool with three classes, each in its own file. Tool windows are launched from the in-game toolbar.
 
 ## 1. Provider — `IToolProvider`
 
 ```csharp
-using Cthangover.Core.UI.Tool;
-using Godot;
-
 namespace MyMod
 {
+    using Cthangover.Core.UI.Tool;
+    using Cthangover.Mods.Interface.Tool;
+    using Godot;
     public class MyToolProvider : IToolProvider
     {
         public string Id => "my_tool";
         public string LocaleKey => "tools/my_tool/title";
         public Window CreateWindow() => new MyToolWindow();
 
-        // Adds the launcher button to the main menu's tool block (below Exit).
-        public void AddMenuButton(Container container) => ToolMenuButton.Attach(container, this);
     }
 }
 ```
@@ -2158,11 +2389,11 @@ namespace MyMod
 ## 2. Window — extends `ToolWindow`
 
 ```csharp
-using Cthangover.Core.UI.Tool;
-using Godot;
-
 namespace MyMod
 {
+    using Cthangover.Core.UI.Tool;
+    using Cthangover.Mods.Interface.Tool;
+    using Godot;
     public class MyToolWindow : ToolWindow
     {
         public MyToolWindow() : base("tools/my_tool/title")
@@ -2181,13 +2412,14 @@ namespace MyMod
 }
 ```
 
-## 3. Toolbar button (optional) — `IToolBoxButton`
+## 3. Toolbar entry — `IToolBoxButton`
 
 ```csharp
-using Cthangover.Core.UI.Tool;
-
 namespace MyMod
 {
+    using Cthangover.Core.UI.Tool;
+    using Cthangover.Mods.Interface.Tool;
+    using Godot;
     public class MyToolBoxButton : IToolBoxButton
     {
         public string ToolId => "my_tool";
@@ -2211,9 +2443,9 @@ tools/my_tool/close = Close
 
 | Step | Action |
 |---|---|
-| 1 | Create provider class implementing `IToolProvider` with a unique `Id` and an `AddMenuButton` that attaches the launcher button |
+| 1 | Create provider class implementing `IToolProvider` with a unique `Id` |
 | 2 | Create window class extending `ToolWindow` — use `CreateFillContainer`, `CreateToolbar`, etc. |
-| 3 | (Optional) Create `IToolBoxButton` class for a persistent HUD button |
+| 3 | Create an `IToolBoxButton` class for the toolbar tools list |
 | 4 | Add locale keys in your mod's `locale/ui_en.properties` |
 | 5 | Ensure your mod's `manifest.json` has `"sources"` covering the new `.cs` files |
 
@@ -2236,6 +2468,37 @@ Tool-specific keys (`tools/&lt;tool_id>/...`) live in the tool mod's own locale 
 - Scenes — scene lifecycle and how scenes reference tools
 - Interactive Objects — `interactive_editor` creates these definitions
 - Locale — `.properties` files for tool UI strings
+
+===== DOC docs/mods/effects/index.md: Effects and atmosphere profiles =====
+`effects_base` supplies scene effects and continuous atmosphere. A scenario's `effect &lt;id>` loads an effect scene from `effects/`. Atmosphere uses a separate `atmosphere` entity with emitter data; it can cover a map or a painted subset of cells and is not a scenario command.
+
+## A profile
+
+```json
+{
+  "Kind": "atmosphere",
+  "Items": [{
+    "Id": "my_game/ash", "Name": "my_game/ash/name",
+    "Emitters": [{
+      "Type": "particles", "Shape": "flake", "Count": 80,
+      "Color": "#a0a0a070", "Velocity": [0.1, 0.02, -0.4],
+      "Height": [0.1, 5], "Size": [0.5, 1.2], "Sway": 0.2, "Seed": 17
+    }]
+  }]
+}
+```
+
+Put profiles in `atmospheres/`. A map's `Atmosphere` selects a whole-map profile. Its `Effects` list adds profiles, optionally with `Cells` masks. RPG Map Editor's **Effects** tool paints and erases masks; Effects Editor edits profile parameters and opens the map editor with its profile selected. Removing the last cell removes that mask placement. Masks are implemented in model v2.
+
+`particles` supports `flake`, `leaf`, `glow`, `dust`, `streak`. Velocity is XYZ world units per second, positive Z up; Height is a world-unit range and Size a pixel-radius range. `Pulse` fades periodically and `Trail` controls streak duration. Counts are capped at 512 per emitter and 2048 per profile. `ripples` draws projected rings in a named `Region`; the tile host supplies `water`. A missing region draws nothing. Cosmetic randomness is separate from gameplay randomness.
+
+## Extending and hosting
+
+Implement `IAtmosphereEmitterFactory` in a mod depending on `effects_base`. Its `Id` selects JSON `Type`; `Create` receives `AtmosphereEmitterInfo`, including custom `ExtraFields`, and returns an `IAtmosphereEmitter`. `Advance` updates once per host frame; `Draw` draws through the context projection without advancing; `Dispose` releases owned assets. Factories are discovered and removed through the mod pipeline. Duplicate types, unknown types and invalid ranges are diagnosed.
+
+Outside an RPG map, host an `AtmosphereView`, call `Configure(profileId, context)` with bounds and a `Func&lt;Vector3, Vector2>` projection, then `Advance(delta)` each frame. Call `Release()` before manual freeing; tree exit also releases resources. There is no RPG dependency in the atmosphere engine. Scene exit, renderer replacement and profile changes release owned emitters; compatible geometry edits retain animation state.
+
+Implementation: `mods/effects_base/src/Atmosphere/`, `mods/effects_editor/`, the atmosphere schema and `mods/rpg/src/Model/RpgMap.cs`.
 
 ===== DOC docs/mods/events/index.md: Event Bus =====
 The **ModEventBus** is a global publish-subscribe event bus that allows mods to react
@@ -2462,6 +2725,12 @@ All typed events derive from `ModEvent` (`Core/Events/ModEvent.cs`), which carri
 - `ClearForMod(string modId)` — removes all subscriptions registered with that `modId`, across both the typed and string layers. Called on mod unload/reload.
 - `ClearAll()` — wipes every subscription on both layers.
 
+## Reload and background speech events
+
+`ScenarioContentChangedEvent` tells consumers to re-read changed scenario content. `ModSetReloadedEvent` reports an applied/rejected mod-set change; consumers must inspect `Applied` before rebuilding live state. Their contracts live in `Core/Events/Events/`.
+
+`npc_barks_base` declares `BarkSpeechEvent`, bridged under `npc_speech`. It carries `EventId`, `SessionId`, simulation time `At`, `RunId`, `UtteranceId`, placement `Speaker`, `Map`, `Cue`, `Phase` and `Depth`. Phases are `speech.started`, `speech.finished`, `speech.interrupted`. The director defers cue reactions until the next simulation update and filters stale or duplicate events; interruption is not reported as completion. Events are transient and are not replayed from saves. See Background NPC scenarios.
+
 ===== DOC docs/mods/interactives/index.md: Interactive Objects =====
 Interactive objects are clickable scene elements with hover effects and custom actions. They are added to scenes from scenario scripts via `interactive_add` and defined as JSON files.
 
@@ -2633,7 +2902,7 @@ JSON-defined items — consumables, resources, and recipe items — with localiz
 Any JSON key that does not match a DTO field is captured by
 `ItemInfo.ExtraProperties` (`[JsonExtensionData]`) and imported by
 `ItemFactory` into `Item.Properties` — a string-keyed `PropertyData` bag
-(`Core/Items/ItemInfo.cs`, `Core/Items/Item.cs`). Numbers import as int/float,
+(`mods/items_base/src/ItemInfo.cs`, `mods/items_base/src/Item.cs`). Numbers import as int/float,
 booleans as bool, strings as strings; arrays and objects are stored as raw JSON
 text. Core code never reads `Properties` — the bag exists so your own C# item
 actions or scenario logic can attach custom data to items without schema
@@ -2808,7 +3077,7 @@ Recipes are their own entity kind and follow the same envelope:
 
 ## Inventory API
 
-The player inventory (`Inventory` / `IInventory`, `Core/Items/Inventory.cs`)
+The player inventory (`Inventory` / `IInventory`, `mods/items_base/src/Inventory.cs`)
 is an ordered list of item slots:
 
 - `Items` — `List&lt;IItemContainer>`, each slot being `{ Item, Count }`. Slot
@@ -2828,7 +3097,7 @@ All query and mutation methods are overloaded by **item id string** or by
 
 Every successful mutation publishes an `InventoryChangedEvent` to the global
 `ModEventBus` — published from `Inventory.PublishInventoryChanged`
-(`Core/Items/Inventory.cs`). GDScript subscribers receive it under the key
+(`mods/items_base/src/Inventory.cs`). GDScript subscribers receive it under the key
 `"inventory_changed"` with a snake_case payload:
 
 | Payload key | Type | Meaning |
@@ -2885,6 +3154,9 @@ recipe/wolf_meat_to_ration/desc = A recipe for cooking wolf meat safely
 ```
 
 ## Adding a new item
+
+The quickest way is the **Items** editor (`items_editor`, see Developer Tools):
+**New**, type the name, pick the icon, Save. By hand:
 
 1. Create a JSON file anywhere in your mod with the `{ "Kind": "item", "Items": [ ... ] }` envelope and all fields
 2. Add locale keys for name and description
@@ -3214,23 +3486,31 @@ every gap. A `select ""` with no prompt is written without `key=`.
 
 ## Supported languages
 
-The set of languages is fixed in code (`LocaleLoader.LangToLocale`) and the
-settings dropdown lists exactly these three:
+The set of languages is fixed in code (`LanguageCode.Supported`), the same seven as
+the site, and the settings dropdown lists exactly these, in this order:
 
 | Settings language | Locale code |
 |---|---|
-| Russian | `ru-ru` |
+| Russian | `ru` |
 | English | `en` |
+| Spanish | `es` |
 | Chinese | `zh` |
+| Japanese | `ja` |
+| Korean | `ko` |
+| Vietnamese | `vi` |
 
-An unsupported settings value silently falls back to the `ru` locale.
+Only the primary subtag counts (`en-US`, `en_us` and `EN` are English). An
+unsupported settings value falls back to `ru` with a warning. Every built-in
+mod ships all seven; a mod may ship fewer, and its keys then show as raw keys in
+the missing languages — the locale atlas reports such gaps as errors. The names
+of the languages in the settings come from `menu_base/locale/languages_&lt;lang>.properties`.
 
 ### Loader API
 
 Two static methods on `LocaleLoader` drive loading:
 
-- `LoadCurrentLanguage()` — reads the language from the saved settings, maps it
-  through `LangToLocale` (falling back to `ru`), and delegates to `LoadLocale`
+- `LoadCurrentLanguage()` — reads the language from the saved settings, reads it
+  through `LanguageCode.Normalize` (falling back to `ru`), and delegates to `LoadLocale`
 - `LoadLocale(string locale)` — merges the `.properties` files for that locale
   across **all** loaded mods into one Godot `Translation`, replaces any previous
   translation for that locale on `TranslationServer`, and sets it as the active
@@ -3339,7 +3619,7 @@ The map is declared like any mod panel — in the manifest `ui` array:
 Zone state has two layers:
 
 - **Authoring defaults** — `locked` / `hidden` flags from the JSON above.
-- **Runtime overrides** — sparse dictionaries owned by the `MapZoneService` singleton (`Core/UI/Tool/MapZoneService.cs`), changed via `Open`/`Close`/`Show`/`Hide`/`ResetZone`.
+- **Runtime overrides** — sparse dictionaries owned by the `MapZoneService` singleton (`mods/map_base/src/MapZoneService.cs`), changed via `Open`/`Close`/`Show`/`Hide`/`ResetZone`.
 
 The effective state is the override when present, otherwise the authoring default. Every change publishes a `MapZoneChangedEvent`, so an open map updates live when a scenario changes a zone. Extra rule shared by the game and the editor (`MapZoneRules`): a zone whose `scene` is empty or unregistered is always treated as locked, so authors can sketch future regions safely. The zone matching the active scene is marked *you are here* and cannot be entered again.
 
@@ -3369,7 +3649,7 @@ Persistence is covered by an integration test that runs the real `SaveService` s
 
 ## Map editor
 
-The `editor_tools` mod ships a visual map editor (`mods/editor_tools/src/MapEditor/`, tool id `map_editor`). It edits the same zone JSON: a canvas with draggable polygon, marker and label handles, per-zone fields, load/save of `map/*.json` into the selected mod, and a game-like preview that renders the real `map_widget.tscn` with the unsaved data. The editor and the game share one style implementation (`MapZoneStyle`), so both views render zones identically; after saving, the running map reloads without a game restart.
+The `map_editor` mod ships a visual map editor (`mods/map_editor/src/MapEditor/`, tool id `map_editor`). It edits the same zone JSON: a canvas with draggable polygon, marker and label handles, per-zone fields, load/save of `map/*.json` into the selected mod, and a game-like preview that renders the real `map_widget.tscn` with the unsaved data. The editor and the game share one style implementation (`MapZoneStyle`), so both views render zones identically; after saving, the running map reloads without a game restart.
 
 See Creating a Custom Tool for how tools like this are registered.
 
@@ -3377,14 +3657,14 @@ See Creating a Custom Tool for how tools like this are registered.
 
 | Component | Location |
 |---|---|
-| `MapWidget` | `Core/UI/Tool/MapWidget.cs` — overlay behaviour, markers, location card |
-| `MapZonesLayer` | `Core/UI/Tool/MapZonesLayer.cs` — polygon hit-testing and painting |
-| `MapMarker` | `Core/UI/Tool/MapMarker.cs` — marker emblem (`scenes/ui/map_marker.tscn`) |
-| `MapZone` | `Core/UI/Tool/MapZone.cs` — JSON zone DTO |
-| `MapZoneService` | `Core/UI/Tool/MapZoneService.cs` — zone list + runtime overrides singleton |
+| `MapWidget` | `mods/map_base/src/MapWidget.cs` — overlay behaviour, markers, location card |
+| `MapZonesLayer` | `mods/map_base/src/MapZonesLayer.cs` — polygon hit-testing and painting |
+| `MapMarker` | `mods/map_base/src/MapMarker.cs` — marker emblem (`scenes/ui/map_marker.tscn`) |
+| `MapZone` | `mods/map_base/src/MapZone.cs` — JSON zone DTO |
+| `MapZoneService` | `mods/map_base/src/MapZoneService.cs` — zone list + runtime overrides singleton |
 | `IMapZoneService` | `Core/Actions/IMapZoneService.cs` — scenario-facing facade (`ctx.Map`) |
-| `MapZoneRules` / `MapZoneStyle` | `Core/UI/Tool/` — shared enterability rule and zone visuals |
-| `Map*ZoneAction` | `Core/Actions/Atomic/` — the four DSL commands |
+| `MapZoneRules` / `MapZoneStyle` | `mods/map_base/src/` — shared enterability rule and zone visuals |
+| `Map*ZoneAction` | `mods/map_base/src/Actions/` — the four DSL actions |
 
 ===== DOC docs/mods/metadata/index.md: Scene Event Metadata =====
 The `[SceneEvent]` attribute allows mod C# code to hook into scene lifecycle events declaratively, without needing manifest subscriptions.
@@ -3463,7 +3743,7 @@ prefix, in lowercase `snake_case`. The folder name, `id`, the repository
 | Engine subsystem other mods build on | `&lt;subject>_base` | `dialog_base`, `ui_base`, `shell2d_base` |
 | Mechanic, optional for a game | plain noun or `&lt;variant>_&lt;mechanic>` | `cooking`, `card_battle` |
 | The game itself: scenes, story, entry point | `&lt;game>_game` | `cthangover_game` |
-| Further content of one game | `&lt;game>_&lt;part>` | `cthangover_murakami`, `cthangover_party` |
+| Further content of one game | `&lt;game>_&lt;part>` | `cthangover_murakami` |
 | Reusable content any game may take | `&lt;theme>_pack` | `town_pack` |
 | Template to copy | `&lt;what>_template` | the collection `novel_template` (its own mod: `my_novel_game`) |
 | Developer tool | `&lt;subject>_&lt;tool>` | `editor_tools`, `resource_atlas` |
@@ -3487,6 +3767,10 @@ Every mod's `manifest.json` is deserialized into `ModManifest` (`Core/Mods/ModMa
 | `category` | string | Optional catalog category, or a comma-separated combination for mods that belong to several groups (e.g. `"library, gameplay"`). Slugs: `story`, `characters`, `gameplay`, `visual`, `audio`, `ui`, `locale`, `library`, `engine`, `overhaul`, `tools`, `editor`, `debug`, or `other` (default). Parsed case-insensitively into the `[Flags]` `CategoryType`; all selected categories are pre-checked in the Catalog Export dialog (`CatalogExportWindow`) |
 | `sources` | string[] | Glob-style paths to C# source files (e.g. `"src/"`, `"scripts/*.cs"`). Collected and compiled via Roslyn by `ModCompiler` |
 | `gd_sources` | string[] | Glob-style paths to GDScript files (e.g. `"scripts/*.gd"`, `"gd/**/*.gd"`). `ModGDScriptLoader` collects them, compiles via Godot's GDScript runtime, and registers them as scenario actions or mod initializers |
+| `test_sources` | string[] | Test-only C# globs, compiled separately in explicit mod-test mode |
+| `test_suites` | array | Opt-in suites with `id`, optional `path` and activation prefixes |
+| `integrations` | array | Conditional virtual mods: `id`, `with` partner IDs, optional `path`; see Integrations |
+| `fixture` | bool | Test fixture excluded from ordinary game/all-mod selection |
 | `depends` | string[] | Versioned dependencies in format `modId[op][version][?]` — see below. Parsed into `ModDependency` entries via `ModDependencyListConverter`; affects topological compile order and version validation |
 | `depends_native` | string[] | Glob patterns for native shared libraries handled by `ModNativeLoader` — see below |
 | `conflicts_with` | string[] | Mutually exclusive mod IDs. Declarative only — see section above |
@@ -3537,6 +3821,89 @@ A mod may ship precompiled .NET assemblies in a `dll/` directory. During `ModReg
 
 This runs **before** Roslyn compilation of `sources`, so source-based mods can reference types from precompiled API assemblies. Each loaded precompiled assembly also gets a `DllImportResolver` installed (`ModNativeLoader.InstallResolverOnAssembly`) for its own P/Invoke calls.
 
+===== DOC docs/mods/modules/index.md: Bundled modules and their references =====
+Each row corresponds to an installed top-level `mods/&lt;id>/manifest.json`, audited on 2026-11-03. A game selects modules through its collection and transitive dependencies; installing a module alone does not select it for every game. Versions and dependency details on the home-page catalog are generated from these same manifests.
+
+Read a mod's **Documentation** tab in Mods &amp; Collections for its bundled `docs/&lt;language>.md` guide and actual game/editor captures. The table links to the system reference on this site. Test fixtures and conditionally mounted integrations are not ordinary gameplay content.
+
+| Mod | Purpose from its manifest | Reference |
+|---|---|---|
+| `audio_base` | Audio engine: scene music, sound effects and ambience on separate buses with their own volume, and a music player that follows the current scene. | Guide |
+| `avatar_base` | Reusable avatar definitions and independent preset state, with renderer-neutral composition for layered images and animated models. | Guide |
+| `avatar_layers` | Layered PNG avatar renderer: preset-controlled images, ordering, placement, visibility and opacity. | Guide |
+| `battle_formulas` | Battle skills written as data: damage and heal formulas over the participants' stats, resource costs, pierce and stun — no code, and the same skill works in every battle core. | Guide |
+| `card_battle` | A battle system with cards: pick a character card and drag its action cards onto targets. Built on Turn Battle Base; the battle of Cthangover. | Guide |
+| `catalog_export` | Export mod catalog metadata and installable archives. | Guide |
+| `characters_base` | Characters engine: heroes, companions and enemies with their battle attributes and action cards, the character actions panel and dialog portraits. | Guide |
+| `characters_editor` | Edits a mod's characters while the game runs: names in every language, portrait, RPG walking sprite, battle numbers and actions. A save reaches the running game at once. | Guide |
+| `classic_rpg_pack` | A ready set of classic fantasy rules as data: six attributes, three classes, equipment slots, gear and four formula skills. RPG Plus is built on it. | Guide |
+| `cooking` | The kitchen of Cthangover: learn recipes, cook at the home_kitchen workbench and keep an eye on the party's rations. | Guide |
+| `crafting` | Workbench stations that turn materials into items: stations and recipes are plain data, and any scenario opens a station with one command. | Guide |
+| `cthangover_game` | The story content of Cthangover: scenes, scenarios, characters, items, quests and the world map of Marao's very bad night. The machinery lives in engine mods. | Guide |
+| `cthangover_murakami` | A Cthangover story line: follow the beast prowling the town to a meeting with Murakami — scenarios, her character and expressions, a journal quest and battles. | Guide |
+| `dialog_base` | Dialog engine: the dialog box with portraits and answers, and the .scenario language in which every game of the collection tells its story. | Guide |
+| `editor_tools` | Compatibility toolset: installs the individual scene, scenario, map, interactive, light, Godot scene and catalog tools. | Guide |
+| `effects_base` | Scene effects and continuous atmosphere: editable particle profiles and extensible emitters for leaves, fireflies, snow, rain and dust. | Guide |
+| `effects_editor` | Live atmosphere authoring: particle and ripple profiles, preview, map and cell placement. | Guide |
+| `equipment` | Wearable gear for any game with stats: slots as data, items become equipment by their JSON keys, and worn bonuses flow into sheets, battles, checks and conditions at once. | Guide |
+| `expressions_base` | Reusable numeric expressions with mod-defined function and operator strategies, strict runtime assignments and compatible game formulas. | Guide |
+| `ff_battle` | A battle system in the style of classic console RPGs: the party, the enemies and a command menu — Attack, Items, Defend, Escape. The battle of RPG Plus. | Guide |
+| `interactive_base` | Clickable objects for picture scenes: a picture of its own over the background, a glow under the mouse, and a click that starts a scenario. | Guide |
+| `interactive_editor` | Edit scene interactive objects and their placement on backgrounds. | Guide |
+| `items_base` | Items and the inventory: what an item is, the bag panel, what is saved, and scenario commands to give, take and check items. | Guide |
+| `items_editor` | Edits a mod's items while the game runs: names and descriptions in every language, price, picture, types and the use action. The game shows a save at once. | Guide |
+| `junior_reaper_paper_grief` | Расследование повторных смертей стражника: фэнтезийный RPG-мир, осмотр мельницы мышью, сброс, свидетели и решение семейной причины. | Guide |
+| `light_editor` | Edit scene lights and their placement on backgrounds. | Guide |
+| `live2d_base` | Live2D Cubism runtime for C#: drawn characters that breathe, blink and move with physics, playing the motions and expressions their artist made. | Guide |
+| `locale_atlas` | Maps every translation key of every mod: what each language declares, where keys are used, and what is wrong — missing, empty, undeclared or duplicated keys and encoding problems. | Guide |
+| `locale_editor` | A translations window: lists every text a language lacks (from the locale atlas), and writes the translation into the locale file of the mod that owns the key, so the game shows it at once. | Guide |
+| `map_base` | World map engine: a full-screen picture of the world with places to travel between; scenarios open, close, hide and reveal them as the story goes. | Guide |
+| `map_editor` | Edit world map zones, polygons, labels and markers. | Guide |
+| `menu_base` | The main menu: start or continue a game, pick one of the installed games, load a save and change the language, sound and display settings. | Guide |
+| `mod_manager` | The Mods &amp; Collections screen: what is installed, what each mod does, installing and updating from the online catalog, and which mods make up each ready-made game. | Guide |
+| `music_pack` | Shared music for any game: 22 tracks with exploration, combat and main menu playlists; a game can override playlists while keeping the track names. | Guide |
+| `my_novel_game` | The novel template's content: an evening town, a bar and a home connected by choices. Copy it, rename it and grow your own story from these three places. | Guide |
+| `npc_barks_base` | Concurrent ambient scenario hosts, speech cues and NPC attention. Prototype. | Guide |
+| `quests_base` | Quests engine: quests with numbered steps that scenarios start, advance and finish, and the journal panel that shows them. | Guide |
+| `recruiting` | Defeated enemies can be captured after a victory and later fight on the player's side; while they wait in the recruits list, they live by rules of their own. | Guide |
+| `resource_atlas` | Maps which mod uses whose resources and whether every link is backed by depends — catching undeclared dependencies and duplicate providers no depends order can settle. | Guide |
+| `rpg` | A walkable tile world in the spirit of RPG Maker: grid movement with WASD, events on E/F, teleports; a map is an ordinary scene of the game. Battles and random encounters come with turn_battle_base through the battles integration, so the world runs without it. | Guide |
+| `rpg_editor` | RPG map editor for model v2 (plan 12.4): a palette by shape, the map in the game's own top-down and isometric projections, placements (own and foreign, as patches), strokes, collision, spawn, teleport links, undo and a byte-stable save; encounters when rpg__battles is mounted. | Guide |
+| `rpg_object_editor` | Edits RPG objects (model v2) while the game runs: surfaces, segments, sprites and actors in a form by shape, their pictures, footprint, anchor, interaction and extends, with a preview in the top-down and the isometric projection drawn by the game's own renderer. A foreign object is edited as a patch in the own mod; the source stays untouched. | Guide |
+| `rpg_plus_game` | A complete small RPG: a prologue that picks the class, a village and forest mystery, crafting, trade, a desert and turn-based battles — data and scenarios only. | Guide |
+| `scenario_editor` | Edit scenario text and transition graphs, then play-test inside the current game. | Guide |
+| `scenario_studio` | A dock beside the running game that pauses, steps and edits the playing scenario: breakpoints, restarts with state rollback, live edits into a mod or a per-game layer. | Guide |
+| `scenario_tools_base` | Shared scenario file access, syntax and graph models for authoring tools. No tool windows. | Guide |
+| `scene_builder` | Inspect and edit Godot scene nodes and their properties with a live preview. | Guide |
+| `scene_editor` | Create and edit logical scenes, backgrounds, ambient sound and scenario bindings. | Guide |
+| `schema_base` | Lets every mod describe its scenario actions, DSL commands and data fields as data; the tools build forms, pickers and checks from these descriptions. | Guide |
+| `schema_tools` | The Data Editor window and the command palette: edit any described entity in a form and assemble checked scenario lines from the mods' schemas. | Guide |
+| `shell2d_base` | The frame every 2D game is drawn in: the background view box, the toolbar, panel slots and notifications that content mods fill. | Guide |
+| `skills_base` | The player's collection of skill cards: skills that open possibilities in other mechanics, grant battle action cards and add up into the collection effect. | Guide |
+| `stat_checks` | One scenario command, check: roll a character's stat plus dice against a difficulty and branch the story on success or failure. | Guide |
+| `stats_base` | A stats engine for any genre: stats, archetypes and traits as data, formulas for derived numbers, character sheets, levels and pools — handed to battles unchanged. | Guide |
+| `test_defaults_and_patches` | A test fixture, not content: property patches the property_patches test loads to check how patches of other mods' characters and items merge. Never part of a game. | Guide |
+| `test_integrations` | A test fixture, not content: hosts the integration 'probe' that joins a mod set only together with quests_base, so the tests can check both the boot and the in-process mounting gate. Never part of a game. | Guide |
+| `tile_isometric_base` | Draws tile maps at an angle, a grid of 2:1 diamonds, so buildings and trees stand up out of the ground. One of the two views of Tile Rendering. | Guide |
+| `tile_render_base` | The shared engine behind tile maps: turns a prepared map description into a picture; the viewing angle is a small renderer mod on top. | Guide |
+| `tile_topdown_base` | Draws tile maps straight from above, on a square grid, in the style of classic 2D RPGs. One of the two views of Tile Rendering; RPG Plus uses it. | Guide |
+| `time_base` | The in-game clock, day and night: scenes change their look with the time, lamps and windows light them, and a portable lamp helps after dark. | Guide |
+| `tools_base` | Shared forms, file access, localization editing and UI components for authoring tools. No tool windows. | Guide |
+| `town_pack` | Ready-made scenery for a small-town story: the town entrance, a home vestibule and an evening bar as backgrounds, with the bar's ambience. No story inside. | Guide |
+| `trading` | Shops as data and a trade window of two inventories: the merchant's goods on one side, the player's bag on the other, and money as an ordinary item. | Guide |
+| `turn_battle_base` | The platform under every turn-based battle: starting from a scenario, the battle scene, victory and defeat, experience and loot — how the player fights is a separate battle system. | Guide |
+| `ui_base` | The interface layer every game shares: the toolbar, the in-game menu, the save indicator, notifications and the common look of panels, buttons and lists. | Guide |
+| `validator` | Checks every mod without running the game: broken references, unknown scenario commands, wrong parameters, missing dependencies — a report on every game start. | Guide |
+| `village_pack` | Reusable RPG art: nine tilesets, walking sprites, battle artwork, snow enemies, six shared architectural interiors, reusable containers and editable atmosphere profiles. | Guide |
+
+## Games and toolsets
+
+The four `kind: game` collections are `cthangover`, `novel_template`, `rpg_plus`, and `junior_reaper_paper_grief`. `frontend` is the menu/shell toolset; `dev_tools` groups authoring capabilities. Collections are packages under `collections/&lt;id>/collection.json`, not mods.
+
+`editor_tools` is a source-free compatibility package bringing seven independent editors. A game can choose individual tools instead. `tools_base` supplies common widgets/documents and neutral services; `scenario_tools_base` adds dialog-specific file and graph models. Neither registers a window of its own.
+
+`rpg__battles` and `turn_battle_base__quests` are production integrations. Their host/partner combination determines whether they mount. Mod test suites and fixture mods instead require explicit test activation.
+
 ===== DOC docs/mods/musics/index.md: Music &amp; Playlists =====
 Background music tracks (`.ogg`) organized into playlists with ambient/combat categorization. Playlist selection happens per scene: the engine picks the playlist whose `Scene` matches the current scene name and switches between its categories based on game state (exploration vs battle).
 
@@ -3557,7 +3924,7 @@ music/
 - `.ogg` — Vorbis-compressed audio, any bitrate
 - Files are referenced by name (without extension) in playlists
 
-## Real example — `cthangover_game/music/playlists/default.json`
+## Real example — `music_pack/music/playlists/default.json`
 
 ```jsonc
 {
@@ -3683,7 +4050,7 @@ not via `defaultAmbient`.
 
 ## `MusicPlayerBehaviour` public API
 
-`Cthangover.Core.Audio.MusicPlayerBehaviour` (`Core/Audio/MusicPlayerBehaviour.cs`)
+`Cthangover.Core.Audio.MusicPlayerBehaviour` (`mods/audio_base/src/MusicPlayerBehaviour.cs`)
 is the node that drives playlist auto-advance and scene-aware switching. Its
 public surface:
 
@@ -3735,7 +4102,7 @@ engine (~1s delay, then a volume ramp) and cannot be configured per playlist.
 | Field | Type | Description |
 |---|---|---|
 | `Scene` | string | Scene name this playlist applies to (`"default"` is used when no playlist matches the loaded scene) |
-| `MusicType` | string | Category: `Ambient` (exploration), `Combat` (battle), `Force` (transient, normalised to `Ambient`). A scene named `Battle` switches playback to `Combat`, otherwise `Ambient` plays |
+| `MusicType` | string | Category: `Ambient` (exploration), `Combat` (battle), `Force` (transient, normalised to `Ambient`). The registered scene route chooses the music type (`turn_battle_base` supplies the battle route); ordinary scenes use `Ambient` |
 | `MusicNames` | string[] | Track filenames without extension. Must match `.ogg` files in `music/` |
 
 ## Real example — default playlist
@@ -3812,192 +4179,60 @@ no ordered or shuffle-flagged mode.
 Music types: `Force`, `Combat`, `Ambient`. Mixer buses (`MixerType`): `Sounds`,
 `Musics`, `Ambient` — music plays through the dedicated `Musics` bus.
 
-===== DOC docs/mods/patches/arrays-and-identity.md: Array Operations &amp; Identity Keys =====
-## Array Operations
+===== DOC docs/mods/patches/arrays-and-identity.md: Array operations and declared identity =====
+The patch engine operates on JSON trees at any depth. Object properties merge recursively; scalars and bare arrays replace the previous value. A null patch value removes the property, so deserialization sees its default. `Key$set` replaces even an object wholesale.
 
-When a patch modifies a JSON **array** property (e.g. `Skills`, `Perks`, `Tags`), the suffix on the key determines how the arrays are merged:
-
-| Key suffix | Behaviour |
+| Patch key | Behaviour |
 |---|---|
-| *(no suffix)* | **Overwrite** — replaces the entire array. Same semantics as scalar properties. |
-| `$add` | **Add** — appends incoming elements to the existing array. If the property doesn't exist yet, creates it. |
-| `$remove` | **Remove** — removes incoming elements from the existing array. If the property doesn't exist, no-op. |
-| `$set` | **Overwrite** — explicit form, same as bare key. |
+| `Skills` or `Skills$set` | Replace the array |
+| `Skills$add` | Append; with a declared identity, merge an existing matching element instead |
+| `Skills$remove` | Remove by declared identity, otherwise by semantic JSON value |
 
-### Examples
-
-**Base character definition** (the entity object inside a `Kind: "character"` file):
-```jsonc
-// Base entity definition (Items entry of a character file)
-{ "Id": "Marao", "Skills": ["slash", "block"] }  // Id is the entity identifier; Skills is the array to patch
+```json
+{"Items": [{"Id": "Marao", "Skills$add": ["cook"], "Skills$remove": ["block"]}]}
 ```
 
-**Add elements** — a cooking mod extends skills:
-```jsonc
-// patches/character.json
-// $add appends elements to the existing array (creates if missing)
-{ "Items": [{ "Id": "Marao", "Skills$add": ["cook"] }] }
-```
-Result: `["slash", "block", "cook"]`
+Unkeyed additions are not deduplicated. JSON object property order does not change semantic equality. A missing array can be created by `$add`; removing from a missing array does nothing. Incompatible operations are diagnosed with a path inside the entity.
 
-**Remove elements** — a balance patch removes a skill:
-```jsonc
-// $remove deletes matching elements from the array (no-op if missing)
-{ "Items": [{ "Id": "Marao", "Skills$remove": ["block"] }] }
-```
-Result: `["slash", "cook"]`
+## Identity is explicit
 
-**Replace entirely** — a weapon overhaul resets skills:
-```jsonc
-// $set replaces the entire array (explicit form, same as bare key)
-{ "Items": [{ "Id": "Marao", "Skills$set": ["sword", "shield_bash"] }] }
-```
-Result: `["sword", "shield_bash"]`
+The engine does **not** guess an identity from fields named `Id`, `ItemId` or `Name`. Keys come from these sources, in priority order:
 
-**Overwrite (bare key)** — equivalent to `$set`:
-```jsonc
-// Bare key overwrites the entire array (same as $set); previous values discarded
-{ "Items": [{ "Id": "Marao", "Skills": ["slash", "block"] }] }
-```
-Result: `["slash", "block"]` (previous values are discarded)
+1. An explicit operation value `{"$key": ..., "$items": [...]}`.
+2. `[MergeKey("Id")]` on the typed DTO's list property.
+3. `IMergeable.MergeKeyProperty` on the typed list element.
 
-### Multi-layer example
+The type walk follows nested objects, lists and dictionaries, respecting JSON property names. Unknown extension-data fields have no DTO metadata; use an explicit `$key` there. A key can be one property or a composite list. Key names and string values compare case-insensitively.
 
-All three operations can be combined across mod layers. Processing order follows the standard property pipeline (entity → wildcard `*` → specific `Id`):
+For example, a mod-defined reward array must declare its key when updating one reward:
 
-```jsonc
-// Entity base: ["slash", "block"]
-
-// Wildcard patch: $add appends "dodge" to ALL entities first
-{ "Items": [{ "Id": "*", "Skills$add": ["dodge"] }] }
-// → ["slash", "block", "dodge"]
-
-// Specific patch: $remove deletes "slash" from Marao only
-{ "Items": [{ "Id": "Marao", "Skills$remove": ["slash"] }] }
-// → ["block", "dodge"]
-```
-
-**No deduplication** is performed — if the same element is added twice, it appears twice.
-
-### Universality
-
-This system applies to **any** array property on any entity type — characters, items, and any mod-defined extras. There is no special-casing for specific property names.
-
-```jsonc
-// Works for any array property — no special-casing needed
-{ "Items": [{ "Id": "sword/iron", "CraftingMaterials$add": ["steel_ingot"] }] }   // Specific item patch
-{ "Items": [{ "Id": "*", "Tags$add": ["undead"] }] }                                // Wildcard: tags all entities
-```
-
-Scalar properties (int, float, bool, string) still use **last-wins** semantics — the suffix convention only affects JSON array values.
-
----
-
-## Object Arrays with Identity Keys
-
-> ⚠ **IMPORTANT CONVENTION: the identity field MUST be named `Id` (or end in `Id`, like `ItemId`, `QuestId`, `ActionId`).**
->
-> For mod-defined (extra-property) arrays this field is **auto-detected** — no registration, no config, no C# code needed.
-> For **typed** C# array properties there is a second path: if the element type
-> implements `IMergeable`, its `MergeKeyProperty` value is used **first**, taking
-> priority over the naming convention (see below).
-
-For arrays of **objects** (e.g. `Loot`, `Rewards`, `Drops`), the system matches elements by an **identity field** instead of raw JSON text. This enables **per-field merge**: a patch can update a single property of an existing object without repeating all its fields.
-
-### How identity detection works
-
-Resolution order per property:
-
-1. **Interface first** — if the entity type is known and the array property's
-   element type implements `IMergeable` (`Core/Mods/Patches/IMergeable.cs`,
-   a single `MergeKeyProperty` string property), the key comes from
-   `MergeKeyProperty`. The map is built by `JsonPatchMerger.BuildMergeKeys&lt;T>()`.
-   Example: `LootEntry` (`Core/Characters/LootEntry.cs`) implements
-   `IMergeable` with `ItemId` as its key, so the typed `Loot` property always
-   merges by `ItemId`.
-2. **Convention fallback** — when no interface-provided key exists, the key is
-   auto-detected from the array JSON itself (table below).
-
-| Array element type | Detection | Identity field |
-|---|---|---|
-| `{"Id": "gold", ...}` | First field named `Id` → detected | `Id` |
-| `{"ItemId": "sword", ...}` | No `Id`, but field ending in `Id` → detected | `ItemId` |
-| `{"QuestId": "q1", ...}` | Same logic | `QuestId` |
-| `{"Name": "test"}` | Nothing matches → no identity | Raw text compare |
-| `"string"` or `42` | Not an object → no identity | Raw text compare |
-
-**The system prioritises exact `"Id"` over suffix matches.** If your object has both `Id` and `ItemId`, `Id` wins.
-
-### Per-field merge example
-
-```jsonc
-// Base entity: object array with ItemId as identity key
-{ "Loot": [
-    {"ItemId": "food/wolf_meat", "MinCount": 1, "MaxCount": 1, "Probability": 100},    // Matched by ItemId
-    {"ItemId": "resource/branches", "MinCount": 1, "MaxCount": 1, "Probability": 100}  // Matched by ItemId
-]}
-
-// Balance patch: uses $add/$remove on the object array
-{ "Items": [{ "Id": "wolf_1",
-    "Loot$add": [{"ItemId": "food/ration", "Probability": 50}],        // Adds new entry
-    "Loot$remove": [{"ItemId": "resource/branches"}]                    // Removes by identity match
-}]}
-
-// Result:
-// → food/wolf_meat: unchanged
-// → resource/branches: removed (matched by ItemId)
-// → food/ration: added as new entry
-```
-
-### Per-field property overwrite
-
-When `$add` finds an existing element with the same identity value, the patch **overwrites only the specified properties**, preserving unmentioned fields from the base:
-
-```jsonc
-// Base: {"ItemId": "food/bread", "MinCount": 1, "MaxCount": 2, "Probability": 50}
-// Patch: {"Loot$add": [{"ItemId": "food/bread", "Probability": 80}]}   // Matches by ItemId, merges only Probability
-// Result: {"ItemId": "food/bread", "MinCount": 1, "MaxCount": 2, "Probability": 80}
-//         (Probability overridden, MinCount/MaxCount preserved from base — per-field merge)
-```
-
-### Removing with identity key
-
-The `$remove` operation only needs the identity field — other fields in the remove object are ignored:
-
-```jsonc
-// $remove only needs the identity field (ItemId); other fields are ignored
-{ "Items": [{ "Id": "wolf_1", "Loot$remove": [{"ItemId": "food/wolf_meat"}] }] }
-```
-
-### Mod-defined arrays — no config needed
-
-Any mod can introduce a new array of objects in a character or item JSON, and patches immediately work with per-field merge — as long as objects have an `Id` or `*Id` field:
-
-```jsonc
-// Mod A defines a quest with rewards (identity key: Id)
+```json
 {
-  "Id": "daily_hunt",
-  "Name": "Daily Hunt",
-  "Rewards": [
-    {"Id": "gold", "Count": 100},     // Identity field "Id" detected automatically
-    {"Id": "exp", "Count": 50}
-  ]
+  "Items": [{
+    "Id": "daily_hunt",
+    "Rewards$add": {"$key": "Id", "$items": [{"Id": "gold", "Count": 200}]},
+    "Rewards$remove": {"$key": "Id", "$items": ["exp"]}
+  }]
 }
-
-// Mod B patches the rewards without knowing Mod A's internals:
-{ "Items": [{ "Id": "daily_hunt",
-    "Rewards$add": [{"Id": "gold", "Count": 200}],   // Matched by Id → overwrites Count, preserves Id
-    "Rewards$remove": [{"Id": "exp"}]                 // Matched by Id → removes entire exp entry
-}]}
-
-// Result Rewards: [{"Id": "gold", "Count": 200}]
 ```
 
-**No C# code, no interface, no registration** is needed for mod-defined
-extra-property arrays — the `Id` / `*Id` convention is all that's required.
-The `IMergeable` interface is an optional, higher-priority path for typed C#
-array properties (see the resolution order above); it does not need to be
-implemented for convention-based detection to work.
+`$add` deep-merges only supplied fields into an element with the same key; it appends when the key is absent. `$remove` accepts an object with the key fields, or the bare value for a single-property key. A composite operation uses, for example, `"$key": ["Layer", "X", "Y"]`, and supplies all key fields in each item.
+
+Known declarations include RPG object `Parts` and `States`, map `Strokes` and `Events` (key `Id`), and map `Lights` (key `id`). `LootEntry` uses its `IMergeable` key `ItemId`. Shop offers do not declare a key: use `"Sells$add": {"$key": "Item", "$items": [...]}` to update an existing price rather than append a duplicate.
+
+## Layers applied later
+
+`Variants`, placement overrides and state components can store patches that will only apply when the effective object is built. `[PatchLayer(typeof(...))]` tells the engine to compose such layers rather than execute their operations prematurely. For example, adding to `Interact.Commands` in a placement patch must still add to the object's commands when that placement is resolved.
+
+Use the editors' field patches or preserve the stored layer structure; a fully resolved object is not the same as its stored inheritance layer.
+
+## Deletion, isolation and API
+
+An entity patch with `"$delete": true` removes the entity. A null property removes that property; it does not delete the entity. Wildcard patches run first, then targeted patches, in mod order within each group. The resolver applies each patch to a copy and verifies deserialization. A failing patch is logged with its mod, file, entity and JSON path and is skipped without discarding other valid patches.
+
+`JsonPatchMerger.Apply(JsonObject target, JsonObject patch, Type targetType)` mutates a JSON object; callers applying it directly must handle rollback themselves. `JsonPatchMerger.Merge(...)` applies grouped patches and accepts an optional target DTO type. `MergeTypeMap` supplies nested type/key metadata. The former `DetectIdentityKey` and `BuildMergeKeys&lt;T>` helpers are not current APIs.
+
+Implementation: `Core/Mods/Patches/JsonPatchMerger.cs`, `Core/Mods/Patches/MergeTypeMap.cs`, `Core/Mods/Patches/PatchLayerComposer.cs` and `Core/Mods/Resolvers/Impls/PatchResolver.cs`.
 
 ===== DOC docs/mods/patches/index.md: Patches =====
 Patches let one mod add or override properties of entities defined in another mod — without rewriting their JSON files entirely.
@@ -4166,7 +4401,7 @@ mods/test_defaults_and_patches/
 
 Besides scalar last-wins overwrites, patch keys can carry array operation
 suffixes — `$add`, `$remove`, and `$set` (parsed by
-`ArrayMergeHelper.ParseArrayOperation`). These enable appending, removing, and
+`JsonPatchMerger`). These enable appending, removing, and
 explicitly replacing array elements, including per-field merging of object
 arrays matched by identity keys. See
 Array Operations &amp; Identity Keys for the full
@@ -4176,17 +4411,11 @@ Mechanically, `JsonPatchMerger.Merge` applies all patches whose entry id is
 `"*"` (the wildcard targeting every entity of the type) first, then the
 patches matching the concrete entity id.
 
-Public helpers on `JsonPatchMerger` (`Core/Mods/Patches/JsonPatchMerger.cs`)
-are available to C# code:
-
-| Member | Purpose |
-|---|---|
-| `DetectIdentityKey(JsonElement)` | Auto-detects the identity field of an object array from its JSON: `"Id"` first, then the first property ending in `Id`; returns `null` if none |
-| `BuildMergeKeys&lt;T>()` | Reflects over type `T` and returns a map of list-typed property → identity key for element types implementing `IMergeable` |
+Public APIs are `JsonPatchMerger.Apply(JsonObject, JsonObject, Type)` and `Merge(..., Type targetType = null)`. `MergeTypeMap` walks DTO types for declared list identities. There is no identity-name guessing: extra arrays use explicit `$key` / `$items` operation values. Null removes a property, `$set` replaces an object wholesale, and `"$delete": true` removes an entity. See the array reference for nested layers and failure isolation.
 
 ## Pages
 
-- Array Operations &amp; Identity Keys — $add/$remove/$set, per-field merge, identity key detection
+- Array Operations &amp; Identity Keys — $add/$remove/$set, per-field merge, declared identities and explicit keys
 - Scene Patches — patching `.tscn` scenes with inherited scenes and `metadata/_patch_*` operations
 
 ===== DOC docs/mods/patches/scenes.md: Scene Patches =====
@@ -4442,7 +4671,7 @@ name with the "pages are still empty" placeholder:
 
 ## Two kinds of status — don't conflate them
 
-A quest carries **two independent state values** (`Core/Quests/`):
+A quest carries **two independent state values** (`mods/quests_base/src/Quests/`, with transitional contracts in `Core/Quests/`):
 
 | Where | Type | What it means | How it changes |
 |---|---|---|---|
@@ -4478,7 +4707,7 @@ action battle.init scene=town_entry enemies=wolf_2,werewolf_girl_1 quest_id=Meet
 This sets the tag `boss_battle` on `MeetingMurakamiQuest` when the battle is initiated.
 
 On the C# side, tags live in a `HashSet&lt;string>` on `QuestBase.Data`
-(`Core/Quests/QuestBase.cs`):
+(`mods/quests_base/src/Quests/QuestBase.cs`):
 
 | Method | Description |
 |---|---|
@@ -4489,7 +4718,7 @@ On the C# side, tags live in a `HashSet&lt;string>` on `QuestBase.Data`
 
 Scenario `condition:` expressions map onto these directly: `hasTag(...)` calls
 `IQuest.ContainsTag`, `notHasTag(...)` calls `IQuest.NotContainsTag` (resolved
-by `QuestMethodCondition`, `Core/Scenes/QuestMethodCondition.cs`).
+by `QuestMethodCondition`, `mods/quests_base/src/Scenes/QuestMethodCondition.cs`).
 
 ## Conditional scenarios
 
@@ -4531,15 +4760,15 @@ action quest.send_notification quest_id=OldHouseQuest
 ```
 
 Under the hood this routes to `IQuestExtensions.SendNotification(this IQuest)`
-(`Core/Quests/IQuestExtensions.cs`), which posts a localized
+(`mods/quests_base/src/Quests/IQuestExtensions.cs`), which posts a localized
 `ui/journal/new - &lt;quest name>` message to the notification banner queue. It
 does not modify quest state.
 
 ## Events emitted
 
 `quest_status_changed` is published from `QuestServiceImpl.SetStatus`
-(`Core/Actions/QuestServiceImpl.cs`); `quest_tag_changed` is published from
-`QuestBase.AddTag` / `QuestBase.RemoveTag` (`Core/Quests/QuestBase.cs`) — and
+(`mods/quests_base/src/Actions/QuestServiceImpl.cs`); `quest_tag_changed` is published from
+`QuestBase.AddTag` / `QuestBase.RemoveTag` (`mods/quests_base/src/Quests/QuestBase.cs`) — and
 only when the tag set actually changed. Both reach GDScript mods through the
 ModEventBus string layer (payload keys are snake_case versions of the C#
 properties):
@@ -4555,7 +4784,7 @@ published for a quest that doesn't exist.
 
 ## Persistence pipeline
 
-`QuestFactory` (`Core/Quests/QuestFactory.cs`) owns quest instances end-to-end:
+`QuestFactory` (`mods/quests_base/src/Quests/QuestFactory.cs`) owns quest instances end-to-end:
 
 - `QuestFactory.Instance.Get(id)` — returns the shared runtime `QuestBase`.
   **Throws `KeyNotFoundException`** when the id was never loaded from mod data
@@ -4565,8 +4794,7 @@ published for a quest that doesn't exist.
 - `QuestFactory.Instance.SetAll(List&lt;QuestBase>)` — save/restore: looks up each
   entry from the save file by ID and overwrites its `Data` (tags + stage) and
   lifecycle `Status`. Empty/null lists are ignored; entries whose quest no
-  longer exists (removed mod, renamed quest) are skipped with a warning so an
-  ageing save cannot block loading.
+  longer exists (removed mod, renamed quest) are retained in `QuestFactory.Unresolved` and written back by `QuestsSaveable`, so an ageing save does not silently lose them.
 - `QuestFactory.Instance.ResetAll()` — returns every quest to `NotStarted` with
   an empty tag set. Called by `GameData.StartNewGame` because the factory
   singleton survives returning to the main menu and would otherwise leak the
@@ -4626,6 +4854,8 @@ a tag without locale entries still appears as a stamp.
 ## Quest conditions — full expression reference
 
 See Conditions for the complete condition expression language.
+
+Quest state is serialized by `QuestsSaveable` into the `quests_base` slot (`Quests` blob), rather than `__core__`; see Save data.
 
 ===== DOC docs/mods/recruiting/index.md: Recruiting =====
 The recruiting system manages the post-battle recruit roster. It is a **standalone mod** (`mods/recruiting/src/`): it owns its data, rules, save state and event subscription, and no other mod depends on it. Removing the mod removes recruiting entirely — battles, cooking, story content and the core keep working.
@@ -4840,206 +5070,242 @@ action character.send_notification type=Murakami
 
 Recruited characters can acquire skills. `SkillData` is not a singleton - it is a plain instance owned by `RuntimeData`, accessible as `GameData.Instance.Runtime.SkillData`. It holds a single global set of player-owned skill IDs (lowercase strings such as `"slave_master"`) and is persisted with the save. Skills are not tied to individual recruits - they are a global unlock pool.
 
-===== DOC docs/mods/save/api.md: Mod Save API =====
-## Implementing IModSaveable in a mod
+===== DOC docs/mods/rpg/events.md: Map-owned events =====
+An invisible interaction area belongs directly to an RPG map's `Events` list. It needs no picture, `rpg_object` or `rpg_placement`. Use a placement for a visible chest or person, and a map event for an invisible doorway, story zone or action-key trigger.
 
-Your mod must provide a class implementing `IModSaveable`. It is auto-discovered via reflection when your mod assembly loads.
-
-### API
-
-```csharp
-public interface IModSaveable
+```json
 {
-    // Called on save. Slot metadata (ModId, ModName, ModVersion) is
-    // already filled by the core. Set MinCoreVersion, IsRequired,
-    // CustomData, and write Data[...].
-    void OnSave(ModSlot slot);
-
-    // Preferred: explicit contract. Return false + error message on
-    // failure. Default impl calls OnLoadVoid for backward compat.
-    bool OnLoad(ModSlot slot, out string errorMessage);
-
-    // Legacy: throw-based error handling. Override instead of OnLoad
-    // if you prefer exceptions for error reporting.
-    void OnLoadVoid(ModSlot slot);
+  "Id": "greeting", "X": 1, "Y": 1, "Width": 2, "Height": 1,
+  "Trigger": "Step", "When": "self.done != 1", "Solid": false,
+  "Commands": ["text \"Welcome to the meadow.\"", "flag self.done 1", "end"]
 }
 ```
 
-### Minimal example
+This is one entry inside `"Events": [...]` of an `rpg_map` entity. `Width` and `Height` default to 1; `Trigger` defaults to `Use` (E/F); `Solid` defaults to false. `When` is evaluated in the event's own scope. An optional `Name` is a locale key for the interaction cue. A shared `Scenario` can run before `Commands`; a `Teleport` is an alternative to both.
+
+The event `greeting` on `my_meadow` has the scope `my_meadow/greeting`, so `flag self.done 1` writes `my_meadow/greeting:done`. IDs must be unique across both the map's events and placements. Preserve this identity when moving a former invisible placement into `Events`, so existing flags keep their meaning.
+
+## Authoring with the mouse
+
+In RPG Map Editor choose **Event**, drag the rectangle, choose **When stepped on** or **On use (E / F)**, type the commands, press **Apply event**, then **Save**. Optional settings expose the condition, shared scenario and teleport. Select moves the rectangle; its corner handles resize it in either projection. Undo restores a whole drag as one step.
+
+These events save `X`, `Y`, `Width`, `Height` in the map. Legacy picture-less placements still use `Footprint.Size`; they remain supported but are a different storage format. Collision painting shows both, and `o`/`#` overrides their solidity.
+
+## Extending someone else's map
+
+Declare a dependency on the map's owner, then patch the map in `patches/rpg_map/&lt;your_mod>.json`:
+
+```json
+{
+  "Items": [{
+    "Id": "my_meadow",
+    "Events$add": [{
+      "Id": "my_mod_exit", "X": 3, "Y": 1,
+      "Trigger": "Step", "Teleport": {"Map": "rpg_village", "X": 1, "Y": 8, "Dir": "Right"}
+    }]
+  }]
+}
+```
+
+`Events` declares `Id` as its merge key. `$add` therefore updates a matching event or appends a new one; `"Events$remove": ["my_mod_exit"]` removes by identity. It is a map patch, not a separate `rpg_map_event` entity kind. The editor, validator and resource atlas scan event conditions, scripts, shared scenarios and teleport targets.
+
+Implementation: `RpgMap.Events`, `RpgMapEvent`, the RPG interaction runner, and `mods/rpg_editor/src/Document/RpgMapDocument.Events.cs`.
+
+===== DOC docs/mods/rpg/index.md: RPG maps, objects and events =====
+`rpg` supplies a grid world over `shell2d_base`. A map is a logical scene: ordinary dialogs, scene transitions, music and saves still work. WASD or arrows walk, Shift runs, and E/F uses the object or event the player faces. Party members follow the leader's trail and gather after a teleport. The leader's `Charset` supplies the walking picture.
+
+This is model v2. Pictures are individual PNGs in `rpg_images/`; maps do not use a tileset atlas. The separate world-map travel overlay is described in Map &amp; Travel Zones.
+
+## A minimal map
+
+Put this entity in `maps/meadow.json` in your own mod. Declare `rpg>=1`, a tile renderer and `village_pack>=1` in `depends` for this example.
+
+```json
+{
+  "Kind": "rpg_map",
+  "Items": [{
+    "Id": "my_meadow", "Name": "my_game/meadow/name",
+    "Width": 4, "Height": 3,
+    "Legend": {"g": "village_pack/ground/grass"},
+    "Ground": ["gggg", "gggg", "gggg"],
+    "Collision": ["....", "....", "...."],
+    "Spawn": {"X": 1, "Y": 1, "Dir": "Down"}
+  }]
+}
+```
+
+Also supply a scene definition with `"name": "my_meadow"`, following Scenes, and select this scene as the collection entry or enter it with `switch_scene my_meadow`. Map IDs contain no `/`.
+
+| Map field | Meaning |
+|---|---|
+| `Width`, `Height` | Cell dimensions |
+| `TileSize`, `PatchSize` | Picture pixels per cell (default 32) and surface material patch size (128) |
+| `Zoom` | View zoom, default 2 |
+| `Legend` | One character to an `rpg_object` ID; `.` is empty |
+| `Ground`, `Structure` | Rows of surface and segment legend codes respectively |
+| `Collision` | `.` uses object collision, `#` blocks, `o` forces passage even through a solid object |
+| `Strokes` | Ordered cell edits over the base rows; entries merge by `Id` |
+| `Spawn` | Default `X`, `Y`, `Dir` |
+| `Variant` | Default object variant for this map |
+| `Ambient`, `LightMode`, `Lights` | Fixed ambient colour, `cycle`/`day`/`night`, and map lights (radius in cells) |
+| `Atmosphere`, `Effects` | Whole-map profile and additional profiles or painted cell masks; see Effects |
+| `Events` | Map-owned interaction rectangles; see Map events |
+| `Encounters` | Read by the optional battles integration, rather than by the grid world |
+
+## Objects and placements
+
+An object is an entity of kind `rpg_object`, normally in `objects/`. A placement is an entity of kind `rpg_placement`, normally in `placements/&lt;map>/`. Its ID is `&lt;map>/&lt;local_id>`.
+
+| `Form` | Use |
+|---|---|
+| `surface` | Ground material through `Surface` |
+| `segment` | Joined wall or fence cells through `Segment` |
+| `sprite` | One or more pictures in `Parts`, with a multi-cell `Footprint` |
+| `actor` | A 1×1 character using `Charset`, `Facing`, `Column` and an optional `Route` |
+
+```json
+{
+  "Kind": "rpg_placement",
+  "Items": [{
+    "Id": "my_meadow/chest",
+    "Object": "village_pack/chest", "X": 2, "Y": 1,
+    "Interact": {"Trigger": "Use", "Commands": [
+      "text \"There is a note inside.\"", "flag self.opened 1", "end"
+    ]}
+  }]
+}
+```
+
+`Solid` overrides the form default (surfaces are walkable; other forms are solid). `Footprint.Size` is `[width,height]`; optional `Footprint.Solid` rows use `#` for blocked cells. `Hidden` removes drawing, collision and interaction. Explicit map collision codes take precedence.
+
+`Parts` entries can have `Id`, `Image` (relative to `rpg_images/`, without extension), pixel `Crop`, cell `At` and `Size`, `Geometry`, projection restriction `Only`, `DrawOrder` and `SortOffset`. Geometry supports upright pictures, ground pictures, planes and explicit quads. `Anchor` is the object's sorting and standing point in cells. The object editor includes a visual parts workspace for movement, resizing and depth checks with a reference character.
+
+Objects support `Extends` and named `Variants`. A placement's overrides merge over the object and its selected variant. Ordered `States` choose the last matching `When`; supplied state components replace their corresponding component. For example, a state can hide a defeated enemy or remove a locked door's teleport. `self.opened` belongs to this placement, not every copy of the chest: it resolves to the story flag `my_meadow/chest:opened`.
+
+`Interact` accepts `Scenario` and/or inline `Commands` (scenario first, commands afterwards), or a standalone `Teleport` with `Map`, `X`, `Y`, `Dir`. This allows a shared character dialog followed by `party.add`. An `end` in the shared scenario does not discard the appended interaction commands.
+
+## Battles and teleporting
+
+`rpg` has no dependency on `turn_battle_base`. When both are loaded, the integration `rpg__battles` supplies random encounters and `rpg.battle`:
+
+```scenario
+action rpg.battle enemies=rpg_wolf,rpg_slime win_flag=my_wolf_dead
+end
+```
+
+Victory sets the named flag to 1 and returns to the saved map cell. Random battles use map data such as `"Encounters": {"Steps": 48, "Groups": ["rpg_slime", "rpg_slime,rpg_slime"]}`; 0 steps disables them. No battle mod means no random battles. Teleports belong to `rpg` itself:
+
+```scenario
+action rpg.teleport map=rpg_village x=1 y=8 dir=right
+end
+```
+
+## Projection, editing and saving
+
+`tile_render_base` consumes the prepared world. `tile_topdown_base` draws squares from above; `tile_isometric_base` draws 2:1 diamonds. Set the collection setting `tile.renderer` to `topdown` or `isometric`, or override it with `--tile-renderer=isometric`. This changes presentation, not map coordinates or event identities.
+
+The RPG Map Editor paints grids, collision and effect masks; places objects and characters; edits interactions and map events; supports rectangle selection, copy/paste, undo/redo, spawn and teleport targets; and can play from the chosen cell. The RPG Object Editor edits the reusable definitions, parts, states, variants and PNG imports. Both use the game's renderer. Changes to a dependency are saved as patches in the chosen writable mod.
+
+The `rpg` save slot owns `Position`; story flags, including `self.` values, are in the core `Flags` blob. Keep placement and event IDs stable across updates. See Save data and Developer tools.
+
+Implementation: `mods/rpg/src/Model/`, `mods/rpg/src/Play/`, `mods/rpg/src/State/`, `mods/rpg/integrations/battles/`, and the three `tile_*_base` mods.
+
+===== DOC docs/mods/save/api.md: Mod save API =====
+Implement a public `IModSaveable` class in normal mod sources. The assembly consumer discovers it and registers the handler under its mod ID. Use one handler per mod and version each logical `DataBlob` independently.
+
+## Handler contract
 
 ```csharp
-using Cthangover.Core.Mods;
-using Cthangover.Core.Settings;
-
-public class MyModSaveHandler : IModSaveable
+namespace ExampleMod
 {
-    public void OnSave(ModSlot slot)
+    using Cthangover.Core.Mods;
+    using Cthangover.Core.Settings;
+
+    public class CounterSave : IModSaveable
     {
-        // ModId, ModName, ModVersion already set by core.
-        // Set only what the core needs for validation:
-        slot.Metadata.IsRequired = true;
+        public static int Visits { get; set; }
 
-        var blob = new DataBlob();
-        blob.SetInt("Health", player.Health);
-        blob.SetInt("Mana",   player.Mana);
-        blob.SetString("Name", player.Name);
-
-        slot.Data["Stats"] = blob;
-    }
-
-    public bool OnLoad(ModSlot slot, out string errorMessage)
-    {
-        if (slot.Data.TryGetValue("Stats", out var blob))
+        public void OnSave(ModSlot slot)
         {
-            player.Health = blob.GetInt("Health", 100);
-            player.Mana   = blob.GetInt("Mana", 50);
-            player.Name   = blob.GetString("Name", "Hero");
+            // ModId, ModName and ModVersion are already populated.
+            slot.Data["Visits"] = new DataBlob(1, Visits);
+        }
+
+        public bool OnLoad(ModSlot slot, out string errorMessage)
+        {
             errorMessage = null;
+            if (slot?.Data == null || !slot.Data.TryGetValue("Visits", out var blob))
+                return true;
+            if (blob.Version != 1)
+            {
+                errorMessage = "Unsupported Visits blob version";
+                return false;
+            }
+            Visits = blob.ReadJson&lt;int>();
             return true;
         }
 
-        errorMessage = null;
-        return true; // No data → nothing to restore, not an error
-    }
-}
-```
-
-### Versioned migration
-
-When your data schema changes, use `DataBlob.Version` to handle migration:
-
-```csharp
-public void OnSave(ModSlot slot)
-{
-    var data = new PlayerStateV2 { Health = 80, Mana = 40, Stamina = 100 };
-    slot.Data["FullState"] = new DataBlob(version: 2, data);
-}
-
-public bool OnLoad(ModSlot slot, out string errorMessage)
-{
-    if (!slot.Data.TryGetValue("FullState", out var blob))
-    {
-        errorMessage = null;
-        return true; // no data — nothing to restore
-    }
-
-    if (blob.Version == 2)
-    {
-        var state = blob.ReadJson&lt;PlayerStateV2>();
-        Apply(state);
-        errorMessage = null;
-        return true;
-    }
-
-    if (blob.Version == 1)
-    {
-        var old = blob.ReadJson&lt;PlayerStateV1>();
-        Apply(new PlayerStateV2
+        public void OnJoinedExistingGame()
         {
-            Health  = old.Health,
-            Mana    = old.Mana,
-            Stamina = 100, // default for new field
-        });
-        errorMessage = null;
-        return true;
+            // Optional: supply starter state when no slot was restored.
+        }
     }
-
-    errorMessage = $"Unsupported data version: {blob.Version}";
-    return false;
 }
 ```
 
-### Binary data
+Reset new-game state through the normal reset lifecycle as well; loading is not the only way a game starts. `OnJoinedExistingGame` is called for new, dormant or rejected mechanics with no restored slot. Do not use it to overwrite a successfully restored value.
 
-`DataBlob` can hold raw bytes: construct it from a `byte[]`, or use the binary API (`GetBytes`/`SetBytes`) to read and write raw data.
+The preferred load method is `bool OnLoad(ModSlot, out string)`. The legacy `void OnLoadVoid(ModSlot)` may throw; the default implementation delegates to it. Override at least one or the default throws `NotSupportedException`. `OnJoinedExistingGame()` has a no-op default. There is no `IsRequired` metadata property.
 
-```csharp
-public void OnSave(ModSlot slot)
-{
-    slot.Data["Skin"] = new DataBlob(textureBytes);
-}
+## Blobs and migrations
 
-public bool OnLoad(ModSlot slot, out string errorMessage)
-{
-    if (slot.Data.TryGetValue("Skin", out var blob))
-    {
-        byte[] bytes = blob.GetBytes();
-        // Decode the bytes yourself, e.g. via Godot's Image + ImageTexture.
-        ApplySkin(bytes);
-    }
+Use `slot.Data.TryGetValue` for missing keys and inspect `blob.Version` before reading a payload. For a schema upgrade, keep branches reading old DTOs and convert them to the current DTO; write only the current version. Return false with a descriptive error if conversion is impossible.
 
-    errorMessage = null;
-    return true;
-}
-```
+- `new DataBlob(2, data)` stores a versioned JSON payload, read with `ReadJson&lt;T>()`.
+- Key-value fields use `SetInt`/`GetInt`, `SetFloat`/`GetFloat`, `SetString`/`GetString`, `SetBool`/`GetBool`.
+- Raw bytes use `new DataBlob(bytes)` or `SetBytes`/`GetBytes`.
 
-### Marking a mod as optional
+Choose one access mode per blob. Key-value writes and whole JSON writes replace one another. The core fills `ModId`, `ModName`, `ModVersion`; a handler may set `MinCoreVersion`, `CustomData` and its own data. A mod slot requiring a newer core is kept dormant instead of handed to the old implementation.
 
-If a save can be loaded without your mod, set `IsRequired = false`:
+## Discovery and error handling
 
-```csharp
-slot.Metadata.IsRequired = false;
-```
+`ModAssemblyLoader.RegisterAssembly(assembly, modId)` fans out through `ModSaveableConsumer` and `ModSaveableRegistry`.
 
-The core will log a warning and skip the mod's data if the mod is not installed.
-
-### Compatibility guard (MinCoreVersion)
-
-If your save data depends on a specific core API, set the minimum version:
-
-```csharp
-slot.Metadata.MinCoreVersion = "0.2.0";
-```
-
-On load, if the current core version is below `0.2.0`, the load is aborted with an error message.
-
-## Registration &amp; dispatch (ModSaveableRegistry)
-
-You never invoke the registry yourself — implementations are discovered **automatically via reflection** when your mod assembly is loaded (`ModAssemblyLoader.RegisterAssembly` scans it with `Reflections.FindAndCreate&lt;IModSaveable>` and registers every implementation under your mod's ID).
-
-| Method | When | Behaviour |
-|---|---|---|
-| `ModSaveableRegistry.RegisterAssembly(assembly, modId)` | Mod assembly load | Scans the assembly and creates one instance per `IModSaveable` implementation |
-| `CollectSaveData() : Dictionary&lt;string, ModSlot>` | Save time | Per registered mod: builds a `ModSlot` with `ModId`, `ModName`, `ModVersion` pre-filled from `IModInfo`, then calls `OnSave(slot)` |
-| `DispatchLoad(Dictionary&lt;string, ModSlot>) : List&lt;string>` | Load time (phase 3) | Per registered mod whose ID is present in the loaded dictionary, calls `OnLoad(slot, out error)`; collects error strings (empty list = success) |
-
-Error handling rules:
-
-- An exception thrown from `OnSave` is logged and **that mod's slot is skipped**; other mods keep saving.
-- If you override neither load method, the defaults chain into `void OnLoadVoid(ModSlot)`, which throws `NotSupportedException` — override at least one of `bool OnLoad(...)` or `OnLoadVoid`.
-- A `false` return from `OnLoad` (or an exception from either overload) is converted to `Mod '&lt;id>' (&lt;name>): &lt;message>`; any such error aborts the whole load after phase 3.
-
-## Save slot API (SaveService)
-
-| Member | Description |
+| Registry operation | Behaviour |
 |---|---|
-| `Path : string` (static property) | Saves directory — globalised `user://saves` at runtime, `"saves"` otherwise |
-| `Save(string fileName)` | Build `"__core__"` slot, collect mod slots, write JSON |
-| `Load(string fileName) : bool` | Deserialize, validate + restore + dispatch |
-| `GetSaveSlots(int slotCount) : List&lt;SaveSlotInfo>` | Enumerate slots with preview metadata |
-| `DeleteSave(string fileName)` | Delete JSON + PNG screenshot |
+| `RegisterAssembly(assembly, modId)` | Discover save handlers |
+| `CollectSaveData()` | Create metadata and call each handler's `OnSave` |
+| `DispatchLoad(modData, failedModIds)` | Restore compatible live slots; collect failures |
+| `NotifyJoined(restoredModIds)` | Notify handlers without a restored slot |
 
-## Slot preview API (RuntimeSerializer)
+An `OnSave` exception is logged and that handler's new slot is skipped. A false/throwing `OnLoad` is reported and its original slot is retained as dormant (`LoadFailed`). Other compatible mod slots continue loading. The core does not inspect the payload or migrate it on the handler's behalf. Do not depend on the order of unrelated save handlers.
 
-| Member | Description |
+## Save browser API
+
+| `SaveService` member | Purpose |
 |---|---|
-| `RuntimeSerializer.ReadSlotPreview(ModMetadata meta) : CoreSlotPreview` | Deserialises the preview JSON from `ModMetadata.CustomData`; returns a default (empty) preview when the field is absent or malformed |
-| `RuntimeSerializer.CoreSlotPreview` | Nested public DTO: `CurrentSceneName` (`string`), `GameTime` (`long`), `CharacterCount` (`int`) |
+| `SaveDirectory`, `Path` | Active game's Godot directory and globalized path |
+| `Save(fileName)`, `Load(fileName)` | Save/load the active game's logical slot |
+| `ApplyPackage(package, sourceName)` | Restore an already read package |
+| `GameDirectory(gameId)` | Directory for a specific game |
+| `ListSaves(gameId)` | Unlimited saved-slot list with previews |
+| `GetSaveSlots(slotCount)` | Compatibility grid with empty slot placeholders |
+| `ListGamesWithSaves()` | Games represented in the save browser |
+| `NextSlotName(gameId)` | Next available logical name |
+| `ReadPackage(gameId, fileName)` | Read without applying |
+| `BackupSave(gameId, fileName)` | Create a backup |
+| `CopyGameSaves(fromGameId, toGameId)` | Copy saves for a duplicated game and rewrite the game ID |
+| `LastLoadDormancy` | Classification from the last applied save |
+| `PurgeDormantData()` | Explicitly remove dormant slots from saves and current session |
+| `DeleteSave(fileName)` | Delete active-game JSON and PNG |
 
-Lets a custom save-slot UI read slot info without deserialising any game-state blobs.
+Named-game saves live at `user://saves/&lt;game_id>/`; unscoped development saves use `user://saves/`. Slot names are sanitized for filesystem use.
 
-## Save screenshots (SaveScreenshotService)
+## Preview and screenshots
 
-| Method | Description |
-|---|---|
-| `CaptureAndSave(string fileName)` | Grabs the current background texture from the `ViewBox` node, downscales it to 320×180 with Lanczos interpolation, writes `user://saves/{fileName}.png` (same name sanitisation as the JSON save) |
-| `LoadScreenshot(string fileName) : Texture2D` | Reads the thumbnail PNG back as a `Texture2D`; returns `null` if the file is missing or fails to decode |
+`RuntimeSerializer.ReadSlotPreview(metadata)` reads `CurrentSceneName`, `GameTime`, `CharacterCount` from the reserved slot's `CustomData` without reading gameplay blobs. `SaveSlotInfo` also exposes game identity and the saved mod composition; see Data model.
 
-Notes:
-
-- If no valid background texture exists at capture time, a solid dark-grey **64×64 fallback** image is saved instead.
-- The thumbnail is a **separate PNG file** next to the save JSON — it is not part of `SavePackage`. Only the textual preview (`CurrentSceneName`, `GameTime`, `CharacterCount`) is embedded in the save, inside `ModMetadata.CustomData` of the `"__core__"` slot (see Data Model).
-- `DeleteSave(fileName)` removes both the JSON and the PNG.
+`SaveScreenshotService.CaptureAndSave(fileName)` captures the background view and writes a 320×180 PNG beside the JSON. If no background is available it uses a solid fallback image before scaling. `LoadScreenshot(fileName)` uses the active game's directory; `LoadScreenshotFromPath(path)` can load a preview from another game's directory. Both return null if the PNG is absent or cannot be decoded. Screenshots are separate files, not package blobs.
 
 ===== DOC docs/mods/save/data-model.md: Save Data Model =====
 ## Save file structure (SavePackage)
@@ -5049,7 +5315,9 @@ Notes:
 | `SaveId` | `string` | User-facing save name (e.g. "slot_1") |
 | `Timestamp` | `DateTime` | UTC timestamp when the save was created |
 | `CoreVersion` | `string` | Version of the game core that created this save |
-| `ModData` | `Dict&lt;string, ModSlot>` | Data slots from core + all mods |
+| `ModData` | `Dict&lt;string, ModSlot>` | Core and active mod data slots |
+| `Game` | `SaveGameInfo` | Game ID/name/version and ordered `Mods` (`Id`, `Version`) snapshot; null for unscoped development saves |
+| `Dormant` | `Dict&lt;string, ModSlot>` | Inactive/incompatible slots preserved for a later return |
 
 ## `"__core__"` slot structure
 
@@ -5059,15 +5327,26 @@ The core slot uses these blob keys:
 |---|---|---|
 | `Time` | `long` | In-game clock tick (minutes elapsed) |
 | `Lamp` | key-value | `Radius` (float), `Influence` (float) |
-| `Characters` | `List&lt;CharacterInfoData>` | Recruited character snapshots |
-| `Quests` | `List&lt;QuestBase>` | Quest instances with progress |
-| `BattleSet` | `List&lt;string>` | Active battle party character IDs |
-| `Inventory` | `List&lt;CItem>` | Inventory item stacks |
-| `Recipes` | `List&lt;string>` | Unlocked recipe IDs |
 | `ActionPool` | `List&lt;string>` | Persistent action card pool IDs |
 | `Skills` | `List&lt;string>` | Owned skill IDs |
-| `CompletedScenarios` | `List&lt;string>` | One-shot scenario IDs already run |
-| `MapZones` | `MapZoneStateData` | World-map zone open/visible overrides (delta against the mod-authored defaults) |
+| `CompletedScenarios` | `List&lt;string>` | Completed scene-chain scenario IDs |
+| `MapZones` | `MapZoneStateData` | World-map open/visible overrides against authored defaults |
+| `Flags` | `Dictionary&lt;string,string>` | Global flags and scoped `&lt;map>/&lt;event>:&lt;name>` flags |
+
+## Mod-owned slots
+
+| Slot | Blob keys | Owner |
+|---|---|---|
+| `characters_base` | `Characters`, `BattleSet` | Party snapshots and active combat-party IDs |
+| `items_base` | `Inventory`, `Recipes` | Item id/count pairs (including unresolved entries) and learned recipes |
+| `quests_base` | `Quests` | Quest state, including unresolved records |
+| `rpg` | `Position` | RPG map and position state |
+| `stats_base` | `Stats` | Stats sheets and progression |
+| `equipment` | `Worn` | Equipped item state |
+| `recruiting` | `Recruits` | Recruit roster |
+| `npc_barks_base` | `History` | Completed ambient definitions and remaining cooldowns |
+
+These slots are written by the owning mods' `IModSaveable` implementations; they are not part of `__core__`. Current loading does not migrate former core-owned character/item/quest blobs automatically. A currently running battle, dialog execution pointer, speech bubble or transient speech event is not a saved snapshot.
 
 Slot preview metadata (`CurrentSceneName`, `GameTime`, `CharacterCount`) is stored in `ModMetadata.CustomData` as a JSON object, so the slot list UI can read it without deserialising game-state blobs.
 
@@ -5084,7 +5363,7 @@ The saved `CurrentSceneName` is used for the slot-list UI and scene navigation a
 
 ## ModMetadata
 
-The core pre-fills `ModId`, `ModName`, and `ModVersion` from `IModInfo` before calling `OnSave`. The mod only needs to set `MinCoreVersion`, `IsRequired`, `CustomData`, and the data blobs.
+The core pre-fills `ModId`, `ModName`, and `ModVersion` from `IModInfo` before calling `OnSave`. The mod only needs to set `MinCoreVersion`, `CustomData`, and the data blobs.
 
 | Field | Type | Set by | Description |
 |---|---|---|---|
@@ -5092,7 +5371,9 @@ The core pre-fills `ModId`, `ModName`, and `ModVersion` from `IModInfo` before c
 | `ModName` | `string` | core | Human-readable name (from `IModInfo.DisplayTitle`) |
 | `ModVersion` | `string` | core | Version of the installed mod (from `IModInfo.Version`, read from `manifest.json`) |
 | `MinCoreVersion` | `string` | mod | Minimum core version required |
-| `IsRequired` | `bool` | mod | If true, save cannot load without this mod (default: true) |
+| `Dormant` | `bool` | core | True while the slot is retained inactive |
+| `DormantReason` | `string` | core | `NotLoaded`, `Downgrade`, `CoreTooOld`, or `LoadFailed` |
+| `DormantSince` | `DateTime?` | core | First dormancy date |
 | `CustomData` | `string` | mod | Free-form JSON for extra metadata |
 
 ## DataBlob
@@ -5127,91 +5408,56 @@ Returned by `SaveService.GetSaveSlots(slotCount)` for the load-game UI. There is
 | `FileName` | `string` | Logical slot name (e.g. `slot_1`), used as the save-file identifier |
 | `SaveTime` | `DateTime` | UTC timestamp from `SavePackage.Timestamp` (`DateTime.MinValue` for empty slots) |
 | `SceneName` | `string` | Scene at save time (from the core slot preview; `"unknown"` fallback) |
-| `ScreenshotPath` | `string` | Godot path of the thumbnail PNG (e.g. `user://saves/slot_1.png`) |
+| `ScreenshotPath` | `string` | Godot path of the thumbnail PNG (e.g. `user://saves/&lt;game_id>/slot_1.png`) |
 | `HasScreenshot` | `bool` | `true` if a thumbnail PNG exists on disk |
 | `IsEmpty` | `bool` | `true` when no JSON save file exists for this slot |
 | `GameTime` | `long` | In-game time tick at save moment |
 | `CharacterCount` | `int` | Number of characters at save moment |
+| `GameId`, `GameName` | `string` | Game identity and saved display name |
+| `Mods` | `List&lt;SaveGameMod>` | Saved mod-composition snapshot |
 | `LampPercent` | `float` | **Known placeholder**: currently always written as `0f` by `GetSaveSlots` — no real lamp data is computed yet |
 
-===== DOC docs/mods/save/index.md: Save System =====
-The save system uses a mod-aware dispatch architecture. All game state — core and mod alike — lives in named slots inside `SavePackage.ModData`. The core writes its state into the reserved `"__core__"` slot; mods write into their own named slots via `IModSaveable`.
+===== DOC docs/mods/save/index.md: Save system =====
+A `SavePackage` contains a reserved `__core__` slot, mod-owned slots in `ModData`, the game composition snapshot in `Game`, and preserved inactive slots in `Dormant`. The kernel routes blobs to their owners; it does not interpret their payloads.
 
-## Architecture
+## Where saves live
+
+A game's saves and PNG thumbnails live in `user://saves/&lt;game_id>/`. The save browser supports an unlimited list; `slot_1`, `slot_2`, … are logical names, not a hard slot limit. Development runs without a game retain the unscoped saves directory. `Game` records the collection's ID, name, version and mod versions at save time; this snapshot does not force the old composition to be reinstalled.
+
+## Save and load
 
 ```mermaid
 flowchart TD
-    subgraph SaveFlow["Save Flow"]
-        direction TB
-        S1["Save()"] --> S2["Build '__core__' slot"]
-        S1 --> S3["CollectSaveData()"]
-        S2 --> S3b["Metadata, Time, Characters, ..."]
-        S3 --> S4["For each mod:\npre-fill slot.Metadata\n&amp;#40;ModId, ModName, ModVersion&amp;#41;"]
-        S4 --> S5["mod.OnSave&amp;#40;slot&amp;#41;"]
-        S5 --> S5a["Mod writes:\nMinCoreVersion, IsRequired, Data[...]"]
-        S3b --> S6["Merge + Serialise"]
-        S5a --> S6
-    end
-
-    subgraph LoadFlow["Load Flow"]
-        direction TB
-        L1["Load()"] --> L2["Validate all ModData slots"]
-        L2 --> L2a["IsRequired mod installed?"]
-        L2 --> L2b["CoreVersion >= MinCoreVersion?"]
-        L2 --> L2c["ModVersion comparison\n&amp;#40;downgrade/migration&amp;#41;"]
-        L2a --> L3{"Pass?"}
-        L2b --> L3
-        L2c --> L3
-        L3 -->|yes| L4["Restore core state\nfrom '__core__'"]
-        L3 -->|no| LErr["Abort"]
-        L4 --> L5["DispatchLoad() → mods"]
-        L5 --> L6["mod.OnLoad&amp;#40;slot, out error&amp;#41;"]
-        L6 --> L6a["Read slot.Data[...]"]
-        L6 --> L6b["Check blob.Version"]
-        L6 --> L6c["Migrate if needed"]
-    end
-
-    S6 -->|writes| SavePkg["SavePackage\nModData dict"]
-    SavePkg -->|reads| L1
+    S[Save] --> C[Build core slot]
+    S --> M[Collect mod slots]
+    C --> P[Write package with Game and Dormant]
+    M --> P
+    P --> L[Load and validate core slot]
+    L --> D[Classify mod slots]
+    D --> R[Restore compatible live slots]
+    D --> K[Carry incompatible slots as Dormant]
+    R --> J[Notify mods joining an existing game]
 ```
 
-## Core concepts
+Loading first requires a valid core slot. It then classifies each mod slot against the **loaded** mod set and versions, restores core state, and dispatches compatible mod data. A slot whose mod is missing, downgraded, requires a newer core, or rejects its payload is retained as dormant; these mod-local problems do not abort the entire load. The reasons are `NotLoaded`, `Downgrade`, `CoreTooOld`, `LoadFailed`.
 
-### Uniform slots
+Dormant data is written forward unchanged and can revive when the compatible mod returns. New mechanics without restored data start from new-game defaults and receive `IModSaveable.OnJoinedExistingGame()`. The save settings provide explicit dormant-data cleanup (`SaveService.PurgeDormantData()`); data is otherwise retained. Unresolved item and quest records are also retained by their owners rather than silently lost.
 
-Every piece of persisted state lives in a `ModSlot` under `SavePackage.ModData`. There is no distinction between "core" and "mod" data at the storage level — the core just happens to own the reserved key `"__core__"`.
+## State ownership
 
-### Dispatcher (core)
+The core currently keeps time, lamp, skills/action pool, completed scenarios, world-map overrides and story flags. Characters, inventory, recipes, quests, RPG position, stats, equipment, recruits and NPC background history each have their own mod slots. There is no active-battle snapshot or automatic saving of concurrent speech execution pointers.
 
-The core is a lightweight dispatcher. It:
-- Builds its own `"__core__"` slot with named `DataBlob` blocks per subsystem.
-- Collects slots from mods and merges them into the save package.
-- Validates mod metadata on load (required mods present, version compatibility).
-- **Never inspects mod data contents** — it works only with byte arrays and version numbers.
+Removing a mechanic from a game's collection therefore preserves its save slot for a later return. This does not convert old saves from before a subsystem moved out of `__core__`: see Versioning.
 
-## Load flow (three phases)
+## Mod contract
 
-1. **Phase 1 — Validation** (via `ModMetadata` of every slot):
-   - For each `ModSlot` in `ModData`:
-     - If `IsRequired == true` and the mod is not installed → **abort**.
-     - If `CoreVersion &lt; MinCoreVersion` → **abort**.
-     - **Mod version comparison** (if both save and installed mod have versions):
-       - `save.Version > installed.Version` → **abort** (downgrade not supported).
-       - `save.Version &lt; installed.Version` → **warning** (mod must handle migration in `OnLoad`).
-2. **Phase 2 — Core state restore**: read blobs from `ModData["__core__"]` and push values into `RuntimeData`.
-3. **Phase 3 — Mod dispatch** (`ModSaveableRegistry.DispatchLoad`):
-   - For each installed mod whose ID is in `ModData` (excluding `"__core__"`), call `OnLoad(slot, out error)`.
-   - Two overloads supported: `bool OnLoad(ModSlot, out string)` and legacy `void OnLoadVoid(ModSlot)` (throw on error).
+Implement `IModSaveable`; discovery supplies one slot per mod. The core fills `ModId`, `ModName`, `ModVersion`; the mod sets `MinCoreVersion`, optional `CustomData`, and `Data`. There is no `IsRequired` field in the current metadata DTO. Use versioned blobs, handle missing keys, and keep another mod's state out of your own payload.
 
-## Reserved slot key
+`__core__` remains reserved; a mod cannot replace it. Scene navigation after loading uses the core preview's `CurrentSceneName`, while mod state restores before gameplay resumes.
 
-The key `"__core__"` is reserved for the core game state. If a mod attempts to write a slot with this key, the save service logs a warning and skips it.
-
-## Pages
-
-- Data Model — SavePackage, __core__ slot, ModSlot, ModMetadata, DataBlob
-- Mod API — IModSaveable interface, examples, SaveService
-- Versioning &amp; Compatibility — version comparison, backward compatibility, rules
+- Data model — package, slot ownership, blobs and preview fields.
+- Mod API — save handlers, migrations and save-browser methods.
+- Versioning and compatibility — version comparison and dormancy.
 
 ===== DOC docs/mods/save/versioning.md: Versioning &amp; Compatibility =====
 ## Backward compatibility
@@ -5220,7 +5466,7 @@ Old saves (without `ModData`, `SaveId`, `Timestamp`, `CoreVersion` fields) will 
 
 ## Version comparison
 
-During phase-1 validation the core compares `ModMetadata.ModVersion` from the save with `IModInfo.Version` from the installed mod. Both values originate from the `"version"` field in `manifest.json`.
+During slot classification the core compares `ModMetadata.ModVersion` from the save with `IModInfo.Version` from the installed mod. Both values originate from the `"version"` field in `manifest.json`.
 
 ### Comparison strategy
 
@@ -5247,7 +5493,7 @@ Consequences: a segment like `"1b"` does **not** parse as int, so it compares **
 | Condition | Result |
 |---|---|
 | No version in save or installed mod | Skip check |
-| `save.Version > installed.Version` | **Abort** — save was made by a newer mod; downgrade not supported |
+| `save.Version > installed.Version` | Keep this slot **dormant** (`Downgrade`); compatible parts of the game still load |
 | `save.Version &lt; installed.Version` | **Warning** — save is from an older mod version; the mod must handle migration in `OnLoad` |
 | `save.Version == installed.Version` | OK |
 
@@ -5271,11 +5517,19 @@ This value flows through `ModManifest.Version` → `IModInfo.Version` → `ModMe
 
 - **Add `"version"` to `manifest.json`** — the core uses it for save validation and migration detection.
 - **One `IModSaveable` per mod** — create a single implementation in your assembly.
-- **Never set `ModId`, `ModName`, or `ModVersion`** — the core pre-fills them. Set `MinCoreVersion`, `IsRequired`, `CustomData`, and `Data`.
+- **Never set `ModId`, `ModName`, or `ModVersion`** — the core pre-fills them. Set `MinCoreVersion`, `CustomData`, and `Data`.
 - **Prefer `bool OnLoad(ModSlot, out string)`** — explicit contract, no exceptions. Override `OnLoadVoid` only for legacy/compatibility.
 - **Mods must not depend on each other's save data** — the dispatch order is undefined.
 - **Version your `DataBlob` blocks** — use separate blobs per logical entity, version each independently.
 - **Handle missing keys** — use `TryGetValue` and provide defaults.
+
+## Missing mods and rejoining
+
+A missing/unloaded mod or a mod whose slot requires a newer core is kept dormant (`NotLoaded` or `CoreTooOld`). A rejected `OnLoad` becomes `LoadFailed`. These mod-local outcomes do not abort the whole package. A missing or incompatible reserved core slot still blocks load. See Save system.
+
+When a compatible mod returns, its dormant data can revive. A new mechanic without restored data receives `OnJoinedExistingGame()` after defaults are prepared. Retain a stable mod ID; renaming it does not automatically transfer the old slot. Cleanup in the save settings explicitly purges dormant data.
+
+The current format does not migrate the former `Characters`/`BattleSet`, `Inventory`/`Recipes`, or `Quests` blobs out of `__core__`; those owners now read their own mod slots. Older saves may therefore start those subsystems at fresh defaults unless a dedicated converter is supplied.
 
 ===== DOC docs/mods/scenes/index.md: Scenes =====
 Scene definitions map scene IDs to default backgrounds, ambient music, and entry-point scenarios. Scenes are the navigation graph of the game — the player moves between them.
@@ -5286,8 +5540,8 @@ Scene definitions map scene IDs to default backgrounds, ambient music, and entry
 {
   "name": "scene_id",                                       // Unique scene identifier (referenced by switch_scene)
   "defaultBackground": "path/to/background",                // Path to background image loaded on scene enter (or array of paths)
-  "defaultAmbient": "playlist_id",                          // Playlist ID for background music (empty = no music)
-  "defaultScenario": "scenarios/path/to/default.scenario"   // Scenario file that runs when the scene loads
+  "defaultAmbient": "locations/wind",                       // Looping ambient sound ID; empty stops ambient
+  "defaultScenario": "scenarios/path/to/default.scenario"   // Fallback when no scene events are registered
 }
 ```
 
@@ -5296,9 +5550,9 @@ Scene definitions map scene IDs to default backgrounds, ambient music, and entry
 | Field | Description |
 |---|---|
 | `name` | Unique scene identifier (e.g. `home_kitchen`, `town_entry`). Referenced by `switch_scene` in DSL |
-| `defaultBackground` | Path to the background image loaded on scene enter (relative to `backgrounds/`). Can be a single string or an array of strings for multiple backgrounds |
-| `defaultAmbient` | Playlist ID for background music (from `music/playlists/`). Empty string = no music |
-| `defaultScenario` | Path to the scenario file that runs when the scene loads (relative to mod root) |
+| `defaultBackground` | Path to the background image loaded on scene enter (relative to `backgrounds/`). Can be a single string or an array; entering the scene chooses one array entry randomly |
+| `defaultAmbient` | Ambient sound ID relative to `sounds/`; empty/null stops the ambient channel. Music playlists are selected separately by scene and route state |
+| `defaultScenario` | Fallback scenario path relative to the mod root, used when no scene events are registered |
 
 ## Real examples
 
@@ -5308,7 +5562,7 @@ From `mods/cthangover_game/scenes/`:
 {
   "name": "home_kitchen",                                 // Scene ID — used with switch_scene and ui[] entries
   "defaultBackground": "home/kitchen",                    // Background image path (relative to backgrounds/)
-  "defaultAmbient": "",                                   // No ambient music for this scene
+  "defaultAmbient": "",                                   // Stop ambient sounds for this scene
   "defaultScenario": "scenarios/home/home_kitchen_default.scenario"  // Entry-point scenario
 }
 ```
@@ -5317,7 +5571,7 @@ From `mods/cthangover_game/scenes/`:
 {
   "name": "home_vestibule",                                   // Scene ID — vestibule/entrance of the player's home
   "defaultBackground": "home/vestibule",                      // Background image path (relative to backgrounds/)
-  "defaultAmbient": "",                                       // No ambient music for this scene
+  "defaultAmbient": "",                                       // Stop ambient sounds for this scene
   "defaultScenario": "scenarios/home/home_vestibule_default.scenario"  // Entry-point scenario
 }
 ```
@@ -5385,6 +5639,164 @@ This allows mods to extend scenes non-destructively by writing additional scenar
 4. Add `switch_scene {name}` commands to an existing scene to create a navigation path
 5. Register a `[SceneEvent]` class, add extra `.scenario` files targeting the scene, or declare a `ui` entry with `"scene": "{name}"` in your manifest if needed
 
+===== DOC docs/mods/scenes/scenarios/background.md: Background NPC scenarios =====
+`npc_barks_base` hosts concurrent `.scenario` programs on RPG maps. Speech appears above NPCs while the player can keep walking. Each execution uses the shared `dialog_base` parser and its own `DialogRuntime`, variables, waits, roles and debugger. It does not occupy the modal dialog box. The mod is a prototype; its supported command subset is deliberately limited.
+
+[image: Two concurrent NPC speech bubbles at the city gates in Junior Reaper &amp; Paper Grief.]
+
+## Defining a conversation
+
+The game must include `npc_barks_base` and supply the actor placements named below. Put the file in `scenarios/ambient/greeting.scenario`:
+
+```scenario
+scene: my_meadow
+channel: ambient
+actor.guard: my_meadow/guard
+anchor: guard
+condition: near("guard", "player", 4)
+cooldown: 30
+once: false
+priority: 0
+---
+:greet
+action npc.look who=guard target=player
+text "Good evening." who=guard duration=3 cue=guard_greeting
+end
+```
+
+The definition ID is its path relative to `scenarios/` without the extension: `ambient/greeting`. This is distinct from the modal scene-chain scenario identity. Translate speech with ordinary `key=` entries.
+
+| Header | Meaning |
+|---|---|
+| `channel: ambient` | Selects the background host; omitted channel means ordinary modal dialog |
+| `scene` | Required RPG map ID |
+| `actor.&lt;role>` | Required owned participant; full placement ID must start with `&lt;scene>/` |
+| `anchor` | An owned role, defaulting to the first role; supplies the default speaker and `self.` scope |
+| `condition` | Admission condition in this execution's spatial context |
+| `cooldown` | Nonnegative finite seconds after completion, default 30 |
+| `once` | Save completion history and stop admitting the definition after success, default false |
+| `priority` | Lower first; equal priority sorts by definition ID |
+| `on`, `cue`, `source_actor` | Optional reaction to a speech cue; see below |
+
+Actors must exist, be visible and be stationary. Owned participants are reserved together: two conversations cannot own the same actor at once. Disjoint conversations can run concurrently (up to 32). Their actors' routes are held until completion or interruption. E/F interaction with a participant interrupts its bark and releases it for the player's dialog.
+
+## Commands and spatial conditions
+
+Supported commands are `text`, `ptext`, `when`, `goto`, `delay`, `flag`, `set`, `cset`, `end`, and **only** `action npc.look`. Modal choices, scene switches, battles, inventory actions and arbitrary `action` names are rejected during ambient compilation. `wait=false` on speech is rejected.
+
+`who=` selects an owned speaker role; `duration=` is a positive finite reading time in seconds. Without a duration, the host estimates 2–8 seconds from text length. `cue=` emits speech events. `npc.look who=&lt;owned_role> target=&lt;role|player|source>` keeps that actor facing the target while the run owns it.
+
+Conditions share the story condition grammar and add:
+
+| Condition | Prototype meaning |
+|---|---|
+| `near("guard", "player", 4)` | Euclidean distance within an integer radius of 0–1000 logical cells |
+| `visible("guard")` | Participant exists and is logically visible; not a camera or wall visibility test |
+| `moving("player")` | Whether that resolved actor is currently moving |
+| `can_hear("guard", "source")` | Distance within 8 cells; no wall or door acoustics |
+
+`player` and `source` are reserved roles, not names for `actor.*` declarations. `source` resolves to the actor whose speech triggered a reaction.
+
+`when` can wait for a live condition instead of branching once:
+
+```scenario
+when "!near(\"guard\", \"player\", 5)" wait=true timeout=8 else=still_here -> :left
+:still_here
+text "Still here?" who=guard
+end
+:left
+text "There they go." who=guard
+end
+```
+
+`timeout` must be positive and finite. The success arrow and `else` target are optional; a missing target continues to the next line. The modal host also supports this wait form.
+
+## Responding to speech
+
+A second definition can declare:
+
+```scenario
+scene: my_meadow
+channel: ambient
+actor.vendor: my_meadow/vendor
+on: speech.finished
+cue: guard_greeting
+source_actor: my_meadow/guard
+condition: can_hear("vendor", "source")
+cooldown: 30
+---
+:reply
+action npc.look who=vendor target=source
+text "Evening!" who=vendor duration=2
+end
+```
+
+`on` accepts `speech.started` or `speech.finished` and requires `cue`. `source_actor` optionally filters by exact placement ID. Reactions are deferred to the next world update; old-session events, duplicate events, events older than two simulation seconds and reaction depth beyond eight are discarded. An interruption emits `speech.interrupted`, not a false finish; this phase is not an accepted reaction trigger.
+
+## Patching a labeled block
+
+Place a patch under `patches/scenarios/` and depend on the definition's owner:
+
+```scenario
+patch_of: ambient/greeting
+replace: greet
+---
+text "The market closes soon." who=guard duration=3
+end
+```
+
+`replace` preserves the label and replaces its body up to the next label; it cannot introduce labels. `remove: greet` removes the labeled block. `append_blocks: true` appends explicitly labeled blocks, provided the original body ends with `end`. Patches address stable labels, never line numbers. Compilation rejects duplicate labels and missing jump targets. This patch mechanism belongs to the ambient host.
+
+## Editing, debugging and persistence
+
+Scenario Editor validates background buffers and can preview one scenario or its company of nearby scenarios. Save publishes source changes; existing runs keep their compiled program until restarted. Scenario Studio's **Background** tab lists definitions and their admission status separately from running executions. Select a run to pause, step, continue, advance its clock by a second, stop or restart it. Source IDs select breakpoints; run IDs select one execution.
+
+[image: Scenario Studio's Background tab showing the catalog and a live NPC execution at the city gates.]
+
+Menus and ordinary blocking tools pause the simulation and reading timers. The background authoring tools use observation mode; Studio also has an explicit whole-world pause. Scene exit, world replacement and applied mod reload abort transient runs and release their participants.
+
+The `npc_barks_base` save slot stores a `History` blob: completed definition IDs and remaining cooldowns. Bubbles, execution pointers and queued speech events are not saved or replayed; active runs receive a small cooldown on save. An aborted run is not marked completed. Flags remain ordinary saved game flags.
+
+Implementation: `mods/npc_barks_base/src/` and `mods/dialog_base/src/IScenarioExecutionHost.cs`. The authoring seam is `BackgroundScenarios.Provider` / `IBackgroundScenarioTools`. Tests: `npc_barks` and `npc_barks_tools` in the test manifest.
+
+===== DOC docs/mods/scenes/scenarios/expressions.md: Numeric expressions and dialog variables =====
+`expressions_base` supplies the shared expression parser used by dialogs, schemas and stats. Arithmetic works in a visual novel without RPG or character stats.
+
+```scenario
+set money=rnd(3,5)
+cset total "1+2+${money}"
+ptext "You found ${money} coins."
+action item.add id=money/coin count=${money}
+end
+```
+
+The final action additionally requires `items_base` and content defining the item. The random value is calculated once and reused, including in translated `ptext` values and action parameters.
+
+| Assignment | Result |
+|---|---|
+| `set name value` | Literal string |
+| `set name=expression` | Calculated number |
+| `cset name expression` or `cset name=expression` | Calculated number |
+| `set name = value` | Invalid intended assignment: space-separated literal form stores `=` |
+
+Quote expressions containing spaces. Names are case-sensitive. Variables belong to the current runtime; for persistent state read by conditions, use `flag`. Each concurrent background execution has its own variable dictionary.
+
+## Grammar and errors
+
+Numbers use a decimal point. Arithmetic: `+ - * / % ^`, parentheses and unary signs. Comparisons: `&lt; &lt;= > >= == !=`. Boolean results are 0/1; `! &amp;&amp; ||` combine them. Both `condition ? yes : no` and `if(condition, yes, no)` select lazily. Multiplication precedes addition, powers associate right, and `-2^2` is -4.
+
+Functions: `min`, `max`, `abs`, `floor`, `ceil`, `round`, `sqrt`, `clamp`, `rnd`, `rand`, `chance`. `rnd(a,b)` requires ordered Int32 integer bounds and includes both endpoints. `rand` keeps the legacy formula behaviour of reordering and rounding bounds inward. `chance(p)` uses percentages from 0 to 100. Round fractional results before passing them to integer-only item actions.
+
+Dialog assignments reject undefined/nonnumeric variables, zero division, invalid arguments and non-finite results. They stop execution with source and line diagnostics before dependent actions and preserve the old variable value. Reading `${name}` numerically reads its value; it cannot inject expression syntax. Syntax inspection in the validator and palette does not consume randomness.
+
+Stats formulas retain their legacy permissive treatment of unknown variables and division by zero (zero). Sharing syntax does not make these two error policies interchangeable.
+
+## Extending the language
+
+Public parameterless `IExpressionFunctionStrategy`, `IExpressionBinaryStrategy` and `IExpressionUnaryStrategy` implementations are discovered in mods that depend on `expressions_base`. Function strategies declare a name and argument bounds (`MaxArguments = -1` for unlimited); evaluate operands with `context.Value` and use `context.Random`. Operator strategies declare a symbol and precedence (1–100), with optional right associativity for binary operators. The first registration owns a name; duplicate registrations cannot override built-ins. Unloading removes strategies and registry changes invalidate parser caches.
+
+The source-compatible `Cthangover.Mods.Stats.Formulas` APIs remain available. Implementation and examples: `mods/expressions_base/src/` and that mod's bundled guide.
+
 ===== DOC docs/mods/scenes/scenarios/index.md: Scenarios — DSL Reference =====
 `.scenario` files are the heart of the game's narrative system. Each file contains a metadata header, a `---` separator, and a script body written in a custom domain-specific language (DSL).
 
@@ -5413,7 +5825,8 @@ end
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `scene` | string | *(required)* | Scene this scenario targets. Multiple scenario files can target the same scene |
+| `scene` | string | *(none)* | Required for automatic scene-chain execution; a headerless script can be invoked by an interactive object or RPG event |
+| `channel` | string | `dialog` | `dialog` runs in the modal scene chain; `ambient` is hosted by `npc_barks_base` and excluded from that chain |
 | `priority` | int | `0` | Execution order — **lower runs earlier**. All matching scenarios are enqueued in this order |
 | `after` | string | *(none)* | Scenario ID that must come before this one in the chain (ordering dependency) |
 | `condition` | expression | *(none)* | Quest-condition expression. Scenario only runs if true. See `dsl/conditions/` |
@@ -5423,7 +5836,7 @@ end
 
 ## Real examples
 
-### Default kitchen scenario (core)
+### Default kitchen scenario (game content)
 
 ```scenario
 scene: home_kitchen
@@ -5460,7 +5873,7 @@ end
 
 Because `priority: 5 &lt; 10`, the cooking scenario is enqueued **before** the default one. Note that it does **not** replace the default — both scenarios are enqueued and run in priority order. Use `condition:` (or `is_one_run: true`) to exclude scenarios from execution, not priority.
 
-### Bedroom with save_allowed (core)
+### Bedroom with save_allowed (game content)
 
 ```scenario
 scene: home_bedroom
@@ -5488,6 +5901,8 @@ end
 
 The interactive lamp is added once, on first visit. Subsequent visits skip this scenario.
 
+For `channel: ambient`, actor roles, spatial conditions, cooldowns and speech reactions are documented in Background NPC scenarios. These headers belong to the background host.
+
 ## Adding or replacing a scenario
 
 A scenario is identified by its **file name** (without `.scenario`): that is the
@@ -5505,13 +5920,51 @@ id the completion history, `after:` links and the studio use.
 
 ## How the engine selects scenarios
 
-1. Player enters `scene: home_kitchen`
+1. Player enters `scene: home_kitchen` (the following steps describe `channel: dialog`).
 2. Engine collects all `.scenario` files targeting `home_kitchen` across all mods
 3. Sorts by `priority` (ascending) and resolves `after:` dependencies (topological order)
 4. For each scenario in that order, evaluates `condition:` (if present). A scenario **without** a condition always passes.
 5. **Every** scenario whose condition passes is enqueued into the scene's event chain — there is no first-match cut-off. Scenarios then execute one after another in enqueue order.
 
 Priority therefore controls *ordering*, not selection: a lower-priority number means the scenario runs earlier in the chain, alongside all other passing scenarios.
+
+===== DOC docs/mods/scenes/scenarios/actions/catalog.md: Action parameter catalog =====
+This table follows the installed production `schemas/*.json`, including conditional integrations. Load the owning mod before using its action. Required parameters are bold; other parameters are optional. A schema is a validation/editor contract, not an implementation: the runtime action is still responsible for applying it. Test-only suites are excluded.
+
+| Action | Owner | Parameters (schema type; default if given) |
+|---|---|---|
+| `battle.init` | `turn_battle_base` | **`enemies`** (ref_list:character); `scene` (scene) |
+| `battle.init` | `turn_battle_base__quests` | **`enemies`** (ref_list:character); `scene` (scene); `quest_id` (ref:quest); `new_tag` (text) |
+| `battle.set_core` | `turn_battle_base` | **`core`** (choice) |
+| `character.add_skill` | `skills_base` | **`skill_id`** (ref:skill) |
+| `character.send_notification` | `characters_base` | **`type`** (ref:character) |
+| `craft.open` | `crafting` | **`station`** (ref:craft_station) |
+| `equip.put` | `equipment` | **`item`** (ref:item); `who` (who); `slot` (ref:equip_slot); `give` (bool) |
+| `equip.remove` | `equipment` | **`slot`** (ref:equip_slot); `who` (who) |
+| `item.add` | `items_base` | **`id`** (ref:item); `count` (int; default `1`) |
+| `item.remove` | `items_base` | **`id`** (ref:item); `count` (int; default `1`) |
+| `map.close_zone` | `map_base` | **`zone_id`** (text) |
+| `map.hide_zone` | `map_base` | **`zone_id`** (text) |
+| `map.open_zone` | `map_base` | **`zone_id`** (text) |
+| `map.show_zone` | `map_base` | **`zone_id`** (text) |
+| `npc.look` | `npc_barks_base` | **`who`** (text); **`target`** (text) |
+| `party.add` | `characters_base` | **`id`** (ref:character) |
+| `quest.add_tag` | `quests_base` | **`quest_id`** (ref:quest); **`tag`** (text) |
+| `quest.remove_tag` | `quests_base` | **`quest_id`** (ref:quest); **`tag`** (text) |
+| `quest.send_notification` | `quests_base` | **`quest_id`** (ref:quest) |
+| `quest.set_data_status` | `quests_base` | **`quest_id`** (ref:quest); **`level`** (int) |
+| `quest.set_status` | `quests_base` | **`quest_id`** (ref:quest); **`status`** (choice) |
+| `rpg.battle` | `rpg__battles` | **`enemies`** (ref_list:character); `win_flag` (flag) |
+| `rpg.teleport` | `rpg` | `map` (ref:rpg_map); **`x`** (int); **`y`** (int); `dir` (choice) |
+| `stat.add` | `stats_base` | **`stat`** (ref:stat); `value` (number; default `1`); `who` (who) |
+| `stat.archetype` | `stats_base` | `id` (ref:archetype); `who` (who) |
+| `stat.exp` | `stats_base` | **`value`** (int); `who` (who; default `party`) |
+| `stat.restore` | `stats_base` | `who` (who; default `party`); `stat` (text) |
+| `trade.open` | `trading` | **`shop`** (ref:shop) |
+
+`add_live2d_model` is also registered by `live2d_base`; its runtime action requires `model_path=`, accepts `mod_id=`, `node_name=` (default `Live2DModel`), `x=`/`y=` together and `scale=` and it is not currently described by an action schema. `toggle_cooking_workbench` is the cooking convenience alias for its workbench panel; it has no parameters. Spatial `npc.look` requires an ambient execution host and cannot be used as a general modal action.
+
+See Action examples, RPG, Stats, Crafting, Trading and Background scenarios for behaviour and constraints. Unknown/missing parameters and references are checked by the command palette and validator using the same schema catalog.
 
 ===== DOC docs/mods/scenes/scenarios/actions/index.md: Scenario Actions =====
 The `action` command bridges the DSL to game systems. Actions can be implemented in **C#** (via `IScenarioAction` + Roslyn compilation) or in **GDScript** (via `get_name()` + `run(ctx)` auto-detection).
@@ -5532,7 +5985,7 @@ Parameters use `key=value` syntax (no spaces around `=`).
 action party.add id=Murakami
 ```
 
-Adds the character `Murakami` to the player's party. `type=` matches the character's `Id` field in their JSON definition.
+Adds the character `Murakami` to the player's party. `id=` matches the character's `Id` field in their JSON definition.
 
 ```scenario
 action character.send_notification type=Murakami
@@ -5569,6 +6022,8 @@ action ui.toggle_panel name=cooking_workbench
 ```
 
 `name=` is required. The panel is first looked up as a `Control` node in the scene tree by node name; if nothing matches, the name is treated as a mod UI entry id from the manifest `ui` list and toggled through the UI registry — this is how the cooking mod's workbench overlay opens. A mod can also wrap the call into its own action: the cooking mod registers `toggle_cooking_workbench` for exactly that.
+
+The action parameter catalog lists every production action schema, including items, stats, equipment, crafting, trading, RPG and ambient speech. The tables below explain the common actions in more detail.
 
 ## Available action namespaces
 
@@ -5696,7 +6151,7 @@ Declare in `manifest.json`:
 The kernel auto-discovers `get_name()` + `run()` and registers the action — no factory or provider code needed. The `ctx` parameter provides access to all game subsystems (Quests, Character, Battle, Inventory, etc.). See GDScript in Mods for the full action context API.
 
 ===== DOC docs/mods/scenes/scenarios/dsl/index.md: DSL Command Reference =====
-Complete reference to the Scenario DSL commands: 29 keywords registered in the command strategy registry, plus `select`/`option`, which are handled specially by the parser (31 commands total, grouped by category).
+Dialog strategies provide the standard commands below; `select`/`option` are handled specially by the parser. Dialog assignments `set`/`cset` use the shared `expressions_base` evaluator, and optional mechanics add commands such as `check`. The active command set is determined by the loaded mods, so no fixed total describes every game.
 
 ---
 
@@ -5735,6 +6190,7 @@ option "Leave" :exit
 - Text can be a literal or a `key=` locale reference
 - All three target forms are equivalent; the `->` arrow takes priority when several are present
 - An `option` outside a `select` block is ignored
+- `if=` hides the answer while its condition is false; quote the whole argument when it contains spaces: `option "Pay" "if=item('money/coin') >= 5" -> :pay`
 
 ### `:label`
 Anchor point for jumps. Must start with `:` at the beginning of a line.
@@ -5763,6 +6219,16 @@ goto target=cleanup
 > **Note:** The bare form `goto :cleanup` is **not** supported — it is silently ignored by the parser. Always use the `->` arrow or the `target=` parameter.
 
 Useful for skipping optional content or implementing complex branching without nested options.
+
+### `when`
+
+Evaluate the shared condition language at the current line:
+
+```scenario
+when "door_open == 1" else=locked -> :enter
+```
+
+Without a matching branch target execution continues. Add `wait=true timeout=8` to re-evaluate until the condition becomes true or a positive finite deadline expires; success uses the arrow, timeout uses `else`. See Background scenarios for a complete waiting example and spatial conditions.
 
 ### `end`
 Terminates the scenario script. Required at the end of every execution path.
@@ -5862,6 +6328,7 @@ text "- Dear lady!" key=meeting/greeting first=marao/think second=murakami/fear_
 | `second=` | Right-side avatar |
 | `hide_color=` | `hide_color=true` shows avatars in shader-based silhouette mode (color suppressed) — useful for flashbacks or unknown speakers |
 | `wait=` | `wait=false` advances the script immediately without waiting for a click |
+| `who=`, `duration=`, `cue=` | Background host speaker role, positive finite speech duration in seconds, and speech-event cue; see Background scenarios |
 | (inline) | If no `key=`, the text is displayed literally |
 
 ### `ptext`
@@ -6099,9 +6566,21 @@ set met_murakami true
 set door_locked false
 ```
 
-The syntax is **space-separated**: first token is the name, second token is the value. Do not write `set name = value` with spaced equals — the parser stores the literal `"="` as the value. A `name=value` token (no spaces around `=`) is treated as a named argument, which is a different mechanism and not how `set` reads its operands.
+The syntax is **space-separated**: first token is the name, second token is the value. Do not write `set name = value` with spaced equals — the parser stores the literal `"="` as the value. The no-space form `set name=expression` is a numeric assignment supplied by `expressions_base`. `cset name expression` and `cset name=expression` also calculate; see Expressions for functions, validation and extension strategies.
 
 `set` variables live only while this dialog runs. For state that scenario conditions read, use `flag`.
+
+### `cset`
+
+Calculate one dialog variable using the shared expression engine:
+
+```scenario
+set reward=rnd(3,5)
+cset total "1+2+${reward}"
+ptext "Total: ${total}"
+```
+
+Unlike literal `set name value`, this rejects nonnumeric variables, division by zero and non-finite results before later actions execute.
 
 ### `flag`
 Sets a **story flag** of the game. Unlike `set`, a flag is game state: it is saved, a new game starts
@@ -6120,7 +6599,7 @@ condition: door == "open" &amp;&amp; visits >= 3
 text "The door stands open now."
 ```
 
-Same space-separated syntax as `set`. Numeric values compare as integers in conditions.
+Use the space-separated literal form. In an object or map event, `flag self.done 1` addresses only its own scope (`&lt;map>/&lt;local_id>:done`); a global flag uses a plain name. Numeric values compare as integers in conditions.
 
 ### `empty`
 A no-op command — it queues a placeholder action that does nothing and is skipped instantly.
@@ -6193,7 +6672,7 @@ background "town/meetingmurakami/00079"
 
 Do not confuse this with the runtime `${var}` substitution in dialogue text (see `ptext`): includes are expanded once when the mod loads, variables are substituted every time the line is shown.
 
-===== DOC docs/mods/scenes/scenarios/dsl/conditions/index.md: Conditions — Quest Expression Language =====
+===== DOC docs/mods/scenes/scenarios/dsl/conditions/index.md: Shared scenario conditions =====
 The `condition:` metadata field uses a simple expression language to control which scenarios execute based on quest state and scene flags. Boolean literals `true` and `false` are also valid condition expressions.
 
 ## Syntax
@@ -6354,6 +6833,22 @@ flowchart LR
     C["priority: 10&lt;br/>condition: none"] -->|"always passes"| S
     S --> SCENE["Run scenarios in priority order"]
 ```
+
+## Optional mechanic conditions and object scope
+
+The same grammar is used in scenario headers, `when`, `option … if=`, RPG object states and map events. Loaded mods add leaves without replacing the parser:
+
+| Expression | Owner and meaning |
+|---|---|
+| `item('money/coin') >= 5` | `items_base`: inventory count |
+| `stat(cha) >= 5`, `stat('hero', cha) >= 5` | `stats_base`: current stat for the player or named character |
+| `level() >= 2`, `level('hero') >= 2` | `stats_base`: level |
+| `archetype(warrior)`, `archetype('hero', warrior)` | `stats_base`: class membership |
+| `equipped('classic/iron_sword')` | `equipment`: worn item, optional first argument selects the character |
+| `near("guard", "player", 4)`, `can_hear("guard", "source")` | `npc_barks_base`: spatial checks, requiring an ambient host's role context |
+| `self.done == 1` | Scoped flag of the active object or map event; not a global variable named literally `self.done` |
+
+A map event's scope is `&lt;map>/&lt;local_id>`, and `self.done` resolves to `&lt;scope>:done`. The anchor role determines this scope for ambient definitions. Ordinary dialog variables created with `set`/`cset` are separate from persistent flags. See Expressions, RPG events and Background scenarios for complete examples.
 
 ===== DOC docs/mods/scenes/tscn-runtime/index.md: Runtime TSCN Scene Loading =====
 Godot `.tscn` scene files can be loaded and instantiated at runtime — after the game is built — through a custom parser and builder. This is the primary mechanism for mods to ship pre-authored Godot scenes that are constructed identically to how Godot itself would build them.
@@ -6700,6 +7195,77 @@ public class MyResourceBuilder : ISubResourceBuilder
         => /* create and configure */;
 }
 ```
+
+===== DOC docs/mods/schemas/index.md: Schemas: editors from annotations =====
+Mods `schema_base` (the model), `schema_tools` (the Data Editor window and the command palette); read by the
+validator and the item and character editors.
+
+RPG Maker's plugins describe their parameters in comments (`@param`, `@type`) and its editor builds forms
+from them. Here the same idea is data: a mod ships `schemas/&lt;mod>.json` that describes its scenario
+actions, its DSL commands and the fields of entity kinds. Those can be its own kinds or anyone else's. The
+tools merge every mod's schema and build forms, pickers and checks from it.
+
+## A schema file
+
+```jsonc
+{
+  "Actions": [{
+    "Id": "stat.add", "Name": "stats/schema/stat_add", "Category": "stats",
+    "Params": [
+      { "Key": "stat", "Type": "ref", "Kind": "stat", "Required": true, "Name": "stats/schema/field/stat" },
+      { "Key": "value", "Type": "formula" },
+      { "Key": "who", "Type": "who" }
+    ]
+  }],
+  "Commands": [{
+    "Id": "check", "Arrow": "checks/schema/arrow_success",
+    "Positional": [{ "Key": "stat", "Type": "ref", "Kind": "stat", "Required": true }, { "Key": "dc", "Type": "int", "Required": true }],
+    "Params": [{ "Key": "else", "Type": "label" }, { "Key": "dice", "Type": "text" }]
+  }],
+  "Kinds": [{
+    // Adds fields to someone else's kind: every item now has an equip type and traits in the editors
+    "Kind": "item",
+    "Fields": [
+      { "Key": "Equip", "Type": "text" },
+      { "Key": "Traits", "Type": "list", "Of": [{ "Key": "Stat", "Type": "ref", "Kind": "stat" }, { "Key": "Add", "Type": "number" }] }
+    ]
+  }]
+}
+```
+
+Field types: `text`, `locale`, `int`, `number`, `bool`, `choice` (`Options`), `ref` / `ref_list` (`Kind`),
+`who`, `picture` (`Group`), `formula`, `condition`, `scene`, `flag`, `label`, `list` (`Of`), `map`, `pick` (`Kind` + `From`), `stages`, `json`. Unknown types fall back to text. `pick` gathers a field's values across entities (for example accepted equipment types) rather than naming an entity. `stages` edits quest step numbers and localized texts. `choice` accepts a named option or a zero-based numeric option index; serialized numeric enums need not become strings.
+`Name` and `Description` are locale keys of your own mod.
+
+Schemas merge in mod load order. An action or command is replaced whole. A kind is merged field by field,
+so two mods can each add their own fields to `item`.
+
+Each engine mod describes its own actions next to its code: `dialog_base` its commands (`text`, `select`,
+`option` with `if`, `when`, …), `items_base` `item.add`, `trading` `trade.open`, `rpg` `rpg.teleport` and its battles integration `rpg.battle`, `quests_base` the `quest.*` actions, and so on.
+
+## What you get from it
+
+- **Data Editor** window (tool `schema_data_editor`): the described kinds on the left, the entities of a mod
+  in the middle, and a form of every mod's fields on the right. Pickers list real entities (stats, classes,
+  items, scenes). Texts are entered in every language of the mod. Save writes JSON, and the running game
+  sees the change at once.
+- **Command palette** (tool `schema_palette`): find any action or command, fill in its form, see the
+  finished line and its check, and insert it into the open scenario. The text stays the source.
+- **Item and character editors** show other mods' fields of their kind in a "Fields of other mods"
+  section. Install `equipment` and the item editor gains Equip and Traits.
+- **Validator**: unknown and missing parameters, bad numbers and choices, references to entities that do
+  not exist, unparsable conditions in `option … if=` and `when`. The resource atlas sees the references too.
+
+## Foreign entries, field patches and renaming
+
+The Data Editor can include entries of the chosen mod's dependencies. Editing one writes `patches/&lt;kind>/&lt;chosen_mod>.json` containing only changed fields; **Reset to inherited** removes the local patch, and the per-field reset removes that override. Unknown fields are preserved.
+
+**Rename…** previews changed references within the chosen mod and separately lists references from other mods. Confirming writes the local transaction only; other mods are not rewritten. **Undo rename** restores the prior files. Items and Characters editors use the same service. This is entity renaming, not a promise that RPG map/placement identifiers and save data are migrated.
+
+## Your own mechanic
+
+Write the C# action or the entity kind as usual, then add `schemas/&lt;your_mod>.json` and its locale keys.
+No editor code is needed: the Data Editor, the palette and the validator pick it up on the next start.
 
 ===== DOC docs/mods/settings/index.md: Mod Settings =====
 Mods can expose user-configurable settings that appear in the in-game settings menu under a dedicated "Mod Settings" tab. The UI shows a vertical list of mods (only those that have settings) on the left; clicking a mod name displays its settings controls on the right.
@@ -7241,7 +7807,7 @@ sounds/
 
 ## File format
 
-- `.ogg` (Vorbis) and `.wav` are both accepted — see `audio_extensions` in `config/mod_config.json`
+- `.ogg` (Vorbis) and `.wav` are accepted. Although `audio_extensions` exists in the config DTO, the current runtime loader retains this default list; changing that JSON field alone does not enable another format.
 - Short duration (0.1–5 seconds) recommended for one-shot effects
 - The sound id is the path relative to the mod's `sounds/` folder, minus extension: `sounds/ui/click.ogg` → `ui/click`, `battle/hit`
 
@@ -7376,11 +7942,11 @@ Step 4 happens in `ModAssemblyLoader.RegisterAssembly` (`Core/Mods/ModAssemblyLo
 | `PropertyResolverRegistry` | Property resolvers used while building scenes from `.tscn` |
 | `SubResourceBuilderRegistry` | Sub-resource builders for `.tscn` construction |
 | `ExtResourceBuilderRegistry` | External-resource builders for `.tscn` construction |
-| `ModManager.RegisterResolversFromAssembly` | `IModAssetResolver` implementations |
+| `ModAssetResolverConsumer` | `IModAssetResolver` implementations |
 
-Adding a new reflection-based plugin system to the kernel requires exactly one line in this method. Note that `ScriptTypeRegistry` (below) is populated separately — by `ModRegistry.FinalizeGodotInit`, which calls `ScriptTypeRegistry.RegisterAssembly` right after registering each compiled assembly through `ModAssemblyLoader`.
+Registration fans out through `AssemblyConsumerRegistry` and declarative consumers in `Core/Mods/Consumers/`. A mod-owned registry can subclass `ModTypeConsumer&lt;T>` and receives catch-up and unload notifications; see Integrations and reload. No subsystem-specific branch in `ModAssemblyLoader` is required. Note that `ScriptTypeRegistry` (below) is populated separately — by `ModRegistry.FinalizeGodotInit`, which calls `ScriptTypeRegistry.RegisterAssembly` right after registering each compiled assembly through `ModAssemblyLoader`.
 
-Subsystems that now live in mods register their own implementations through an `IModInitializer` instead of this fan-out: battle cores and winground listeners (`turn_battle_base`) and recruit behaviours/conditions (`recruiting`). `ModEventBus` typed events with `[EventKey]` can also be declared in any mod — the GDScript bridge reads the attribute at publish time.
+Subsystems owned by mods contribute their own consumers and initialization hooks: battle cores and winground listeners (`turn_battle_base`), recruit behaviours/conditions (`recruiting`), expression strategies, avatar renderers and atmosphere emitters. `ModEventBus` typed events with `[EventKey]` can also be declared in any mod — the GDScript bridge reads the attribute at publish time.
 
 ## ScriptTypeRegistry — resolving `.tscn` script paths
 
@@ -7542,7 +8108,7 @@ GameLogger.Log("MY_MOD", "This might be a problem", LogLevel.Warning);
 
 ## Important: Godot input in mods
 
-Because mod code compiles into a separate assembly (not processed by Godot's source generators), two rules apply:
+The runtime compiler runs Godot source generators when `Godot.SourceGenerators.dll` is available. `_Ready`/`_Process` bindings then work in mod classes; if the generator is unavailable the compiler logs a lifecycle-binding warning. `ModNode`, `InputHandlerNode` and `ModWidget` from `ui_base` remain the standard forwarder bases. For custom input, keep these placement/event conventions:
 
 1. **`AddChild` BEFORE `GlobalPosition`**: If you set `GlobalPosition` before `AddChild`, the node has no parent canvas transform and the position will be misinterpreted.
 
@@ -7586,6 +8152,37 @@ Roslyn compilation errors appear in the game log. Common issues:
 - Syntax errors — standard C# issues
 
 The game will still run even if a mod's C# fails to compile. Non-C# assets (scenarios, items, etc.) from the same mod remain functional.
+
+===== DOC docs/mods/src/integrations.md: Integrations, assembly consumers and reload =====
+## Conditional integrations
+
+An integration is glue that joins the loaded mod set only when its host and every named partner are present. It does not pull a partner into a game that did not select it. The host declares:
+
+```json
+{"integrations": [{"id": "battles", "with": ["turn_battle_base"]}]}
+```
+
+`integrations/battles/manifest.json` and its source/data files form the virtual mod `&lt;host>__battles`. An optional `path` changes that folder. The virtual mod implicitly depends on its host and partners; its manifest can declare additional dependencies. It is not a separate player-toggleable mod card. Integrations are recomputed at boot and in-process game switches.
+
+For example, `rpg__battles` connects the RPG world to turn-based battles and random encounters. `turn_battle_base__quests` applies battle results to quests. The `rpg` host can therefore be used without any battle engine, and the battle platform without quests. These are production integrations; `test_suites` are a separate opt-in test mechanism.
+
+## Discovering extensions
+
+`ModAssemblyLoader.RegisterAssembly(assembly, modId)` sends loaded assemblies through `AssemblyConsumerRegistry`. Kernel consumers cover actions, initializers, save/settings handlers, discovery, tools, scene events, TSCN building and asset resolvers. A subsystem owned by a mod can declare a public parameterless subclass of `ModTypeConsumer&lt;T>` with a unique `Id`, `Add` and `Remove` methods.
+
+The consumer receives implementations from already registered assemblies, including its own, and from later assemblies. Unloading calls `Remove` for exactly that assembly's contributions. Registries must release those instances and references; a static list retaining an unloaded implementation prevents collectible assemblies from being released. This mechanism is used by expression strategies, avatar renderer factories, atmosphere emitters and other mod-owned extension systems.
+
+The namespace is `Cthangover.Core.Mods.Consumers`; source is `Core/Mods/Consumers/`. A new registry declares a consumer instead of inserting a subsystem-specific branch in the kernel's assembly loader. See C# sources for the other compilation contracts.
+
+## Hot reload
+
+When run from the Godot editor, file watching is enabled by default except for automated tests/atlas runs. Exported builds do not watch by default. `--hot-reload` opts in explicitly and `--no-hot-reload` wins over it. These are Godot user arguments after `--`.
+
+The watcher considers source, manifests, data, scenes, locale and asset changes, while ignoring build folders, editor bookkeeping and temporary files. It prepares and compiles a candidate set before applying it. A rejected compile leaves the previous running version in place and reports the error. Applied changes go through normal unload and registration, and publish a mod-set reload event. Data changes invalidate the relevant resolvers.
+
+Reloadable mods must unsubscribe events, free owned UI/native resources, release callbacks and discard old plugin instances on unload. Godot nodes, live avatar adapters and atmosphere emitters belong to their hosts; merely swapping an assembly does not transfer ownership. In-process game selection uses this same mod-set lifecycle, so test repeated game switches as well as initial boot.
+
+Implementation: `Core/Mods/HotReload/`, `Core/Mods/Pipeline/ModSetReloader.cs`, `Core/Mods/ModIntegrations.cs`. The `hot_reload` and `resettables` suites exercise compile rejection and repeated switching.
 
 ===== DOC docs/mods/src/gdscript/actions.md: Scenario Actions =====
 A GDScript that has both `get_name()` and `run(ctx)` is registered as a **scenario action**. The `ctx` parameter is a `GDActionContext` providing access to all game subsystems.
@@ -8011,6 +8608,138 @@ func run(ctx) -> void:
 Other mods (C# or GDScript) can subscribe to this event by its string key.
 See Events for the full event bus API.
 
+===== DOC docs/mods/stats/index.md: Stats, classes, checks and gear =====
+Mods `stats_base`, `stat_checks`, `equipment`, `battle_formulas`; rules as data in `classic_rpg_pack`;
+the sample game `rpg_plus`.
+
+A stat is whatever your game counts: strength in an RPG, courage or trust in a visual novel. Nothing here
+knows about tile maps, cards or novels, so the same character data works in a dialog, on a tile map and in
+both battle cores. Everything below is JSON and scenario text; no C# is needed.
+
+## Stats (`"Kind": "stat"`)
+
+```jsonc
+{
+  "Kind": "stat",
+  "Items": [
+    // A base attribute: a number with a default and a lower bound
+    { "Id": "str", "Name": "my/stat/str", "Short": "my/stat/str_short", "Group": "attributes", "Order": 1, "Default": 5, "Min": 1 },
+    // A derived stat: a formula of other stats and the level, written into the battle's health
+    { "Id": "hp", "Name": "my/stat/hp", "Group": "combat", "Order": 10, "Formula": "12 + vit * 3 + level * 2", "Min": 1, "Binds": "health" },
+    // A pool: spent and refilled (mana). Battle actions pay with "Cost=mp:4"
+    { "Id": "mp", "Name": "my/stat/mp", "Group": "combat", "Formula": "int * 2 + level * 2", "Pool": true }
+  ]
+}
+```
+
+`Binds` writes the stat into a battle attribute every core already reads: `health`, `attack`, `defence`,
+`point`. `Group` and `Order` lay the stat out on the character sheet. `Hidden` keeps it off the sheet.
+
+## Classes (`"Kind": "archetype"`)
+
+An RPG class or a novel's temperament: stat values or formulas, traits, and actions learned on level-up.
+
+```jsonc
+{
+  "Id": "classic/warrior",
+  "Name": "classic/archetype/warrior",
+  "Stats": { "str": "7 + level * 2", "vit": "6 + level * 2", "int": "2 + floor(level / 2)" },
+  "Traits": [{ "Stat": "hp", "Percent": 10 }],
+  "Learnings": [{ "Level": 1, "Action": "classic/power_strike" }, { "Level": 3, "Action": "classic/guard_break" }]
+}
+```
+
+A character's own value wins over its class, the class over the stat's `Formula`, the formula over
+`Default`. Then come permanent bonuses and traits: `(value + Add + Formula) × (1 + Percent / 100)`, clamped
+to `Min`/`Max`.
+
+## Traits on anything
+
+Any entity can carry `"Traits"`: a character, an item, a class. The characters and items mods do not know
+the key, so other mods' entities become stat-aware without changing their code. A patch gives stats to
+someone else's character:
+
+```jsonc
+// patches/character.json of your mod: the wolf of another mod fights with a sheet
+{ "Items": [{ "Id": "rpg_wolf", "Stats": { "str": 5, "vit": 5, "agi": 7 } }] }
+```
+
+## Formulas
+
+`+ - * / % ^`, comparisons, `&amp;&amp; || !`, `cond ? a : b`, `min max floor ceil round abs sqrt clamp rand(lo, hi)
+chance(p) if(c, a, b)`. Division by zero gives 0 and an unknown name reads 0, so a typo never crashes a
+battle. The validator and the Data Editor window report it instead.
+
+## Gear (`equipment`)
+
+```jsonc
+// Slots are data: what equip types a slot accepts
+{ "Kind": "equip_slot", "Items": [{ "Id": "weapon", "Name": "classic/slot/weapon", "Accepts": ["sword", "staff", "dagger"] }] }
+
+// An item becomes gear by its keys: "Equip" (its type), "Traits", "Archetypes" (who may wear it)
+{ "Id": "classic/iron_sword", "Cost": 30, "ItemType": "TargetUsed", "ItemAction": "action/equip",
+  "Equip": "sword", "Archetypes": ["classic/warrior", "classic/rogue"], "Traits": [{ "Stat": "atk", "Add": 5 }] }
+```
+
+`"ItemAction": "action/stat_up"` together with `"StatUp": { "str": 1 }` makes a tonic that adds permanent
+bonuses.
+
+## Skills with formulas (`battle_formulas`)
+
+```jsonc
+{ "Kind": "action", "Id": "classic/power_strike", "Type": "ToEnemy",
+  "Values": ["RequiredPoint=1", "Formula=a.atk * 1.5 + rand(0, a.str / 2)"] }
+```
+
+`a.*` is the one acting and `b.*` the target: their stats plus `hp`, `hp_max`, `attack`, `defence`, `point`.
+Other values: `Effect=damage|heal`, `Cost=mp:4`, `Pierce=1`, and `State=&lt;status effect>` with
+`StateTurns`/`StateChance`. Both battle cores run these skills.
+
+## In scenarios
+
+```text
+action stat.add stat=cha value=1 who=player
+action stat.archetype id=classic/rogue who=rpg_hero
+action stat.exp value=20                       # the whole party by default
+action equip.put item=classic/dagger who=rpg_hero give=1
+
+check cha 10 who=rpg_hero else=snub -> :gift   # d20 + charisma against 10, shows the roll
+when "level(rpg_hero) >= 3" -> :veteran else=rookie
+select "What do you say?"
+option "Bluff [Charisma]" "if=stat(rpg_hero, cha) >= 6" -> :bluff
+option "Show the dagger" "if=equipped(rpg_hero, 'classic/dagger')" -> :threat
+option "Leave" -> :leave
+```
+
+Conditions: `stat(who, stat) >= n`, `level(who) >= n`, `archetype(who, id)`, `equipped(who, item)`. They
+work wherever conditions do: `when`, an `option`'s `if`, a scenario's `condition:`, map events. An option
+whose condition is false is not offered. A choice with every option hidden is skipped.
+
+`check` leaves `check_roll`, `check_total`, `check_dc`, `check_result` and more in the dialog variables for
+your own lines. The dice default to the game setting `checks.dice`, else `d20`. `dice=none` makes a plain
+threshold.
+
+## Game settings (`collection.json` → `settings`)
+
+| Setting | Meaning |
+|---|---|
+| `stats.player` | whose sheet `player` means |
+| `stats.exp_curve` | exp needed for a level when the class has no `ExpCurve` |
+| `stats.leveling` | `all` lets characters without a class level up too |
+| `checks.dice` | default dice of `check` |
+
+## The character sheet
+
+The toolbar's book button shows the party, the class, the level and exp bar, the stats by group with the
+part traits add, and blocks other mods add (the Equipment block with Take off). In C#, a mod adds a block by
+implementing `ISheetSection`.
+
+## See it working
+
+`--game=rpg_plus --new`: a novel prologue picks the class and makes a charisma check, then the tile world
+uses the same stats in gear, battles and the sheet. The content is in `mods/rpg_plus_game`, the rules in
+`mods/classic_rpg_pack`.
+
 ===== DOC docs/mods/status_effects/index.md: Status Effects =====
 Status effects are temporary buffs, debuffs, or crowd-control effects applied to characters during battle. Defined as JSON data and managed through `StatusEffectQueue`; the runtime is owned by the turn-battle mod (`turn_battle_base`) and keyed per character via `StatusEffectService`, so the core character model stays free of battle state.
 
@@ -8140,6 +8869,69 @@ status/stun/name = Stunned
 status/stun/desc = Character skips their next turn
 ```
 
+===== DOC docs/mods/testing/index.md: Launching, testing and diagnostic tools =====
+Use Godot 4.6 .NET and .NET 8. `dotnet build Cthangover.csproj` builds the kernel only: sources under `mods/` compile at runtime with Roslyn. A successful kernel build does not prove that mod compilation succeeds.
+
+## Choosing a game or scene
+
+Godot user arguments follow the separator `--`:
+
+```text
+godot --path . -- --game=novel_template --new
+godot --path . -- --game=rpg_plus --load=slot_1
+godot --path . -- --game=junior_reaper_paper_grief --new
+godot --path . -- --game=rpg_plus --new --with-mods=rpg_object_editor --studio
+```
+
+| Argument | Effect |
+|---|---|
+| `--game=&lt;collection_id>` | Load that game's mod set and enter it |
+| `--new`, `--load=&lt;slot>` | Start fresh (also the default) or load the game's save |
+| `--with-mods=a,b` | Add the named mods and required dependencies for this run |
+| `--all-mods` | Load all ordinary installed mods, overriding game/frontend selection; fixtures and inactive suites stay excluded |
+| `--frontend` | Force the menu/mod-manager set when no explicit game or all-mods selection wins |
+| `--scene=&lt;logical_id>` | Navigate after boot to a registered logical scene; unknown IDs log an error and retain normal launcher behaviour |
+| `--tile-renderer=topdown` / `isometric` | Override the collection's tile renderer |
+| `--studio` | Open Scenario Studio when available |
+| `--hot-reload`, `--no-hot-reload` | Override the editor/default file-watching policy |
+| `--wait-for-debugger` | Show the attach-debugger dialog before boot |
+
+With no game or development flag, only the frontend is loaded. Development flags (`--scene=`, `--itest=`, `--run-tests`, autoplay, atlases, debugger) imply all-mods when no game or frontend is selected. `--all-mods` takes precedence, then `--game=`, then `--frontend`, then the development fallback. An actual `.tscn` path is Godot's positional main-scene argument, not a logical `--scene=` value.
+
+## Unified runner
+
+```text
+dotnet run --project tests/Cthangover.TestRunner -- --list
+dotnet run --project tests/Cthangover.TestRunner -- --test unit
+dotnet run --project tests/Cthangover.TestRunner -- --test mod_units
+dotnet run --project tests/Cthangover.TestRunner -- --test resource_atlas
+dotnet run --project tests/Cthangover.TestRunner -- --test locale_atlas
+dotnet run --project tests/Cthangover.TestRunner -- --test coverage
+dotnet run --project tests/Cthangover.TestRunner -- --json test-results.json
+```
+
+No selection runs the complete manifest: kernel build, xUnit and integration tests. `--no-build` skips the kernel build. Test IDs, scenes, arguments and window requirements live in `tests/tests.manifest.json`; logs go to `tests/artifacts/logs/&lt;test>.log`. Exit 0 means the selected checks passed. Pure xUnit tests live under `tests/Cthangover.Tests`; mod units use each manifest's `test_sources`, compiled into a separate test assembly.
+
+Direct mod testing uses `--run-tests [--mod=&lt;id>]`. GUI suites declared in `test_suites` mount as `&lt;host>__&lt;suite>` only when an activation prefix matches, or with `--with-test-suites`; ordinary games and `--all-mods` do not activate them. A fixture needs explicit `--with-mods=`. Windowed tests need a real renderer/display, including pixel, Live2D and editor screenshot checks.
+
+## Autoplay and captures
+
+`--choices=0,1 --timeout=30` mounts `dialog_base__autoplay`, advances text and chooses indexed answers. `--dialogs=N` finishes after N completed dialogs for hub games that never become idle. The result marker is `[TEST_RESULT]`; inspect error logs and runtime mod compilation, not only process exit.
+
+`dialog_base__doc_shots` runs capture steps with a selected game, `--itest=doc_shots --doc-steps=&lt;file> --shots=&lt;directory>`. It can navigate scenes, operate dialogs and panels, drive keys/mouse and save actual runtime frames. `cthangover_game__site_shots` and `site/make-shots.ps1` provide the site's game frames. Keep source captures and analysis outside mod repositories; bundled documentation assets are selected runtime captures.
+
+## Validator and atlases
+
+`validator` checks data/scenario references, schemas, conditions and unknown parameters independently of the authoring windows. `resource_atlas` maps providers and consumers, detects foreign resources without a transitive dependency, unrelated providers of one key, and dependency-less patches; missing providers are warnings. It also scans map-owned event scripts and teleport links. `locale_atlas` maps declarations and references in all installed languages: undeclared keys, invalid text/encoding and contradictory declarations are errors; missing translations are warnings and retain fallback behaviour.
+
+Direct flags `--resource-atlas` / `--locale-atlas` generate reports and quit. `--with-test-suites` includes inert test resources for a full audit. The locale editor consumes the atlas scan and writes translations into the owning mod's locale files.
+
+In the shared `/workspace` environment, heavy or longer-than-about-30-second runs must use the existing Windows watcher: publish an atomic, uniquely named job with a Russian purpose, track it to `.exit`, and inspect its result/state/log. See the workspace's `watch/README.md`; do not start another watcher or infer success from a pending job.
+
+## Screenshot colour pipeline
+
+Keep the normal renderer and `rendering/viewport/hdr_2d=true`. Capture through `Cthangover.Mods.Interface.View.ViewportCapture.SavePng(viewport, path)` or `Take(viewport)`, disposing the returned image. HDR 2D viewport pixels are linear; saving them directly to PNG makes screenshots dark. The shared helper converts RGB to sRGB before 8-bit quantization and does not transform alpha. `Convert(Rgba8)` alone is insufficient. Do not change HDR, exposure, display colour profiles or rendering backend to compensate. Compare a trial capture before a batch. This requirement is also recorded in workspace and project `AGENTS.md`.
+
 ===== DOC docs/mods/time/index.md: Time System =====
 The in-game clock tracks time progression and drives day/night lighting cycles. Time affects quest progression, character stats, and scene appearance via the `light_use_time` feature.
 
@@ -8207,6 +8999,36 @@ light_use_time: true
 ## Saving
 
 Time is persisted in save files as a `long` tick value. On load, all derived properties (hours, phases, etc.) are recalculated.
+
+===== DOC docs/mods/trading/index.md: Shops and trading =====
+`trading` adds the entity kind `shop` and the action `trade.open`. Currency is an ordinary inventory item; the default is `money/coin`, defined by this mod. A shop has unlimited stock and no persistent stock state. Sold items do not become its new offers.
+
+Put a shop in `shops/` and depend on `trading` and the mods owning its goods:
+
+```json
+{
+  "Kind": "shop",
+  "Items": [{
+    "Id": "my_game/merchant", "Name": "my_game/merchant/name",
+    "Currency": "money/coin",
+    "Sells": [{"Item": "rpg_plus/elixir", "Price": 10}],
+    "Buys": [{"Item": "rpg_plus/branches", "Price": 1}]
+  }]
+}
+```
+
+`Name` is a locale key. `Sells` lists what the player buys; `Buys` lists what the merchant accepts. Prices are positive integers per unit; prices below 1 are ignored. The example goods are owned by `rpg_plus_game`.
+
+```scenario
+action trade.open shop=my_game/merchant
+end
+```
+
+The trade window has the merchant's offers on the left and the player's bag on the right. Pick an item, set the quantity with the slider, −/+, or All, and press Buy or Sell. Buy quantities are limited by available currency; sell quantities by the bag. Other bag entries cannot be sold here. Walking is blocked while trading; Esc closes the window.
+
+RPG Plus supplies the concrete shop `rpg_plus/village_merchant` in `mods/rpg_plus_game/shops/village_merchant.json`. To extend an existing shop, use `patches/shop/&lt;your_mod>.json` and a dependency on its owner. Offers have no declared merge key. To update one offer, supply an explicit operation such as `"Sells$add": {"$key": "Item", "$items": [{"Item": "rpg_plus/elixir", "Price": 12}]}`. A plain `$add` appends instead; see Array patches.
+
+Only inventory changes persist, in the `items_base` save slot. Data Editor and the command palette consume `mods/trading/schemas/trading.json`; implementation is in `mods/trading/src/`.
 
 ===== DOC docs/mods/wrappers/index.md: Wrappers — UI Templates =====
 A mod can attach its own UI (panels, overlays, widgets) to the game shell in two ways:
@@ -8311,7 +9133,7 @@ wrappers/
 
 ## Building mod UI from code — ModWidget
 
-When creating UI components from mod C# code, inherit from `ModWidget` (`Core/UI/Base/Lists/ModWidget.cs`). It provides an idempotent `Construct()`/`Destruct()` lifecycle for UI built from code inside mods: `EnsureConstructed()` calls the abstract `Construct()` exactly once, and the virtual `Destruct()` is called automatically on `_ExitTree`. Usage = override `Construct()` and build your children there:
+When creating UI components from mod C# code, inherit from `ModWidget` (`mods/ui_base/src/Base/Lists/ModWidget.cs`). It provides an idempotent `Construct()`/`Destruct()` lifecycle for UI built from code inside mods: `EnsureConstructed()` calls the abstract `Construct()` exactly once, and the virtual `Destruct()` is called automatically on `_ExitTree`. Usage = override `Construct()` and build your children there:
 
 ```csharp
 public class MyUIPanel : ModWidget
